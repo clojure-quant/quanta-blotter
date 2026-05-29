@@ -1,0 +1,8 @@
+[{:account/id 1
+  :account/api :paper
+  :account/settings {:fill-probability 20
+                    :wait-seconds 5}}
+ {:account/id 2
+  :account/api :paper
+  :account/settings {:fill-probability 10
+                    :wait-seconds 5}}]

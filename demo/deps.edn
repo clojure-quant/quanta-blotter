@@ -1,0 +1,13 @@
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure    {:mvn/version "1.11.1"}
+        io.github.clojure-quant/blotter {:local/root "../blotter" :deps/manifest :deps}}
+ :aliases
+ {:nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
+                       cider/cider-nrepl {:mvn/version "0.28.3"}}
+          :main-opts  ["-m" "nrepl.cmdline"]}
+  
+  :cli-quote-print {:exec-fn demo.cli-quote-print/start-cli}
+  :cli-trade {:exec-fn demo.cli-trade/start-cli}
+
+;
+  }}
