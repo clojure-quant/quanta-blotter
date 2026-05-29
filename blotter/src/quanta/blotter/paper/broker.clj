@@ -9,8 +9,8 @@
   (let [fill-flow (random-fill-flow settings log order)
         fill-send-flow (m/ap (let [fill (m/?> fill-flow)]
                                (m/? (push fill))))
-        fill-task (m/reduce identity nil fill-send-flow)]
-    (fill-task #(println "fill-order-done") #(println "fill-order-error"))))
+        fill-task (m/reduce (fn [r v] nil) nil fill-send-flow)]
+    (fill-task #(println "fill-order-done" %) #(println "fill-order-error" %))))
 
 (defn- paper-broker-task [settings pull push log]
   (m/sp
