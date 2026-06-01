@@ -1,4 +1,4 @@
-(ns quanta.market.trade.position
+(ns quanta.blotter.order-manager.position
   (:require
    [missionary.core :as m]))
 

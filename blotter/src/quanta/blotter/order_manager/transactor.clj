@@ -1,15 +1,15 @@
-(ns quanta.market.trade.transactor
+(ns quanta.blotter.order-manager.transactor
   (:require
    [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]
-   [quanta.market.util :refer [flow-sender start-logging mix]]
-   [quanta.market.trade.schema :as s]
-   [quanta.market.trade.print :as print]
-   [quanta.market.trade.order :refer [order-change-flow
+   [quanta.blotter.util :refer [flow-sender start-logging mix]]
+   [quanta.blotter.order-manager.schema :as s]
+   [quanta.blotter.order-manager.print :as print]
+   [quanta.blotter.order-manager.order :refer [order-change-flow
                                       working-orders-flow
                                       order-dict->order-seq-flow
                                       trade-flow]]
-   [quanta.market.trade.position :refer [position-change-flow
+   [quanta.blotter.order-manager.position :refer [position-change-flow
                                          open-positions-flow]]))
 
 (defn position-dict->positions [position-dict]
@@ -32,14 +32,14 @@
   {:working-orders working-orders
    :open-positions open-positions})
 
-(defn transactor-start
+(defn create-transactor
   "starts the transactor.
    the transactor keeps working-orders and open-positions from
    a order-orderupdate-flow.
 
    db is optional. if no db is passed, the database will not get updated and you 
    are working purely in memory."
-  [{:keys [order-orderupdate-flow logfile db]}]
+  [{:keys [order-orderupdate-flow db]}]
   ; load-working-orders from db.
   (let [; flows
         order-change-f (order-change-flow order-orderupdate-flow)
@@ -50,6 +50,18 @@
         open-position-f (open-positions-flow position-change-f)
         alert-f (transactor-alert order-change-f)
         snapshot-a (atom {})
+        state {:db db
+              ; :working-orders working-orders
+               :order-orderupdate-flow order-orderupdate-flow
+               :open-position-f open-position-f
+               :working-order-f working-order-f
+               :trade-f trade-f
+               :alert-f alert-f 
+               :snapshot-a snapshot-a}]
+    state))
+
+(defn transactor-start [transactor]
+  (let [{:keys [working-order-f open-position-f snapshot-a]} transactor
         wo-cont-f (m/reductions (fn [r v] v) nil working-order-f)
         op-cont-f (m/reductions (fn [r v] v) nil open-position-f)
         update-snapshot-t (m/reduce (fn [_s v]
@@ -60,17 +72,10 @@
                                               (m/relieve {} wo-cont-f)
                                               (m/relieve {} op-cont-f)))
         snapshot-dispose! (update-snapshot-t #(prn ::snapshot-success %)
-                                             #(prn ::snapshot-crash %))
-        state {:db db
-              ; :working-orders working-orders
-               :order-orderupdate-flow order-orderupdate-flow
-               :open-position-f open-position-f
-               :working-order-f working-order-f
-               :trade-f trade-f
-               :alert-f alert-f
-               :snapshot-dispose! snapshot-dispose!
-               :snapshot-a snapshot-a}]
-    state))
+                                             #(prn ::snapshot-crash %))]
+    (assoc transactor :snapshot-dispose! snapshot-dispose!)
+    ))
+
 
 (defn transactor-stop [{:keys [snapshot-dispose!]}]
   (info "transactor stopping..")

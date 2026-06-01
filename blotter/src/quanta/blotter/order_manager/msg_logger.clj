@@ -1,8 +1,8 @@
-(ns quanta.market.trade.msg-logger
+(ns quanta.blotter.order-manager.msg-logger
   (:require
    [missionary.core :as m]
    [taoensso.timbre :as timbre :refer [debug info warn error]]
-   [quanta.market.trade.db :as trade-db :refer [store-message!]])
+   [quanta.blotter.order-manager.db :as trade-db :refer [store-message!]])
   (:import [missionary Cancelled]))
 
 (defn log-messages-task [dbconn msg-flow account-id direction]

@@ -2,6 +2,19 @@
 orders executions positions with account/trader routing
 
 
+order/create
+order/cancel
+order/modify
+order-acq/order-created
+order-acq/order-canceled
+order-acq/order-modified
+order-update/fill
+order-update/expired
+order-update/message
+
+order-status/order-created
+order-status/order-changed
+order-status/order-done
 
 order-status
  :live

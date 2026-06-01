@@ -1,4 +1,4 @@
-(ns quanta.market.trade.order
+(ns quanta.blotter.order-manager.order
   (:require
    [taoensso.timbre :as timbre :refer [debug info warn error]]
    [tick.core :as t]

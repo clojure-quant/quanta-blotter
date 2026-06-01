@@ -1,7 +1,7 @@
-(ns demo.dev.transactor
+(ns demo.transactor
   (:require
    [missionary.core :as m]
-   [quanta.market.trade.transactor :refer [transactor-start]]))
+   [quanta.blotter.order-manager.transactor :refer [create-transactor transactor-start transactor-log-start!]]))
 
 (def order-orderupdate-flow
   (m/seed [{:order-id "456"
@@ -23,6 +23,10 @@
                                   :fill-qty 0.11
                                   :fill-value 500.0}}]))
 
-(def tm (transactor-start {:logfile ".data/transactor2.txt"
-                           :order-orderupdate-flow order-orderupdate-flow}))
+(def tm (create-transactor {:order-orderupdate-flow order-orderupdate-flow}))
+
+(transactor-log-start! tm "transactor2.txt")
+
+
+(transactor-start tm)
 

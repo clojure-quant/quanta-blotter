@@ -1,7 +1,8 @@
 (ns demo.util.orderflow-simulated-rdv
   (:require
    [missionary.core :as m]
-   [demo.orderflow-simulated :refer [demo-order-action-flow]]))
+   [demo.util.orderflow-simulated :refer [demo-order-action-flow]]))
+
 
 
 (defn- flow->pull

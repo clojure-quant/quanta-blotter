@@ -4,9 +4,10 @@
    [missionary.core :as m]
    [taoensso.timbre :as timbre :refer [debug info warn error]]
    [quanta.market.protocol :as p]
-   [quanta.market.util :refer [mix start-logging]]
+   [quanta.blotter.util :refer [mix start-logging]]
    ; bring default implementations into scope:
-   [quanta.market.broker.bybit.trade]))
+   ;[quanta.market.broker.bybit.trade]
+   ))
 
 (defn- get-tradeaccount-order [{:keys [tradeaccounts] :as _this} {:keys [account]}]
   (get tradeaccounts account))

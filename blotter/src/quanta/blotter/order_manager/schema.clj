@@ -1,4 +1,4 @@
-(ns quanta.blotter.schema
+(ns quanta.blotter.order-manager.schema
   (:require
    [tick.core :as t]
    [malli.core :as m]

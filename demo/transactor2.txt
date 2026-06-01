@@ -1,0 +1,22 @@
+
+open-positions-table
+|---------+-------+---------|
+| account | asset | net-qty |
+|---------+-------+---------|
+| :demo4  |   BTC |    0.05 |
+|---------+-------+---------|
+
+
+open-positions
+{[:demo4 "BTC"] 0.05}
+
+open-positions-table
+|---------+-------+---------|
+| account | asset | net-qty |
+|---------+-------+---------|
+| :demo4  |   BTC |    0.05 |
+|---------+-------+---------|
+
+
+open-positions
+{[:demo4 "BTC"] 0.05}

@@ -1,4 +1,4 @@
-(ns quanta.market.trade.print
+(ns quanta.blotter.order-manager.print
   (:require
    [crockery.core :as crockery]))
 

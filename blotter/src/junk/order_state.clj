@@ -2,7 +2,7 @@
   (:require
    [missionary.core :as m]
    [taoensso.timbre :as timbre :refer [debug info warn error]]
-   [quanta.market.util :refer [flow-sender start-logging mix]]
+   [quanta.blotter.util :refer [flow-sender start-logging mix]]
    [quanta.market.trade.schema :as s]
    [quanta.market.trade.db :refer [store-new-order! store-order-update!]]
    [quanta.market.trade.working-order :as wo]))

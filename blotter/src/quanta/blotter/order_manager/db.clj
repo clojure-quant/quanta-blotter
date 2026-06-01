@@ -1,4 +1,4 @@
-(ns quanta.market.trade.db
+(ns quanta.blotter.order-manager.db
   (:require
    [clojure.set :refer [rename-keys]]
    [taoensso.timbre :as timbre :refer [debug info warn error]]
