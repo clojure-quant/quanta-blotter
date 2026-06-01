@@ -6,37 +6,37 @@
 
 (def demo-order-action-flow
   (create-time-flow
-   [0 {:type :new-order
+   [1 {:type :trader/new-order
        :account/id 1
        :order-id 1
        :asset "BTCUSDT"
        :side :buy
-       :limit 100.0
-       :qty 0.001}
-    2 {:type :new-order
+       :limit 1000.0M
+       :qty 0.001M}
+    2 {:type :trader/new-order
        :account/id 2
        :order-id 2
        :asset "ETHUSDT"
        :side :sell
-       :limit 100.0
-       :qty 0.001}
-    3 {:type :cancel-order
+       :limit 101.0M
+       :qty 0.001M}
+    3 {:type :trader/cancel-order
        :account/id 2
        :order-id 2}
-    5 {:type :new-order
+    5 {:type :trader/new-order
        :account/id 2
        :order-id 3
        :asset "ETHUSDT"
        :side :sell
-       :limit 100.0
-       :qty 0.001}
-    7 {:type :new-order
+       :limit 99.3M
+       :qty 0.001M}
+    7 {:type :trader/new-order
        :account/id 2
        :order-id 4
        :asset "ETHUSDT"
        :side :sell
-       :limit 100.0
-       :qty 0.001}]))
+       :limit 98.7M
+       :qty 0.001M}]))
 
 
 

@@ -3,7 +3,8 @@
    [missionary.core :as m]
    [quanta.blotter.paper.broker] ;; side effect: brings in paper broker implementation
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
-   [quanta.blotter.logger :refer [create-logger log stop-logger]]
+   [quanta.blotter.consolidator :refer [create-consolidator start-consolidator! stop-consolidator!]]
+   [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
    [demo.util.orderflow-simulated-rdv :refer [create-orderflow-simulated-rdv]]
    [demo.util.update-printer :refer [create-orderupdate-printer]])
   (:import [missionary Cancelled]))
@@ -18,15 +19,26 @@
         ;; trading-flows
         {:keys [orderflow-simulated-rdv dispose-orderflow-simulated-rdv]} (create-orderflow-simulated-rdv)
         {:keys [orderupdate-rdv dispose-orderupdate-printer]} (create-orderupdate-printer)
+        ;; consolidator
+        consolidator (create-consolidator {:order orderflow-simulated-rdv :orderupdate orderupdate-rdv :log log})
+        _ (start-consolidator! consolidator)
+        {:keys [order orderupdate]} (:channel consolidator)
+        {:keys [combined-flow]} consolidator
+        l-channel (create-logger "order-orderupdate-paper.txt")
+        dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
         ;; account-manager
-        am (create-account-manager orderflow-simulated-rdv orderupdate-rdv log)
+        ;order orderflow-simulated-rdv 
+        ;orderupdate orderupdate-rdv 
+        am (create-account-manager order orderupdate log)
         ;_ (add-edn-account am "demo-accounts.edn" 1)
         ;_ (add-edn-account am "demo-accounts.edn" 2)
         _ (add-edn-accounts am "demo-accounts.edn")
         dispose! (start-account-manager am)]
     {:dispose-order-puller dispose-orderflow-simulated-rdv
      :dispose-account dispose!
-     :dispose-pull-printer dispose-orderupdate-printer}))
+     :dispose-pull-printer dispose-orderupdate-printer
+     :dispose-flow-logger dispose-flow-logger
+     }))
 
 
 (comment

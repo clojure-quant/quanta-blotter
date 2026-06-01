@@ -12,20 +12,28 @@
                (m/reduce conj))))))
 
 
-(defn start-logging-flow [filename log-f]
+(defn merge-events [events]
+  (->> events
+       (map (fn [x] (str "\n" x)))
+       (apply str)))
+
+
+(defn start-logging-flow [filename console? log-f]
   (let [blocked-f (time-buffered 500 log-f)
         t (m/reduce (fn [_r v]
-                      (let [s (map (fn [x] (str "\n" x)) v)
-                            s (apply str s)]
-                        (println s)
+                      (let [s (merge-events v)
+                            s (str "\r\n " s)]
+                        ;(println "logging events: " (count v) " data: \r\n" s)
+                        (when console?
+                          (println s))
                         (spit filename s :append true)))
                     nil blocked-f)]
     (t prn prn)))
 
-(defn create-logger [filename]
+(defn create-logger [filename console?]
   (let [log-a (atom "")
         log-f (m/watch log-a)]
-    {:dispose! (start-logging-flow filename log-f)
+    {:dispose! (start-logging-flow filename console? log-f)
      :log! (fn [t]
              (reset! log-a t))}))
 
@@ -33,6 +41,19 @@
 (defn stop-logger [this]
   (:dispose! this))
 
-(defn log [this s]
+(defn log
+  [this s]
   ((:log! this) s))
+
+
+
+(defn start-log-flow-to-logger [this f]
+  (assert this "start-log-flow-to-logger needs this")
+  (assert f "start-log-flow-to-logger needs f")
+  (let [log-t  (m/reduce (fn [_r v]
+                           (log this v)
+                           nil)
+                         nil f)]
+    (log-t #(println "flow-logger done" %) #(println "flow-logger error" %))))
+
 

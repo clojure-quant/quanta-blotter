@@ -1,0 +1,25 @@
+
+[ 
+{:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :limit 100.0, :qty 0.001}
+{:date #time/instant "2026-06-01T20:10:07.740265349Z", :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT", :message "paper broker confirmed new order"}
+
+{:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :limit 100.0, :qty 0.001}
+{:date #time/instant "2026-06-01T20:10:09.740517009Z", :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT", :message "paper broker confirmed new order"}
+
+{:type :trader/cancel-order, :account/id 2, :order-id 2}
+{:type :broker/cancel-confirmed, :account/id 2, :order-id 2, :message "paper broker confirmed order canceled received."}
+{:order-id 2, :date #time/instant "2026-06-01T20:10:12.740853585Z", :type :broker/order-canceled}
+
+{:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :limit 100.0, :qty 0.001}
+{:date #time/instant "2026-06-01T20:10:17.741032902Z", :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT", :message "paper broker confirmed new order"}
+
+{:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :limit 100.0, :qty 0.001}
+{:date #time/instant "2026-06-01T20:10:24.741005992Z", :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT", :message "paper broker confirmed new order"}
+
+{:type :broker/order-filled, :order-id 4, :fill-id "m-9By0", :date #time/instant "2026-06-01T20:10:29.741914267Z", :asset "ETHUSDT", :qty 0.001, :side :sell :price 100.0}
+
+{:type :broker/order-filled, :order-id 3, :fill-id "7N-G_C", :date #time/instant "2026-06-01T20:10:37.742482333Z", :asset "ETHUSDT", :qty 0.001, :side :sell :price 101.0}
+
+{:type :broker/order-filled, :order-id 1, :fill-id "KKEY9v", :date #time/instant "2026-06-01T20:10:52.742779027Z", :asset "BTCUSDT", :qty 0.001, :side :buy :price 10000.0}
+
+]

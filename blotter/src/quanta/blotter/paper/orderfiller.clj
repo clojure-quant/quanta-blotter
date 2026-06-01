@@ -7,15 +7,16 @@
 
 (defn random-fill
   "probabilistically returns either a filled order, or nil"
-  [fill-probability {:keys [order-id qty side asset] :as order}]
+  [fill-probability {:keys [order-id qty side asset limit] :as order}]
   (when (< (rand-int 100) fill-probability)
-    {:type :order-update/fill
+    {:type :broker/order-filled
      :order-id order-id
      :fill-id (nano-id 6)
      :date (t/instant)
      :asset asset
      :qty qty
-     :side side}))
+     :side side
+     :price limit}))
 
 (defn random-fill-flow
   "returns a flow of fills. 
@@ -26,12 +27,12 @@
    log-fn   
    {:keys [order-id] :as order}]
   (let [log (fn [order-id & data]
-              (log-fn (str "random-fill [" order-id "]" data)))]
+              (log-fn (str "random-fill order-id [" order-id "] :" data)))]
     (m/ap (log order-id "order created")
           (loop [i 0]
             (if (= i 0)
               (m/amb
-               {:type :order-update/new-order
+               #_{:type :broker/order-confirmed
                 :order-id order-id
                 :date (t/instant)}
                (recur (inc i)))
@@ -45,7 +46,7 @@
                                      (catch Cancelled _ true))]
                     (if cancelled?
                       (do (log order-id " cancelled")
-                          (m/amb  {:type :order-update/canceled
+                          (m/amb  {:type :broker/order-canceled
                                    :order-id order-id
                                    :date (t/instant)}))
                       (m/amb (recur (inc i))))))))))))

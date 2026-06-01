@@ -2,19 +2,37 @@
 orders executions positions with account/trader routing
 
 
-order/create
-order/cancel
-order/modify
-order-acq/order-created
-order-acq/order-canceled
-order-acq/order-modified
-order-update/fill
-order-update/expired
-order-update/message
+MESSAGE TYPES:
 
-order-status/order-created
-order-status/order-changed
-order-status/order-done
+
+* trader/new-order              place a new order
+* trader/cancel-order           cancel existing order
+trader/modify-order           modify existing order
+trader/position-status
+
+* broker/order-rejected         a new order is rejected
+* broker/order-confirmed        a new order is confirmed (so it is working)
+[broker/order-pending-new]    order received but not working yet. avoid if possible
+* broker/order-canceled         an existing order is canceled (so it is no longer working)
+broker/order-cancel-reject    cancel of existing order rejected (see :text for reason)
+broker/order-modified         the order was modified (as per trader request)
+* broker/order-filled           a fill or a partial fill "execution-report"
+broker/order-expired          for example good-till-day order or fill-or-kill order 
+broker/order-status           this is the order-status of the broker. avoid if possible. (will not get granular fills)
+* broker/message
+broker/session-message
+broker/position-status
+broker/balance-status
+broker/margin-status
+
+session/connected
+session/disconnected
+
+
+oms/order-status                 internally generated
+oms/position-status              internally generated 
+
+
 
 order-status
  :live

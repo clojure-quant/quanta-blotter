@@ -10,7 +10,7 @@
   [flow]
   (let [pull (m/rdv)
         process-flow (m/ap (let [v (m/?> flow)]
-                             (println "demo order -> rdv: " v)
+                             ;(println "demo order -> rdv: " v)
                              (m/? (pull v))))
         process-t (m/reduce (fn [r v] nil) nil process-flow)
         dispose!  (process-t #(println "process done" %) #(println "process error " %))]

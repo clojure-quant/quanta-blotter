@@ -2,14 +2,12 @@
   (:require
    [missionary.core :as m]))
 
-(defn print-orderupdate [rdv]
+(defn print-orderupdate [r]
   (m/sp
    (loop []
-     (println "orderupdate: " (m/? rdv))
+     (println "orderupdate printer: " (m/? r))
      (recur))))
 
-(defn create-orderupdate-printer []
-  (let [r (m/rdv)
-        print-t (print-orderupdate r)]
-    {:orderupdate-rdv  r
-     :dispose-orderupdate-printer (print-t #(println "orderupdate-print done " %) #(println "orderupdate-print error " %))}))
+(defn create-orderupdate-printer [orderupdate-rdv]
+  (let [print-t (print-orderupdate orderupdate-rdv)]
+    (print-t #(println "orderupdate-print done " %) #(println "orderupdate-print error " %))))

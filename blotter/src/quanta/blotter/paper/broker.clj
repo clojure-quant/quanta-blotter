@@ -1,6 +1,7 @@
 (ns quanta.blotter.paper.broker
   (:require
    [missionary.core :as m]
+   [tick.core :as t]
    [quanta.blotter.protocol :as p]
    [quanta.blotter.paper.orderfiller :refer [random-fill-flow]])
   (:import [missionary Cancelled]))
@@ -18,19 +19,31 @@
    (let [orders (atom {})]
      (loop []
        (let [{:keys [type order-id] :as action} (m/? pull)]
-         (log (str "order-action: " action))
+         (log (str "paper-broker in: " action))
          (case type
-           :new-order
-           (let [dispose-fill (start-fill! settings log action push)]
+           :trader/new-order
+           (let [_ (m/? (push (assoc action 
+                                     :type :broker/order-confirmed
+                                     :date (t/instant)
+                                     :message "paper broker confirmed new order")))
+                 dispose-fill (start-fill! settings log action push)]
              (swap! orders assoc order-id dispose-fill))
 
-           :cancel-order
+           :trader/cancel-order
            (if-let [dispose-fill (get @orders order-id)]
-             (do (dispose-fill)
+             (do (m/? (push (assoc action
+                                   :type :broker/cancel-confirmed
+                                   :message "paper broker confirmed order canceled received.")))
+                 (dispose-fill)
                  (swap! orders dissoc order-id))
-             (log (str "cancel ignored, unknown order-id " order-id)))
+             (do 
+               (log (str "cancel ignored, unknown order-id " order-id))  
+               (m/? (push (assoc action
+                                 :type :broker/cancel-rejected
+                                 :message "paper broker cannot cancel unkonw order")))))
 
-           (m/? (push {:type :order-update/reject
+           ; else
+           (m/? (push {:type :broker/message
                        :message (str "unsupported message type: " type)
                        :order-action action})))
          (recur))))))
