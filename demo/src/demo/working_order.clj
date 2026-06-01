@@ -41,12 +41,18 @@
   "Reads channel-paper.edn; after each channel message prints a table of all orders."
   []
   (let [channel-flow (m/seed (load-channel-paper))
-        order-change-flow (wo/order-change-flow channel-flow)]
+        order-change-flow (wo/order-change-flow channel-flow)
+        closed-orders (atom [])
+        ]
     (m/? (m/reduce
           (fn [orders-by-id order]
             (let [order-id (:order/id order)
                   orders-by-id (if (= :done (:order/status order))
-                                 (dissoc orders-by-id order-id)
+                                 (do (swap! closed-orders conj order)
+                                     (println "Closed Orders:")
+                                     (print-table table-cols (->> @closed-orders (map order->row) (sort-by :order-id)))  
+                                     (println "\r\n")
+                                     (dissoc orders-by-id order-id))
                                  (assoc orders-by-id order-id order))]
               ;(println "\r\n \r\n" " " order)
 

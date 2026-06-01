@@ -10,6 +10,7 @@
   [fill-probability {:keys [order-id qty side asset limit] :as order}]
   (when (< (rand-int 100) fill-probability)
     {:type :broker/order-filled
+     :account/id (:account/id order)
      :order-id order-id
      :fill-id (nano-id 6)
      :date (t/instant)
