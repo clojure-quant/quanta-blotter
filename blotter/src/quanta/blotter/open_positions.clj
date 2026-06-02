@@ -1,7 +1,14 @@
 (ns quanta.blotter.open-positions
   (:require
    [missionary.core :as m]
-   [taoensso.timbre :refer [info]]))
+   [taoensso.timbre :refer [info]])
+  (:import [java.math BigDecimal]))
+
+(defn- num-abs [n]
+  (cond
+    (nil? n) 0
+    (instance? BigDecimal n) (.abs ^BigDecimal n)
+    :else (Math/abs (double n))))
 
 (defn- initial-state []
   {:net-qty 0.0
@@ -36,8 +43,14 @@
 (defn- short-realized-pl [entry exit close-qty]
   (* (- entry exit) close-qty))
 
+(defn- lots->avg-entry [lots]
+  (if (empty? lots)
+    0.0
+    (/ (reduce + 0.0 (map #(* (:qty %) (:price %)) lots))
+       (reduce + 0.0 (map :qty lots)))))
+
 (defn- to-position-view
-  [{:keys [account asset net-qty avg-entry-price realized-pl]}]
+  [{:keys [account asset net-qty avg-entry-price realized-pl lots]}]
   (if (zero? net-qty)
     {:position/account account
      :position/asset asset
@@ -45,12 +58,15 @@
      :position/qty 0.0
      :position/average-entry-price nil
      :position/realized-pl (or realized-pl 0.0)}
-    (let [long? (pos? net-qty)]
+    (let [long? (pos? net-qty)
+          avg (if (seq lots)
+                (lots->avg-entry lots)
+                avg-entry-price)]
       {:position/account account
        :position/asset asset
        :position/side (if long? :long :short)
        :position/qty (if long? net-qty (- net-qty))
-       :position/average-entry-price avg-entry-price
+       :position/average-entry-price avg
        :position/realized-pl (or realized-pl 0.0)})))
 
 (defn- view-changed? [state]
@@ -82,9 +98,9 @@
         new-net (+ net trade)]
     (cond
       (same-direction? net trade)
-      (let [abs-new (Math/abs new-net)
-            abs-trade (Math/abs trade)
-            abs-old (Math/abs net)
+      (let [abs-new (num-abs new-net)
+            abs-trade (num-abs trade)
+            abs-old (num-abs net)
             new-avg (if (zero? net)
                       price
                       (/ (+ (* abs-old avg) (* abs-trade price)) abs-new))]
@@ -95,7 +111,7 @@
                :closed-emitted false))
 
       :else
-      (let [close-qty (min (Math/abs net) (Math/abs trade))
+      (let [close-qty (min (num-abs net) (num-abs trade))
             long? (pos? net)
             new-realized (+ realized
                             (if long?
@@ -158,7 +174,7 @@
         net (or (:net-qty state) 0.0)
         lots (or (:lots state) [])
         realized (or (:realized-pl state) 0.0)
-        trade-qty (Math/abs trade)
+        trade-qty (num-abs trade)
         new-net (+ net trade)]
     (cond
       (zero? net)
@@ -176,7 +192,7 @@
              :closed-emitted false)
 
       :else
-      (let [close-qty (min (Math/abs net) trade-qty)
+      (let [close-qty (min (num-abs net) trade-qty)
             [lots rem pl] (if (pos? net)
                             (fifo-consume-long lots price close-qty)
                             (fifo-consume-short lots price close-qty))
@@ -204,10 +220,7 @@
           (assoc state
                  :net-qty new-net
                  :lots lots
-                 :avg-entry-price (if (empty? lots)
-                                    0.0
-                                    (/ (reduce + 0.0 (map #(* (:qty %) (:price %)) lots))
-                                       (reduce + 0.0 (map :qty lots))))
+                 :avg-entry-price (lots->avg-entry lots)
                  :realized-pl new-realized
                  :closed-emitted false))))))
 
@@ -248,3 +261,25 @@
             _ (info "open-position flow for" k)
             position (m/?> 1 (per-position-view-flow fill-flow opts))]
         position)))))
+
+
+(defn open-position-dict-flow [position-change-f]
+  (m/reductions
+       (fn [acc position]
+            (let [k [(:position/account position) (:position/asset position)]
+                  acc (if (= :closed (:position/side position))
+                        (dissoc acc k)
+                        (assoc acc k position))]
+              acc))
+          {}
+          position-change-f))
+
+
+
+(defn open-position-list-flow [position-change-f]
+  (m/eduction 
+   (map vals)
+   (open-position-dict-flow position-change-f)
+   ))
+
+

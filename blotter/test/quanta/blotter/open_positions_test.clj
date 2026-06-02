@@ -38,8 +38,11 @@
 (deftest buy-sell-flip-fifo-same-lots
   (let [fills [(fill 1 "X" :buy 100.0 10.0)
                (fill 1 "X" :sell 110.0 11.0)]
-        last-pos (last (emissions fills {:method :fifo}))]
+        ems (emissions fills {:method :fifo})
+        last-pos (last ems)]
+    (is (= 10.0 (:position/average-entry-price (first ems))))
     (is (= :short (:position/side last-pos)))
+    (is (= 11.0 (:position/average-entry-price last-pos)))
     (is (= 100.0 (:position/realized-pl last-pos)))))
 
 (deftest fifo-consumes-oldest-lot-first
@@ -49,6 +52,7 @@
         pos (last-emission fills {:method :fifo})]
     (is (= :long (:position/side pos)))
     (is (= 40.0 (:position/qty pos)))
+    (is (= 12.0 (:position/average-entry-price pos)))
     (is (= 280.0 (:position/realized-pl pos)))))
 
 (deftest average-partial-close-keeps-avg

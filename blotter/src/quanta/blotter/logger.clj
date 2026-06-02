@@ -17,18 +17,19 @@
        (map (fn [x] (str "\n" x)))
        (apply str)))
 
+(defn flow-logging-task [filename console? log-f]
+  (let [blocked-f (time-buffered 500 log-f)]
+    (m/reduce (fn [_r v]
+                (let [s (merge-events v)
+                      s (str "\r\n " s)]
+                        ;(println "logging events: " (count v) " data: \r\n" s)
+                  (when console?
+                    (println s))
+                  (spit filename s :append true)))
+              nil blocked-f)))
 
 (defn start-logging-flow [filename console? log-f]
-  (let [blocked-f (time-buffered 500 log-f)
-        t (m/reduce (fn [_r v]
-                      (let [s (merge-events v)
-                            s (str "\r\n " s)]
-                        ;(println "logging events: " (count v) " data: \r\n" s)
-                        (when console?
-                          (println s))
-                        (spit filename s :append true)))
-                    nil blocked-f)]
-    (t prn prn)))
+  ((flow-logging-task filename console? log-f) prn prn))
 
 (defn create-logger [filename console?]
   (let [log-a (atom "")
