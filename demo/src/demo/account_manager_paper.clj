@@ -19,11 +19,11 @@
         _ (log l {:type :paper/started :date (t/instant)})
         log-fn (partial log l)
         ; setup rdvs
-        {:keys [orderflow-simulated-rdv dispose-orderflow-simulated-rdv]} (create-orderflow-simulated-rdv)
-        orderupdate-original-rdv (m/rdv)
-        dispose-orderupdate-printer (create-orderupdate-printer orderupdate-original-rdv) ; uses original flow.        
+        order-rdv (m/rdv) 
+        orderupdate-rdv (m/rdv)
+        dispose-orderupdate-printer (create-orderupdate-printer orderupdate-rdv) ; uses original flow.        
         ;; consolidator
-        consolidator (create-consolidator {:order orderflow-simulated-rdv :orderupdate orderupdate-original-rdv :log log-fn})
+        consolidator (create-consolidator {:order order-rdv :orderupdate orderupdate-rdv :log log-fn})
         _ (start-consolidator! consolidator)
         {:keys [order orderupdate]} (:channel consolidator)
         {:keys [combined-flow]} consolidator
@@ -35,7 +35,9 @@
         ;_ (add-edn-account am "demo-accounts.edn" 1)
         ;_ (add-edn-account am "demo-accounts.edn" 2)
         _ (add-edn-accounts am "demo-accounts.edn")
-        dispose! (start-account-manager am)]
+        dispose! (start-account-manager am)
+        ;; simulate orders
+        dispose-orderflow-simulated-rdv (create-orderflow-simulated-rdv order-rdv)]
     {:dispose-order-puller dispose-orderflow-simulated-rdv
      :dispose-account dispose!
      :dispose-pull-printer dispose-orderupdate-printer

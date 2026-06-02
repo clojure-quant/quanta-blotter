@@ -28,12 +28,11 @@
         _ (log l {:type :paper/started :date (t/instant)})
         log-fn (partial log l)
         ; setup rdvs
-        {:keys [orderflow-simulated-rdv dispose-orderflow-simulated-rdv]} (create-orderflow-simulated-rdv)
+        order-rdv (m/rdv)
         orderupdate-original-rdv (m/rdv)
         dispose-orderupdate-printer (create-orderupdate-printer orderupdate-original-rdv) ; uses original flow.
-        
         ;; consolidator
-        consolidator (create-consolidator {:order orderflow-simulated-rdv :orderupdate orderupdate-original-rdv :log log-fn})
+        consolidator (create-consolidator {:order order-rdv :orderupdate orderupdate-original-rdv :log log-fn})
         _ (start-consolidator! consolidator)
         {:keys [order orderupdate]} (:channel consolidator)
         {:keys [combined-flow]} consolidator
@@ -44,7 +43,11 @@
         ;; trade account 
         account (account-by-id (load-demo-accounts) 1)
         trade-account (p/create-trade-account account order orderupdate log-fn)
-        dispose-account! (trade-account #(println "account done" %) #(println "account error" %))]
+        dispose-account! (trade-account #(println "account done" %) #(println "account error" %))
+        
+        ;; simulate orders
+        dispose-orderflow-simulated-rdv (create-orderflow-simulated-rdv order-rdv)
+        ]
     {;:dispose-logger (:dispose! l)
      :dispose-order-puller dispose-orderflow-simulated-rdv
      :dispose-account dispose-account!
