@@ -6,6 +6,19 @@
    [missionary Cancelled]
    [java.util.concurrent.locks ReentrantLock]))
 
+(defn push-flow-to-rdv
+  "Convert a missionary flow (e.g. m/ap) into a pull task that yields successive values."
+  [order-rdv flow]
+  (let [process-flow (m/ap (let [v (m/?> flow)]
+                             ;(println "demo order -> rdv: " v)
+                             (m/? (order-rdv v))))
+        process-t (m/reduce (fn [r v] nil) nil process-flow)
+        dispose!  (process-t #(println "process done" %) #(println "process error " %))]
+    dispose!))
+
+
+
+
 (defn first-match [predicate flow]
   (m/reduce (fn [_r v]
               (debug "first-match check: " v)

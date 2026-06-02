@@ -6,7 +6,8 @@
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator! stop-consolidator!]]
    [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
-   [demo.util.orderflow-simulated-rdv :refer [create-orderflow-simulated-rdv]]
+   [quanta.blotter.util :refer [push-flow-to-rdv]]
+   [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
    [demo.util.update-printer :refer [create-orderupdate-printer]])
   (:import [missionary Cancelled]))
 
@@ -37,8 +38,9 @@
         _ (add-edn-accounts am "demo-accounts.edn")
         dispose! (start-account-manager am)
         ;; simulate orders
-        dispose-orderflow-simulated-rdv (create-orderflow-simulated-rdv order-rdv)]
-    {:dispose-order-puller dispose-orderflow-simulated-rdv
+        dispose-orderflow-simulated (push-flow-to-rdv order-rdv demo-order-action-flow)
+        ]
+    {:dispose-orderflow-simulated dispose-orderflow-simulated
      :dispose-account dispose!
      :dispose-pull-printer dispose-orderupdate-printer
      :dispose-flow-logger dispose-flow-logger

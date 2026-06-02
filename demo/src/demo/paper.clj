@@ -7,7 +7,8 @@
    [quanta.blotter.paper.broker]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator! stop-consolidator!]]
    [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
-   [demo.util.orderflow-simulated-rdv :refer [create-orderflow-simulated-rdv]]
+   [quanta.blotter.util :refer [push-flow-to-rdv]]
+   [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
    [demo.util.update-printer :refer [create-orderupdate-printer]])
   (:import [missionary Cancelled]))
 
@@ -46,10 +47,10 @@
         dispose-account! (trade-account #(println "account done" %) #(println "account error" %))
         
         ;; simulate orders
-        dispose-orderflow-simulated-rdv (create-orderflow-simulated-rdv order-rdv)
+        dispose-orderflow-simulated (push-flow-to-rdv order-rdv demo-order-action-flow)
         ]
     {;:dispose-logger (:dispose! l)
-     :dispose-order-puller dispose-orderflow-simulated-rdv
+     :dispose-order-puller dispose-orderflow-simulated
      :dispose-account dispose-account!
      :dispose-pull-printer dispose-orderupdate-printer
      :dispose-flow-logger dispose-flow-logger
