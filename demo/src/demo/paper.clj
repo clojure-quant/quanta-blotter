@@ -1,5 +1,6 @@
 (ns demo.paper
   (:require
+   [tick.core :as t]
    [clojure.edn :as edn]
    [missionary.core :as m]
    [quanta.blotter.protocol :as p]
@@ -24,7 +25,7 @@
   []
   (let [;; logger
         l (create-logger "log/paper-log.txt" false)
-        _ (log l "started!\r\n")
+        _ (log l {:type :paper/started :date (t/instant)})
         log-fn (partial log l)
         ;log-fn (fn [s] (println "log: " s))
         account (account-by-id (load-demo-accounts) 1)
@@ -32,14 +33,14 @@
         {:keys [orderflow-simulated-rdv dispose-orderflow-simulated-rdv]} (create-orderflow-simulated-rdv)
         orderupdate-original-rdv (m/rdv)
         dispose-orderupdate-printer (create-orderupdate-printer orderupdate-original-rdv) ; uses original flow.
-
+        
         ;; consolidator
         consolidator (create-consolidator {:order orderflow-simulated-rdv :orderupdate orderupdate-original-rdv :log log-fn})
         _ (start-consolidator! consolidator)
         {:keys [order orderupdate]} (:channel consolidator)
         {:keys [combined-flow]} consolidator
         l-channel (create-logger "log/paper-order-orderupdate.txt" false)
-        _ (log l-channel "started!\r\n")
+        _ (log l-channel {:type :consolidator/started :date (t/instant)})
         dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
         
         ;; trade account 

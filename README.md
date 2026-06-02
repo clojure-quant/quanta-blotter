@@ -3,7 +3,7 @@
 orders executions positions with account/trader routing
 
 
-MESSAGE TYPES:
+## MESSAGE TYPES
 
 
 * trader/new-order              place a new order
@@ -29,10 +29,45 @@ broker/margin-status
 session/connected
 session/disconnected
 
-
 oms/order-status                 internally generated
 oms/position-status              internally generated 
 
+*universal-fx-message-types*
+
+public enum UpdateType : short
+{
+	// Trader Requests
+	TraderOrderSendRequest=1,
+	TraderOrderCancelRequest=2,
+			
+	// Responses to TraderNewOrder,
+	NewOrderAcq=3,
+	Reject=4,
+			
+	// Responses to Cancel
+	CancelAcq=5,
+	OrderCancelReject = 6,
+	Cancel=7,
+			
+	// Events that happen long after a new Order has been Aqnowledged
+	// We need to differenciate between FillPartial and FillComplete, because FIX sends FillComplete after the
+	//order is no longer working.
+	FillPartial=8,
+	FillComplete=9,
+			
+	Expiry=10
+}
+
+NOTES
+
+- to use fill partial/complete for a broker that supports it is ok.
+  however, if a broke does only send fill, then what does this mean?
+  it means the broker-api needs to track if an order is open or not.
+  this adds additional complexity to the broker-api.
+  therefore the OMS needs to accept multiple fillpartial, and needs
+  to gracefully interpret the last fillpartial as fillcomplete.
+
+- we might be able to skip cancelacq and only go for cancel.
 
 
 order-status
