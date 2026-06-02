@@ -1,6 +1,7 @@
 (ns demo.account-manager-paper
   (:require
    [missionary.core :as m]
+   [tick.core :as t]
    [quanta.blotter.paper.broker] ;; side effect: brings in paper broker implementation
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator! stop-consolidator!]]
@@ -14,22 +15,23 @@
   "Start paper trade-account 1 fed by simulated orderflow for that account."
   []
   (let [;; logger
-        l (create-logger "account-manager-paper.txt")
-        log (partial log l)
-        ;; trading-flows
+        l (create-logger "log/paper-account-manager.txt" false)
+        _ (log l {:type :paper/started :date (t/instant)})
+        log-fn (partial log l)
+        ; setup rdvs
         {:keys [orderflow-simulated-rdv dispose-orderflow-simulated-rdv]} (create-orderflow-simulated-rdv)
-        {:keys [orderupdate-rdv dispose-orderupdate-printer]} (create-orderupdate-printer)
+        orderupdate-original-rdv (m/rdv)
+        dispose-orderupdate-printer (create-orderupdate-printer orderupdate-original-rdv) ; uses original flow.        
         ;; consolidator
-        consolidator (create-consolidator {:order orderflow-simulated-rdv :orderupdate orderupdate-rdv :log log})
+        consolidator (create-consolidator {:order orderflow-simulated-rdv :orderupdate orderupdate-original-rdv :log log-fn})
         _ (start-consolidator! consolidator)
         {:keys [order orderupdate]} (:channel consolidator)
         {:keys [combined-flow]} consolidator
-        l-channel (create-logger "order-orderupdate-paper.txt")
+        l-channel (create-logger "log/paper-account-manager-order-orderupdate.txt" false)
+        _ (log l-channel {:type :consolidator/started :date (t/instant)})
         dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
         ;; account-manager
-        ;order orderflow-simulated-rdv 
-        ;orderupdate orderupdate-rdv 
-        am (create-account-manager order orderupdate log)
+        am (create-account-manager order orderupdate log-fn)
         ;_ (add-edn-account am "demo-accounts.edn" 1)
         ;_ (add-edn-account am "demo-accounts.edn" 2)
         _ (add-edn-accounts am "demo-accounts.edn")

@@ -27,8 +27,6 @@
         l (create-logger "log/paper-log.txt" false)
         _ (log l {:type :paper/started :date (t/instant)})
         log-fn (partial log l)
-        ;log-fn (fn [s] (println "log: " s))
-        account (account-by-id (load-demo-accounts) 1)
         ; setup rdvs
         {:keys [orderflow-simulated-rdv dispose-orderflow-simulated-rdv]} (create-orderflow-simulated-rdv)
         orderupdate-original-rdv (m/rdv)
@@ -44,6 +42,7 @@
         dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
         
         ;; trade account 
+        account (account-by-id (load-demo-accounts) 1)
         trade-account (p/create-trade-account account order orderupdate log-fn)
         dispose-account! (trade-account #(println "account done" %) #(println "account error" %))]
     {;:dispose-logger (:dispose! l)

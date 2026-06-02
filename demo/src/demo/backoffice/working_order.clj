@@ -1,4 +1,4 @@
-(ns demo.working-order
+(ns demo.backoffice.working-order
   (:require
    [clojure.pprint :refer [print-table]]
    [ednx.edn :refer [slurp-edn]]
