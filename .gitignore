@@ -4,3 +4,4 @@
 .nrepl-port
 .calva
 demo/log/*.txt
+blotter/target

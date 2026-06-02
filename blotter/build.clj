@@ -19,6 +19,11 @@
                  :version version
                  :basis basis
                  :src-dirs ["src"]
+                 :pom-data [[:licenses
+                             [:license
+                              [:name "Eclipse Public License 1.0"]
+                              [:url "https://www.eclipse.org/legal/epl-v10.html"]
+                              [:distribution "repo"]]]]
                  :scm {:url "https://github.com/clojure-quant/quanta-blotter"
                        :connection "scm:git:git://github.com/clojure-quant/quanta-blotter.git"
                        :developerConnection "scm:git:ssh://git@github.com/clojure-quant/quanta-blotter.git"
