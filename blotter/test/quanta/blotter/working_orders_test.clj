@@ -77,3 +77,10 @@
     (is (every? #(= :working (:order/status %)) before-fill))
     (is (= :done (:order/status last-1)))
     (is (= 10000.0 (:order/avg-price last-1)))))
+
+(deftest working-order-list-flow-keeps-open-orders-only
+  (let [flow (m/seed [{:type :trader/new-order, :account/id 1, :order-id 9
+                       :asset "BTCUSDT", :side :buy, :qty 0.001}])
+        lists (m/? (m/reduce conj [] (wo/working-order-list-flow (wo/order-change-flow flow))))]
+    (is (= 1 (count (last lists))))
+    (is (= 9 (:order/id (first (last lists)))))))

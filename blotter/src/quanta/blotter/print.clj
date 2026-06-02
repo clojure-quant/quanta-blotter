@@ -4,21 +4,22 @@
    [tick.core :as t]
    [quanta.blotter.open-positions :as op]
    [quanta.blotter.working-orders :as wo]
+   [quanta.blotter.util :as util]
    [missionary.core :as m]
    [quanta.blotter.logger :as logger]))
 
 (defn working-orders-table [working-orders]
   (with-out-str
     (crockery/print-table
-     [{:name :account2, :title "account" :align :left :key-fn #(get-in % [:open-order :account])}
-      {:name :order-id2, :title "order-id" :align :left :key-fn #(get-in % [:open-order :order-id])}
-      {:name :asset, :align :right :title "asset" :key-fn #(get-in % [:open-order :asset])}
-      {:name :asset, :align :right :title "side" :key-fn #(get-in % [:open-order :side])}
-      {:name :asset, :align :right :title "qty" :key-fn #(get-in % [:open-order :qty])}
-      {:name :order-type2, :title "otype" :align :left :key-fn #(get-in % [:open-order :ordertype])}
-      {:name :order-type3, :title "limit" :align :left :key-fn #(get-in % [:open-order :limit])}
-      {:name :asset, :align :right :title "fill-qty" :key-fn #(get-in % [:order-status :fill-qty])}
-      {:name :asset, :align :right :title "fill-value" :key-fn #(get-in % [:order-status :fill-value])}]
+     [{:name :account, :title "account" :align :left :key-fn :order/account}
+      {:name :order-id, :title "order-id" :align :left :key-fn :order/id}
+      {:name :asset, :align :right :title "asset" :key-fn :order/asset}
+      {:name :side, :align :right :title "side" :key-fn :order/side}
+      {:name :status, :align :right :title "status" :key-fn :order/status}
+      {:name :qty, :align :right :title "qty" :key-fn :order/qty}
+      {:name :qty-filled, :align :right :title "qty-filled" :key-fn :order/qty-filled}
+      {:name :qty-working, :align :right :title "qty-working" :key-fn :order/qty-working}
+      {:name :avg-price, :align :right :title "avg-price" :key-fn :order/avg-price}]
      working-orders)))
 
 (defn open-positions-table [open-positions]
@@ -32,23 +33,34 @@
       {:name :realized-pl, :align :right :title "realized-pl" :key-fn :position/realized-pl}]
      open-positions)))
 
-(defn timestamped-table [open-positions]
-  (str (t/instant) " open positions \r\n" (open-positions-table open-positions)))
+(defn- timestamped-table [label table-str]
+  (str (t/instant) " " label "\r\n" table-str))
+
+(defn- positions-log-flow
+  [channel-flow & [{:keys [method] :or {method :fifo}}]]
+  (m/eduction
+   (map (fn [positions]
+          (timestamped-table "open positions" (open-positions-table positions))))
+   (op/open-position-list-flow
+    (op/position-change-flow channel-flow {:method method}))))
+
+(defn- working-orders-log-flow [channel-flow]
+  (m/eduction
+   (map (fn [orders]
+          (timestamped-table "working orders" (working-orders-table orders))))
+   (wo/working-order-list-flow
+    (wo/order-change-flow channel-flow))))
+
+(defn- snapshot-log-flow
+  [channel-flow & [{:keys [method] :or {method :fifo}}]]
+  (util/mix
+   (positions-log-flow channel-flow {:method method})
+   (working-orders-log-flow channel-flow)))
 
 (defn start-open-positions-working-order-logger! [oms log-file]
   (let [channel-flow (get-in oms [:consolidator :combined-flow])
         _ (assert channel-flow "start-open-positions-working-order-logger! needs channel-flow")
         l (logger/create-logger log-file false)
-        pos-change-f (op/position-change-flow channel-flow {:method :fifo})
-        open-pos-list-f (op/open-position-list-flow pos-change-f)
-        timestamped-pos-f (m/eduction (map timestamped-table) open-pos-list-f)
-        ;working-order-f (wo/working-order-flow channel-flow)
-
-        dispose1! (logger/start-log-flow-to-logger l 
-                                                   
-                                                   timestamped-pos-f
-                                                   ;open-pos-list-f
-                                                   ;pos-change-f
-                                                   )
-        ]
-    {:dispose1 dispose1!}))
+        log-f (snapshot-log-flow channel-flow {:method :fifo})
+        dispose! (logger/start-log-flow-to-logger l log-f)]
+    {:dispose dispose!}))

@@ -108,3 +108,22 @@
          _ (info "working-order flow for order-id:" order-id)
          order-status (m/?> 1 (per-order-view-flow order-flow))]
      order-status)))
+
+(defn working-order-dict-flow
+  "Latest {:order/...} per order-id; removes orders when status is :done."
+  [order-change-f]
+  (m/reductions
+   (fn [acc order]
+     (let [k (:order/id order)]
+       (if (= :done (:order/status order))
+         (dissoc acc k)
+         (assoc acc k order))))
+   {}
+   order-change-f))
+
+(defn working-order-list-flow
+  "Emits a vector of working (non-done) orders, sorted by order-id."
+  [order-change-f]
+  (m/eduction
+   (map (fn [dict] (->> dict vals (sort-by :order/id))))
+   (working-order-dict-flow order-change-f)))
