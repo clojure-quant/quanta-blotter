@@ -60,8 +60,7 @@
                                  (recur))))
         t (m/join concat copy-order-sp copy-orderupdate-sp)
         dispose (t #(println "consolidator done" %) #(println "consolidator error" %))]
-    (reset! dispose! dispose))
-  this)
+    dispose))
 
 
 
