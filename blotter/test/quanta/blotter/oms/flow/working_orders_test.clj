@@ -1,8 +1,8 @@
-(ns quanta.blotter.oms.working-orders-test
+(ns quanta.blotter.oms.flow.working-orders-test
   (:require
    [clojure.test :refer :all]
    [missionary.core :as m]
-   [quanta.blotter.oms.working-orders :as wo]))
+   [quanta.blotter.oms.flow.working-orders :as wo]))
 
 (def channel-paper-flow
   (m/seed

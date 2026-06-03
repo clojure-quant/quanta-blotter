@@ -1,4 +1,4 @@
-(ns quanta.blotter.oms.working-orders
+(ns quanta.blotter.oms.flow.working-orders
   (:require
    [missionary.core :as m]
    [taoensso.timbre :refer [info]]))
@@ -33,6 +33,7 @@
          :asset (:asset msg)
          :side (:side msg)
          :qty (:qty msg)
+         :order-type (if (some? (:limit msg)) :limit :market)
          :fill-qty 0.0
          :fill-notional 0.0
          :terminal? false))
@@ -45,13 +46,14 @@
 
 (defn to-order-view
   "Projects internal accumulator state to the public order map."
-  [{:keys [order-id account asset side qty fill-qty fill-notional history terminal?]}]
+  [{:keys [order-id account asset side qty order-type fill-qty fill-notional history terminal?]}]
   (let [qty-filled (or fill-qty 0.0)
         done? (true? terminal?)]
     {:order/id order-id
      :order/account account
      :order/asset asset
      :order/side side
+     :order/type order-type
      :order/status (if done? :done :working)
      :order/qty qty
      :order/qty-filled qty-filled

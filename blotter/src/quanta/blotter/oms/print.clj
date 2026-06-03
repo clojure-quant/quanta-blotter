@@ -1,15 +1,7 @@
 (ns quanta.blotter.oms.print
   (:require
-   [missionary.core :as m]
    [tick.core :as t]
-   [crockery.core :as crockery]
-   [quanta.blotter.util :as util]
-   [quanta.blotter.logger :as logger]
-   [quanta.blotter.oms.validation.flow :as vf]
-   [quanta.blotter.oms.open-positions :as op]
-   [quanta.blotter.oms.working-orders :as wo]
-
-   ))
+   [crockery.core :as crockery]))
 
 (defn working-orders-table [working-orders]
   (with-out-str
@@ -18,12 +10,28 @@
       {:name :order-id, :title "order-id" :align :left :key-fn :order/id}
       {:name :asset, :align :right :title "asset" :key-fn :order/asset}
       {:name :side, :align :right :title "side" :key-fn :order/side}
-      {:name :status, :align :right :title "status" :key-fn :order/status}
       {:name :qty, :align :right :title "qty" :key-fn :order/qty}
-      {:name :qty-filled, :align :right :title "qty-filled" :key-fn :order/qty-filled}
+      {:name :type, :align :right :title "type" :key-fn :order/type}
+      {:name :status, :align :right :title "status" :key-fn :order/status}
       {:name :qty-working, :align :right :title "qty-working" :key-fn :order/qty-working}
+      {:name :qty-filled, :align :right :title "qty-filled" :key-fn :order/qty-filled}
       {:name :avg-price, :align :right :title "avg-price" :key-fn :order/avg-price}]
      working-orders)))
+
+
+(defn trades-table [trades]
+  (with-out-str
+    (crockery/print-table
+     [{:name :account, :title "account" :align :left :key-fn :fill/account-id}
+      {:name :order-id, :title "order-id" :align :left :key-fn :fill/order-id}
+      {:name :asset, :align :right :title "asset" :key-fn :fill/asset}
+      {:name :side, :align :right :title "side" :key-fn :fill/side}
+      {:name :qty, :align :right :title "qty" :key-fn :fill/qty}
+      {:name :price, :align :right :title "price" :key-fn :fill/price}
+      {:name :date, :align :right :title "date" :key-fn :fill/date}
+      {:name :fill-id, :align :right :title "fill-id" :key-fn :fill/id}]
+     trades)))
+
 
 (defn open-positions-table [open-positions]
   (with-out-str
@@ -36,36 +44,5 @@
       {:name :realized-pl, :align :right :title "realized-pl" :key-fn :position/realized-pl}]
      open-positions)))
 
-(defn- timestamped-table [label table-str]
+(defn timestamped-table [label table-str]
   (str (t/instant) " " label "\r\n" table-str))
-
-(defn- positions-log-flow
-  [channel-flow & [{:keys [method] :or {method :fifo}}]]
-  (m/eduction
-   (map (fn [positions]
-          (timestamped-table "open positions" (open-positions-table positions))))
-   (op/open-position-list-flow
-    (op/position-change-flow channel-flow {:method method}))))
-
-(defn- working-orders-log-flow [channel-flow]
-  (m/eduction
-   (map (fn [orders]
-          (timestamped-table "working orders" (working-orders-table orders))))
-   (wo/working-order-list-flow
-    (wo/order-change-flow channel-flow))))
-
-(defn- snapshot-log-flow
-  [channel-flow & [{:keys [method] :or {method :fifo}}]]
-  (util/mix
-   (positions-log-flow channel-flow {:method method})
-   (working-orders-log-flow channel-flow)
-   (vf/bad-message-with-explaination channel-flow)
-   ))
-
-(defn start-open-positions-working-order-logger! [oms log-file]
-  (let [channel-flow (get-in oms [:consolidator :combined-flow])
-        _ (assert channel-flow "start-open-positions-working-order-logger! needs channel-flow")
-        l (logger/create-logger log-file false)
-        log-f (snapshot-log-flow channel-flow {:method :fifo})
-        dispose! (logger/start-log-flow-to-logger l log-f)]
-    {:dispose dispose!}))

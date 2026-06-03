@@ -1,4 +1,4 @@
-(ns quanta.blotter.oms.open-positions
+(ns quanta.blotter.oms.flow.open-positions
   (:require
    [missionary.core :as m]
    [taoensso.timbre :refer [info]])
@@ -19,9 +19,6 @@
    :asset nil
    :closed-emitted false
    :last-view nil})
-
-(defn- fill? [msg]
-  (= :broker/order-filled (:type msg)))
 
 (defn- position-key [msg]
   [(:account/id msg) (:asset msg)])
@@ -246,20 +243,20 @@
                  fill-flow)))
 
 (defn position-change-flow
-  "Consumes a mixed channel flow; emits {:position/...} maps when a fill
-   changes the open position for [account asset].
+  "Consumes a flow of fills (see quanta.blotter.oms.flow.fill/fill-flow); emits
+   {:position/...} maps when a fill changes the open position for
+   [account asset].
 
    Options:
    - :method — :average (default) or :fifo"
-  ([channel-flow]
-   (position-change-flow channel-flow {}))
-  ([channel-flow {:keys [method] :or {method :average}}]
-   (let [opts {:method method}
-         fill-flow (m/eduction (filter fill?) channel-flow)]
+  ([fill-flow]
+   (position-change-flow fill-flow {}))
+  ([fill-flow {:keys [method] :or {method :average}}]
+   (let [opts {:method method}]
      (m/ap
-      (let [[k fill-flow] (m/?> ##Inf (m/group-by position-key fill-flow))
+      (let [[k fills] (m/?> ##Inf (m/group-by position-key fill-flow))
             _ (info "open-position flow for" k)
-            position (m/?> 1 (per-position-view-flow fill-flow opts))]
+            position (m/?> 1 (per-position-view-flow fills opts))]
         position)))))
 
 
@@ -281,5 +278,3 @@
    (map vals)
    (open-position-dict-flow position-change-f)
    ))
-
-

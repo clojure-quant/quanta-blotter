@@ -4,7 +4,7 @@
    [ednx.edn :refer [slurp-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [missionary.core :as m]
-   [quanta.blotter.oms.working-orders :as wo]))
+   [quanta.blotter.oms.flow.working-orders :as wo]))
 
 (add-tick-edn-handlers!)
 

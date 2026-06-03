@@ -1,8 +1,9 @@
-(ns quanta.blotter.oms.open-positions-test
+(ns quanta.blotter.oms.flow.open-positions-test
   (:require
    [clojure.test :refer :all]
    [missionary.core :as m]
-   [quanta.blotter.oms.open-positions :as op]))
+   [quanta.blotter.oms.flow.fill :as fill]
+   [quanta.blotter.oms.flow.open-positions :as op]))
 
 (defn- fill [account asset side qty price]
   {:type :broker/order-filled
@@ -16,7 +17,7 @@
   (let [flow (if (sequential? fills-or-flow)
                 (m/seed fills-or-flow)
                 fills-or-flow)]
-    (m/? (m/reduce conj [] (op/position-change-flow flow opts)))))
+    (m/? (m/reduce conj [] (op/position-change-flow (fill/fill-flow flow) opts)))))
 
 (defn- last-emission [fills & [opts]]
   (last (emissions fills opts)))
