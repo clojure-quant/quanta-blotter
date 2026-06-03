@@ -1,12 +1,14 @@
 (ns quanta.blotter.print
   (:require
-   [crockery.core :as crockery]
+   [missionary.core :as m]
    [tick.core :as t]
+   [crockery.core :as crockery]
    [quanta.blotter.open-positions :as op]
    [quanta.blotter.working-orders :as wo]
    [quanta.blotter.util :as util]
-   [missionary.core :as m]
-   [quanta.blotter.logger :as logger]))
+   [quanta.blotter.logger :as logger]
+   [quanta.blotter.validation.flow :as vf]
+   ))
 
 (defn working-orders-table [working-orders]
   (with-out-str
@@ -55,7 +57,9 @@
   [channel-flow & [{:keys [method] :or {method :fifo}}]]
   (util/mix
    (positions-log-flow channel-flow {:method method})
-   (working-orders-log-flow channel-flow)))
+   (working-orders-log-flow channel-flow)
+   (vf/bad-message-with-explaination channel-flow)
+   ))
 
 (defn start-open-positions-working-order-logger! [oms log-file]
   (let [channel-flow (get-in oms [:consolidator :combined-flow])

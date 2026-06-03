@@ -125,5 +125,5 @@
   "Emits a vector of working (non-done) orders, sorted by order-id."
   [order-change-f]
   (m/eduction
-   (map (fn [dict] (->> dict vals (sort-by :order/id))))
+   (map (fn [dict] (vals dict)))
    (working-order-dict-flow order-change-f)))

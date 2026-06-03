@@ -1,6 +1,5 @@
 (ns quanta.blotter.validation.schema
   (:require
-   [tick.core :as t]
    [malli.core :as m]
    [malli.registry :as mr]
    [malli.error :as me]
@@ -13,103 +12,116 @@
 
 (def above-zero 0.0000000000000001)
 
-(def Order
+(def AccountId :int)
+
+(def OrderId [:or :int :string])
+
+(def FillId [:or :string :int])
+
+(def Side [:enum :buy :sell])
+
+(def Decimal [:fn decimal?])
+
+(def PositiveDecimal
+  [:and Decimal [:fn {:error/message "must be greater than zero"}
+                 #(pos? (double %))]])
+
+(def Instant :time/instant)
+
+(def TraderNewOrder
   [:map
-   [:account :keyword]
+   [:type [:= :trader/new-order]]
+   [:account/id AccountId]
+   [:order-id OrderId]
    [:asset :string]
-   [:side [:enum :buy :sell]]
-   [:qty [:double {:min above-zero}]]
-   [:ordertype [:enum :market :limit]]
-   [:limit {:optional true} [:double {:min above-zero}]]])
+   [:side Side]
+   [:qty PositiveDecimal]
+   [:limit {:optional true} PositiveDecimal]])
 
-(def OrderUpdate
+(def TraderCancelOrder
   [:map
-   [:order-id :string]
-   ;[:account :keyword]
-   ;[:asset :string]
-   [:orderupdatetype [:enum :new-order
-                      :rejected
-                      :canceled
-                      :expired
-                      :trade
-                      :comment]]
+   [:type [:= :trader/cancel-order]]
+   [:account/id AccountId]
+   [:order-id OrderId]])
 
-   [:trade-qty {:optional true} [:double {:min above-zero}]]
-   [:trade-value {:optional true} [:double {:min above-zero}]]
-
-   ;[:qty [:double {:min above-zero}]]
-   ])
-
-(def BrokerOrderStatus
+(def BrokerOrderFilled
   [:map
-   [:order-id :string]
-   [:broker-order-status [:map
-                          [:status [:enum :open :closed]]
-                          [:fill-qty {:optional true} [:double]]
-                          [:fill-value {:optional true} [:double]]]]])
-
-(def Trade
-  [:map
-   [:account :keyword]
+   [:type [:= :broker/order-filled]]
+   [:account/id AccountId]
+   [:order-id OrderId]
+   [:fill-id FillId]
+   [:date Instant]
    [:asset :string]
-   [:side [:enum :buy :sell]]
-   [:qty [:double {:min above-zero}]]])
+   [:qty PositiveDecimal]
+   [:side Side]
+   [:price PositiveDecimal]])
 
-(def Position
+(def BrokerOrderConfirmed
   [:map
-   [:account :keyword]
+   [:type [:= :broker/order-confirmed]]
+   [:account/id AccountId]
+   [:order-id OrderId]
    [:asset :string]
-   [:qty [:double]]])
+   [:side Side]
+   [:qty PositiveDecimal]
+   [:limit PositiveDecimal]
+   [:date Instant]
+   [:message {:optional true} :string]])
 
-(defn validate-order [order]
-  (m/validate Order order {:registry r}))
+(def BrokerCancelConfirmed
+  [:map
+   [:type [:= :broker/cancel-confirmed]]
+   [:account/id AccountId]
+   [:order-id OrderId]
+   [:message {:optional true} :string]])
 
-(defn human-error-order [order]
-  (->> (m/explain Order order {:registry r})
+(def BrokerCancelRejected
+  [:map
+   [:type [:= :broker/cancel-rejected]]
+   [:account/id AccountId]
+   [:order-id OrderId]
+   [:message {:optional true} :string]])
+
+(def BrokerOrderCanceled
+  [:map
+   [:type [:= :broker/order-canceled]]
+   [:order-id OrderId]
+   [:date Instant]
+   [:account/id {:optional true} AccountId]])
+
+(def Message
+  [:multi {:dispatch :type}
+   [:trader/new-order TraderNewOrder]
+   [:trader/cancel-order TraderCancelOrder]
+   [:broker/order-filled BrokerOrderFilled]
+   [:broker/order-confirmed BrokerOrderConfirmed]
+   [:broker/cancel-confirmed BrokerCancelConfirmed]
+   [:broker/cancel-rejected BrokerCancelRejected]
+   [:broker/order-canceled BrokerOrderCanceled]])
+
+(defn validate-message [message]
+  (m/validate Message message {:registry r}))
+
+(defn explain-message [message]
+  (m/explain Message message {:registry r}))
+
+(defn human-error-message [message]
+  (->> (explain-message message)
        (me/humanize)))
 
-(defn validate-broker-order-status [order-status]
-  (m/validate BrokerOrderStatus order-status {:registry r}))
-
-(defn human-error-broker-order-status [order-status]
-  (->> (m/explain BrokerOrderStatus order-status {:registry r})
-       (me/humanize)))
 
 (comment
 
-  (def order {:account :test1
-              ;:asset "QQQ" 
-              ;:side :long
-              :qty 0.001
-              :type :limit
-              :limit 1000.0})
-
-  (validate-order order)
-  (human-error-order order)
-
-  (def order-status {:order-id "34"
-                     :broker-order-status {:status :closed
-                                           :fill-qty 3.0
-                                           :fill-value 50.0}})
-
-  (validate-broker-order-status order-status)
-  (human-error-broker-order-status order-status)
-
-  (require '[malli.generator :as mg])
-  (mg/generate Order {:registry r})
-  ;; => {:account :HE,
-  ;;     :asset "3aCd5MlsWn2VJZkEGFnmLO95",
-  ;;     :side :long,
-  ;;     :qty 0.43434885144233704,
-  ;;     :type :limit,
-  ;;     :limit 6.073498904705048}
-
-  ;; => {:account :c6+-,
-  ;;     :asset "LG6St8xK2vnHZ",
-  ;;     :side :long,
-  ;;     :qty 100.71820831298828,
-  ;;     :type :market,
-  ;;     :limit 0.01611560583114624}
-
-;  
+  (require  '[ednx.edn :refer [slurp-edn read-edn]]
+            '[ednx.tick.edn :refer [add-tick-edn-handlers!]])
+  
+  (add-tick-edn-handlers!)
+  
+  (def messages
+    (slurp-edn "data/channel-paper.edn"))
+  
+  (doseq [msg messages]
+    (println (:type msg) (validate-message msg) (human-error-message msg)))
+  
+  ;
   )

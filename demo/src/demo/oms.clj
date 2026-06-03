@@ -41,3 +41,11 @@ oms
                           :side :sell
                           :limit 1.2051M 
                           :qty 6000.0M}))
+
+
+(m/?
+ (create-limit-order oms {:account/id 2
+                          :asset "EURUSD"
+                          :side :altered-mind
+                          :limit 1.2051M
+                          :qty 6000.0M}))
