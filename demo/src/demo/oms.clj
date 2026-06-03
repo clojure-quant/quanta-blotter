@@ -1,12 +1,12 @@
 (ns demo.oms
   (:require
    [missionary.core :as m]
-   [quanta.blotter.core :refer [create-order-manager start-order-manager! stop-order-manager! create-limit-order]]
+   [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager! create-limit-order]]
    [quanta.blotter.account-manager :refer [add-edn-accounts]]
    ; demo order flow
    [quanta.blotter.util :refer [push-flow-to-rdv]]
    [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
-   [quanta.blotter.print :refer [start-open-positions-working-order-logger!]]
+   [quanta.blotter.oms.print :refer [start-open-positions-working-order-logger!]]
    ; side effects
    [quanta.blotter.paper.broker] ; side effect: brings in paper broker implementation
    )

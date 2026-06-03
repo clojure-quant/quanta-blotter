@@ -184,3 +184,23 @@ public void onOrderUpdate(OrderUpdate orderUpdate)
 			
 			Expiry=10
 		}
+
+
+		(def order-status
+  #{; create new order
+    :order/new
+    :order/order-confirm
+    :order/reject
+
+    ; cancel order
+    :order/cancel-req
+    :order/cancel-reject
+    :order/cancel-confirm
+    :order/cancelled
+
+    ; trade
+    :order/fill-partial
+    :order/fill
+
+    ; expired orders
+    :order/expired})

@@ -1,4 +1,4 @@
-(ns quanta.blotter.open-positions
+(ns quanta.blotter.oms.open-positions
   (:require
    [missionary.core :as m]
    [taoensso.timbre :refer [info]])

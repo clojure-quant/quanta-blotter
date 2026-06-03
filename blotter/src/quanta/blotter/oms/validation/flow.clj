@@ -1,7 +1,7 @@
-(ns quanta.blotter.validation.flow
+(ns quanta.blotter.oms.validation.flow
   (:require
    [missionary.core :as m]
-   [quanta.blotter.validation.schema :as s]))
+   [quanta.blotter.oms.validation.schema :as s]))
 
 (defn filter-valid-messages [f]
   (m/eduction

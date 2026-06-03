@@ -1,4 +1,4 @@
-(ns quanta.blotter.order-manager.db
+(ns quanta.blotter.oms.db
   (:require
    [clojure.set :refer [rename-keys]]
    [taoensso.timbre :as timbre :refer [debug info warn error]]
@@ -9,14 +9,14 @@
 
 (def schema
   [; message
-   {:db/ident :message/timestamp
+   {:db/ident :message/date
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
-   {:db/ident :message/direction
+   {:db/ident :message/type
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
-   {:db/ident :message/account
-    :db/valueType :db.type/keyword
+   {:db/ident :message/account-id
+    :db/valueType :db.type/integer
     :db/cardinality :db.cardinality/one}
    {:db/ident :message/asset
     :db/valueType :db.type/string
@@ -46,7 +46,6 @@
    {:db/ident :order/date-created
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
-   ; order update
    {:db/ident :order/date-done
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}

@@ -1,8 +1,8 @@
-(ns quanta.blotter.open-positions-test
+(ns quanta.blotter.oms.open-positions-test
   (:require
    [clojure.test :refer :all]
    [missionary.core :as m]
-   [quanta.blotter.open-positions :as op]))
+   [quanta.blotter.oms.open-positions :as op]))
 
 (defn- fill [account asset side qty price]
   {:type :broker/order-filled

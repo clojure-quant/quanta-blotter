@@ -29,6 +29,9 @@ jobs:
         with:
           cli: latest
 
+      - name: Run unit tests
+        run: clojure -M:test
+
       - name: Build jar
         run: clojure -T:build jar
 

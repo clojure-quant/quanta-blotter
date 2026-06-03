@@ -1,4 +1,4 @@
-(ns quanta.blotter.working-orders
+(ns quanta.blotter.oms.working-orders
   (:require
    [missionary.core :as m]
    [taoensso.timbre :refer [info]]))

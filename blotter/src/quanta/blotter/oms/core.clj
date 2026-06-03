@@ -1,4 +1,4 @@
-(ns quanta.blotter.core
+(ns quanta.blotter.oms.core
   (:require
    [missionary.core :as m]
    [nano-id.core :refer [nano-id]]

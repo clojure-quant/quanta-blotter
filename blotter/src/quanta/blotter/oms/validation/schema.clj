@@ -1,4 +1,4 @@
-(ns quanta.blotter.validation.schema
+(ns quanta.blotter.oms.validation.schema
   (:require
    [malli.core :as m]
    [malli.registry :as mr]

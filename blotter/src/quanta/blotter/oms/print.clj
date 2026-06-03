@@ -1,13 +1,14 @@
-(ns quanta.blotter.print
+(ns quanta.blotter.oms.print
   (:require
    [missionary.core :as m]
    [tick.core :as t]
    [crockery.core :as crockery]
-   [quanta.blotter.open-positions :as op]
-   [quanta.blotter.working-orders :as wo]
    [quanta.blotter.util :as util]
    [quanta.blotter.logger :as logger]
-   [quanta.blotter.validation.flow :as vf]
+   [quanta.blotter.oms.validation.flow :as vf]
+   [quanta.blotter.oms.open-positions :as op]
+   [quanta.blotter.oms.working-orders :as wo]
+
    ))
 
 (defn working-orders-table [working-orders]

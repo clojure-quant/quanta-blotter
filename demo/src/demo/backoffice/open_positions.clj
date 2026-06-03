@@ -4,7 +4,7 @@
    [ednx.edn :refer [slurp-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [missionary.core :as m]
-   [quanta.blotter.open-positions :as op]))
+   [quanta.blotter.oms.open-positions :as op]))
 
 (add-tick-edn-handlers!)
 
@@ -46,7 +46,7 @@
 (defn run-demo!
   "Reads channel-paper.edn; after each position change prints all positions.
 
-  Optional opts passed to quanta.blotter.open-positions/position-change-flow,
+  Optional opts passed to quanta.blotter.oms.open-positions/position-change-flow,
   e.g. {:method :fifo}."
   [opts]
   (let [position-change-flow (op/position-change-flow channel-flow opts)

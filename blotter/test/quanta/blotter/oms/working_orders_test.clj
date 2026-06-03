@@ -1,8 +1,8 @@
-(ns quanta.blotter.working-orders-test
+(ns quanta.blotter.oms.working-orders-test
   (:require
    [clojure.test :refer :all]
    [missionary.core :as m]
-   [quanta.blotter.working-orders :as wo]))
+   [quanta.blotter.oms.working-orders :as wo]))
 
 (def channel-paper-flow
   (m/seed
@@ -28,12 +28,12 @@
   (group-by :order/id emissions))
 
 (defn- final-for-order
-  "Latest state for an order (emissions are newest-first from parallel branches)."
+  "Latest state for an order (per-order emissions are chronological oldest-first)."
   [emissions order-id]
-  (->> emissions (filter #(= order-id (:order/id %))) first))
+  (->> emissions (filter #(= order-id (:order/id %))) last))
 
 (defn- chronological-for-order [emissions order-id]
-  (->> emissions (filter #(= order-id (:order/id %))) reverse))
+  (filter #(= order-id (:order/id %)) emissions))
 
 (deftest order-change-flow-emits-flat-maps
   (let [emissions (all-emissions)]

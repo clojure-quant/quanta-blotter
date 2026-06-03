@@ -1,4 +1,4 @@
-(ns quanta.blotter.validation.schema-test
+(ns quanta.blotter.oms.validation.schema-test
   (:require
    [clojure.java.io :as io]
    [clojure.test :refer [deftest is testing]]
@@ -6,7 +6,7 @@
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [malli.core :as m]
    [tick.core :as t]
-   [quanta.blotter.validation.schema :as s]))
+   [quanta.blotter.oms.validation.schema :as s]))
 
 (add-tick-edn-handlers!)
 
