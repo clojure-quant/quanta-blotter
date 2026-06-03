@@ -14,8 +14,11 @@
   (is (not (m/validate s/Decimal 100.3 {:registry s/r})))
   (is (m/validate s/Decimal 100.3M {:registry s/r})))
 
+(def ^:private channel-paper-edn
+  (io/file ".." "demo" "data" "channel-paper.edn"))
+
 (defn- read-edn-file [path]
-  (-> path io/file slurp read-edn))
+  (-> path slurp read-edn))
 
 (deftest trader-new-order-test
   (is (s/validate-message
@@ -59,9 +62,15 @@
         :side :sell
         :price 100.0M})))
 
-(deftest channel-paper-messages-test
-  (let [messages (read-edn-file "../demo/data/channel-paper.edn")]
+(deftest channel-paper-edn-schema-test
+  (is (.exists channel-paper-edn)
+      (str "demo fixture missing: " (.getAbsolutePath channel-paper-edn)))
+  (let [messages (read-edn-file channel-paper-edn)]
+    (is (sequential? messages))
+    (is (= 20 (count messages)) "every message in channel-paper.edn is validated")
     (doseq [msg messages]
-      (testing (str "validates " (:type msg))
+      (testing (str (:type msg)
+                    (when-let [id (:order-id msg)] (str " order-id=" id))
+                    (when-let [aid (:account/id msg)] (str " account/id=" aid)))
         (is (s/validate-message msg)
             (pr-str (s/human-error-message msg)))))))

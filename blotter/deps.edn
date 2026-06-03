@@ -1,11 +1,11 @@
 {:paths ["src"]
  :deps {org.clojure/clojure    {:mvn/version "1.11.1"}
-        missionary/missionary {:mvn/version "b.44"}
-        metosin/malli {:mvn/version "0.16.0"} ; schema validation
+        missionary/missionary {:mvn/version "b.47"}
+        metosin/malli {:mvn/version "0.20.1"} ; schema validation
         nano-id/nano-id {:mvn/version "1.1.0"}
         com.joshuadavey/crockery {:mvn/version "0.3.0"} ; better table printing
         tick/tick {:mvn/version "0.6.1"}
-        org.replikativ/datahike {:mvn/version "0.8.1671"}
+        org.replikativ/datahike {:mvn/version "0.8.1697"}
         org.pinkgorilla/timbre {:mvn/version "0.0.8"}
         org.pinkgorilla/edn-x {:mvn/version "0.1.4"}
         }
