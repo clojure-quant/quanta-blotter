@@ -1,6 +1,7 @@
 (ns quanta.blotter.core
   (:require
    [missionary.core :as m]
+   [nano-id.core :refer [nano-id]]
    [tick.core :as t]
    [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
@@ -62,3 +63,17 @@
     (:dispose-transaction-logger d)
     (reset! dispose-a nil)))
 
+(defn create-limit-order
+  "Create a limit order and push it on the OMS order channel."
+  [this {:keys [asset side qty limit order-id broker]
+         :as order-details}]
+  (assert (string? asset) "limit-order :asset has to be a string")
+  (assert (keyword? side) "limit-order :side has to be a keyword")
+  (assert (contains? #{:buy :sell} side) "limit-order :side has to be :buy or :sell")
+  (assert (decimal? limit) "limit-order :limit needs to be a decimal")
+  (assert (decimal? qty) "limit-order :qty needs to be a decimal")
+  (let [order (-> order-details
+                  (assoc :type :trader/new-order)
+                  (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
+    (println "create limit order: " order)
+    ((:order-rdv this) order)))

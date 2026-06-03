@@ -1,7 +1,7 @@
 (ns demo.oms
   (:require
    [missionary.core :as m]
-   [quanta.blotter.core :refer [create-order-manager start-order-manager! stop-order-manager!]]
+   [quanta.blotter.core :refer [create-order-manager start-order-manager! stop-order-manager! create-limit-order]]
    [quanta.blotter.account-manager :refer [add-edn-accounts]]
    ; demo order flow
    [quanta.blotter.util :refer [push-flow-to-rdv]]
@@ -12,7 +12,7 @@
    )
   (:import [missionary Cancelled]))
 
-(def oms  (create-order-manager {:log-file "log/oms.txt"
+(def oms  (create-order-manager {:log-file "log/oms-trace.txt"
                                  :transaction-log-file "log/oms-transaction.txt"}))
 
 oms
@@ -28,3 +28,16 @@ oms
 (start-order-manager! oms)
 
 
+(m/?
+ (create-limit-order oms {:account/id 2
+                          :asset "EURUSD"
+                          :side :buy
+                          :limit 1.1030M 
+                          :qty 10000.0M}))
+
+(m/?
+ (create-limit-order oms {:account/id 2
+                          :asset "EURUSD"
+                          :side :sell
+                          :limit 1.2051M 
+                          :qty 6000.0M}))

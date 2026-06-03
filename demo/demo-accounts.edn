@@ -5,4 +5,12 @@
  {:account/id 2
   :account/api :paper
   :account/settings {:fill-probability 10
-                    :wait-seconds 5}}]
+                     :wait-seconds 5}}
+ 
+{:account/id 3
+ :account/api :paper
+ :account/settings {:fill-probability 0
+                    :wait-seconds 50}}
+ 
+
+ ]
