@@ -28,6 +28,12 @@
   (let [factor (Math/pow 10 precision)]
     (/ (Math/round (* d factor)) factor)))
 
+(defn div
+  "BigDecimal divide rounded to `scale` decimal places (HALF_UP).
+   Used for averages so non-terminating quotients don't throw."
+  [^BigDecimal numerator ^BigDecimal denominator scale]
+  (.divide numerator denominator (int scale) java.math.RoundingMode/HALF_UP))
+
 (def assets
   [{:asset "BTCUSDT" :precision 2 :price "%.3f" :quantity "%.3f"}
    {:asset "ETHUSDT" :precision 3 :price "%.3f" :quantity "%.3f"}])
@@ -82,5 +88,3 @@
 
 ;
   )
-
-

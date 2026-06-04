@@ -1,6 +1,7 @@
 (ns quanta.blotter.oms.flow.working-orders
   (:require
    [missionary.core :as m]
+   [quanta.market.precision :as precision]
    [taoensso.timbre :refer [info]]))
 
 (defn- initial-state []
@@ -13,17 +14,20 @@
   (true? (:terminal? state)))
 
 (defn- apply-fill [state {:keys [qty price]}]
-  (let [fill-qty (or (:fill-qty state) 0.0)
-        fill-notional (or (:fill-notional state) 0.0)
-        q (or qty 0.0)
-        p (or price 0.0)
+  (let [fill-qty (or (:fill-qty state) 0M)
+        fill-notional (or (:fill-notional state) 0M)
+        q (if qty (bigdec qty) 0M)
+        p (if price (bigdec price) 0M)
         new-fill-qty (+ fill-qty q)
         new-notional (+ fill-notional (* q p))
         order-qty (:qty state)
-        filled? (and order-qty (>= new-fill-qty order-qty))]
+        filled? (and order-qty (>= new-fill-qty order-qty))
+        price-scale (max (or (:price-scale state) 0)
+                         (.scale ^BigDecimal p))]
     (assoc state
            :fill-qty new-fill-qty
            :fill-notional new-notional
+           :price-scale price-scale
            :terminal? (or (terminal? state) filled?))))
 
 (defn- init-from-new-order [state msg]
@@ -32,10 +36,11 @@
          :account (:account/id msg)
          :asset (:asset msg)
          :side (:side msg)
-         :qty (:qty msg)
+         :qty (some-> (:qty msg) bigdec)
          :order-type (if (some? (:limit msg)) :limit :market)
-         :fill-qty 0.0
-         :fill-notional 0.0
+         :fill-qty 0M
+         :fill-notional 0M
+         :price-scale 0
          :terminal? false))
 
 (defn- mark-terminal [state]
@@ -46,8 +51,9 @@
 
 (defn to-order-view
   "Projects internal accumulator state to the public order map."
-  [{:keys [order-id account asset side qty order-type fill-qty fill-notional history terminal?]}]
-  (let [qty-filled (or fill-qty 0.0)
+  [{:keys [order-id account asset side qty order-type fill-qty fill-notional price-scale history terminal?]}]
+  (let [qty-filled (or fill-qty 0M)
+        scale (or price-scale 0)
         done? (true? terminal?)]
     {:order/id order-id
      :order/account account
@@ -57,8 +63,8 @@
      :order/status (if done? :done :working)
      :order/qty qty
      :order/qty-filled qty-filled
-     :order/qty-working (if done? 0.0 (- qty qty-filled))
-     :order/avg-price (when (pos? qty-filled) (/ fill-notional qty-filled))
+     :order/qty-working (if done? 0M (- qty qty-filled))
+     :order/avg-price (when (pos? qty-filled) (precision/div fill-notional qty-filled scale))
      :order/history history}))
 
 (defn- process-order-msg [state msg]

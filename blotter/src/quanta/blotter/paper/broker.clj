@@ -13,6 +13,26 @@
         fill-task (m/reduce (fn [r v] nil) nil fill-send-flow)]
     (fill-task #(println "fill-order-done" %) #(println "fill-order-error" %))))
 
+(def reject-reasons
+  ["market-closed" "too-many-orders" "temporary-broker-problem"])
+
+(defn reject-reason
+  "Returns a reject reason when reject-probability fires, else nil.
+   reject-probability 0 always accepts; 1-99 rejects randomly; 100 always rejects."
+  [reject-probability]
+  (let [p (or reject-probability 0)]
+    (when (and (pos? p) (< (rand-int 100) p))
+      (rand-nth reject-reasons))))
+
+(defn reject-message
+  "Builds a :broker/order-rejected message from a :trader/new-order action."
+  [action reason]
+  (assoc action
+         :type :broker/order-rejected
+         :date (t/instant)
+         :reason reason
+         :message (str "paper broker rejected order: " reason)))
+
 (defn- paper-broker-task [settings pull push log]
   (m/sp
    (log (str "paper broker started " settings))
@@ -22,12 +42,14 @@
          (log (str "paper-broker in: " action))
          (case type
            :trader/new-order
-           (let [_ (m/? (push (assoc action 
-                                     :type :broker/order-confirmed
-                                     :date (t/instant)
-                                     :message "paper broker confirmed new order")))
-                 dispose-fill (start-fill! settings log action push)]
-             (swap! orders assoc order-id dispose-fill))
+           (if-let [reason (reject-reason (:reject-probability settings))]
+             (m/? (push (reject-message action reason)))
+             (let [_ (m/? (push (assoc action
+                                       :type :broker/order-confirmed
+                                       :date (t/instant)
+                                       :message "paper broker confirmed new order")))
+                   dispose-fill (start-fill! settings log action push)]
+               (swap! orders assoc order-id dispose-fill)))
 
            :trader/cancel-order
            (if-let [dispose-fill (get @orders order-id)]

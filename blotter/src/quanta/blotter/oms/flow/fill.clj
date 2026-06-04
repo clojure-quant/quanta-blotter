@@ -19,8 +19,8 @@
    :account/id (:account/id msg)
    :asset (:asset msg)
    :side (:side msg)
-   :qty (:qty msg)
-   :price (:price msg)
+   :qty (some-> (:qty msg) bigdec)
+   :price (some-> (:price msg) bigdec)
    :date (:date msg)})
 
 (defn fill-flow

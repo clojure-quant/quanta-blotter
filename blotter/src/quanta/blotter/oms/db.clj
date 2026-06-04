@@ -42,16 +42,16 @@
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
    {:db/ident :order/qty
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :order/qty-filled
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :order/qty-working
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :order/avg-price
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    ;; fill (stored once)
    {:db/ident :fill/id
@@ -73,10 +73,10 @@
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
    {:db/ident :fill/qty
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :fill/price
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :fill/date
     :db/valueType :db.type/instant
@@ -92,13 +92,13 @@
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/qty
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/average-entry-price
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/realized-pl
-    :db/valueType :db.type/double
+    :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}])
 
 (defn- path->id
@@ -168,8 +168,9 @@
 (defn- as-str [v]
   (when (some? v) (str v)))
 
-(defn- as-double [v]
-  (when (some? v) (double v)))
+(defn- as-bigdec [v]
+  (when (some? v)
+    (if (decimal? v) v (bigdec v))))
 
 (defn- as-date
   "Datahike :db.type/instant requires a java.util.Date. tick / the #time/instant
@@ -196,10 +197,10 @@
     (:order/side order) (assoc :order/side (:order/side order))
     (:order/type order) (assoc :order/type (:order/type order))
     (:order/status order) (assoc :order/status (:order/status order))
-    (some? (:order/qty order)) (assoc :order/qty (as-double (:order/qty order)))
-    (some? (:order/qty-filled order)) (assoc :order/qty-filled (as-double (:order/qty-filled order)))
-    (some? (:order/qty-working order)) (assoc :order/qty-working (as-double (:order/qty-working order)))
-    (some? (:order/avg-price order)) (assoc :order/avg-price (as-double (:order/avg-price order)))))
+    (some? (:order/qty order)) (assoc :order/qty (as-bigdec (:order/qty order)))
+    (some? (:order/qty-filled order)) (assoc :order/qty-filled (as-bigdec (:order/qty-filled order)))
+    (some? (:order/qty-working order)) (assoc :order/qty-working (as-bigdec (:order/qty-working order)))
+    (some? (:order/avg-price order)) (assoc :order/avg-price (as-bigdec (:order/avg-price order)))))
 
 (defn fill->entity [eid order-ref fill]
   (cond-> {:db/id eid
@@ -209,8 +210,8 @@
            :fill/side (:side fill)}
     order-ref (assoc :fill/order order-ref)
     (:asset fill) (assoc :fill/asset (:asset fill))
-    (some? (:qty fill)) (assoc :fill/qty (as-double (:qty fill)))
-    (some? (:price fill)) (assoc :fill/price (as-double (:price fill)))
+    (some? (:qty fill)) (assoc :fill/qty (as-bigdec (:qty fill)))
+    (some? (:price fill)) (assoc :fill/price (as-bigdec (:price fill)))
     (:date fill) (assoc :fill/date (as-date (:date fill)))))
 
 (defn position->entity [eid position]
@@ -218,10 +219,10 @@
            :position/account (:position/account position)
            :position/asset (:position/asset position)
            :position/side (:position/side position)
-           :position/realized-pl (as-double (or (:position/realized-pl position) 0.0))}
-    (some? (:position/qty position)) (assoc :position/qty (as-double (:position/qty position)))
+           :position/realized-pl (as-bigdec (or (:position/realized-pl position) 0M))}
+    (some? (:position/qty position)) (assoc :position/qty (as-bigdec (:position/qty position)))
     (some? (:position/average-entry-price position))
-    (assoc :position/average-entry-price (as-double (:position/average-entry-price position)))))
+    (assoc :position/average-entry-price (as-bigdec (:position/average-entry-price position)))))
 
 ;; ---------------------------------------------------------------------------
 ;; process a block

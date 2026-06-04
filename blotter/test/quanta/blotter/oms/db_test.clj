@@ -10,25 +10,25 @@
 
 (def demo-msg
   {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
-   :fill-id "m-9By0" :qty 0.001 :side :sell :price 100.0})
+   :fill-id "m-9By0" :qty 0.001M :side :sell :price 100.0M})
 
 (def demo-order
   {:order/id 4 :order/account 2 :order/asset "ETHUSDT" :order/side :sell
-   :order/status :working :order/qty 0.001 :order/qty-filled 0.0
-   :order/qty-working 0.001 :order/avg-price nil})
+   :order/status :working :order/qty 0.001M :order/qty-filled 0.0M
+   :order/qty-working 0.001M :order/avg-price nil})
 
 (def demo-order-update
   {:order/id 4 :order/account 2 :order/asset "ETHUSDT" :order/side :sell
-   :order/status :done :order/qty 0.001 :order/qty-filled 0.001
-   :order/qty-working 0.0 :order/avg-price 100.0})
+   :order/status :done :order/qty 0.001M :order/qty-filled 0.001M
+   :order/qty-working 0.0M :order/avg-price 100.0M})
 
 (def demo-fill
   {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
-   :fill-id "m-9By0" :qty 0.001 :side :sell :price 100.0})
+   :fill-id "m-9By0" :qty 0.001M :side :sell :price 100.0M})
 
 (def demo-position
   {:position/account 2 :position/asset "ETHUSDT" :position/side :short
-   :position/qty 0.001 :position/average-entry-price 100.0 :position/realized-pl 0.0})
+   :position/qty 0.001M :position/average-entry-price 100.0M :position/realized-pl 0.0M})
 
 (deftest process-stores-all-kinds
   (let [conn (fresh-db)
@@ -51,6 +51,8 @@
       (let [fills (db/query-fills conn)]
         (is (= 1 (count fills)))
         (is (= "m-9By0" (:fill/id (first fills))))
+        (is (decimal? (:fill/price (first fills))) "numeric values are stored as bigdec")
+        (is (decimal? (:fill/qty (first fills))) "numeric values are stored as bigdec")
         (is (some? (:fill/order (first fills))) "fill references its order")))
     (testing "position stored"
       (let [positions (db/query-positions conn)]

@@ -28,23 +28,23 @@
         ems (emissions fills {:method :average})]
     (is (= 2 (count ems)))
     (is (= :long (:position/side (nth ems 0))))
-    (is (= 100.0 (:position/qty (nth ems 0))))
-    (is (= 10.0 (:position/average-entry-price (nth ems 0))))
-    (is (= 0.0 (:position/realized-pl (nth ems 0))))
+    (is (== 100.0 (:position/qty (nth ems 0))))
+    (is (== 10.0 (:position/average-entry-price (nth ems 0))))
+    (is (== 0.0 (:position/realized-pl (nth ems 0))))
     (is (= :short (:position/side (nth ems 1))))
-    (is (= 10.0 (:position/qty (nth ems 1))))
-    (is (= 11.0 (:position/average-entry-price (nth ems 1))))
-    (is (= 100.0 (:position/realized-pl (nth ems 1))))))
+    (is (== 10.0 (:position/qty (nth ems 1))))
+    (is (== 11.0 (:position/average-entry-price (nth ems 1))))
+    (is (== 100.0 (:position/realized-pl (nth ems 1))))))
 
 (deftest buy-sell-flip-fifo-same-lots
   (let [fills [(fill 1 "X" :buy 100.0 10.0)
                (fill 1 "X" :sell 110.0 11.0)]
         ems (emissions fills {:method :fifo})
         last-pos (last ems)]
-    (is (= 10.0 (:position/average-entry-price (first ems))))
+    (is (== 10.0 (:position/average-entry-price (first ems))))
     (is (= :short (:position/side last-pos)))
-    (is (= 11.0 (:position/average-entry-price last-pos)))
-    (is (= 100.0 (:position/realized-pl last-pos)))))
+    (is (== 11.0 (:position/average-entry-price last-pos)))
+    (is (== 100.0 (:position/realized-pl last-pos)))))
 
 (deftest fifo-consumes-oldest-lot-first
   (let [fills [(fill 1 "X" :buy 50.0 10.0)
@@ -52,25 +52,25 @@
                (fill 1 "X" :sell 60.0 15.0)]
         pos (last-emission fills {:method :fifo})]
     (is (= :long (:position/side pos)))
-    (is (= 40.0 (:position/qty pos)))
-    (is (= 12.0 (:position/average-entry-price pos)))
-    (is (= 280.0 (:position/realized-pl pos)))))
+    (is (== 40.0 (:position/qty pos)))
+    (is (== 12.0 (:position/average-entry-price pos)))
+    (is (== 280.0 (:position/realized-pl pos)))))
 
 (deftest average-partial-close-keeps-avg
   (let [fills [(fill 1 "X" :buy 100.0 10.0)
                (fill 1 "X" :sell 40.0 12.0)]
         pos (last-emission fills {:method :average})]
     (is (= :long (:position/side pos)))
-    (is (= 60.0 (:position/qty pos)))
-    (is (= 10.0 (:position/average-entry-price pos)))
-    (is (= 80.0 (:position/realized-pl pos)))))
+    (is (== 60.0 (:position/qty pos)))
+    (is (== 10.0 (:position/average-entry-price pos)))
+    (is (== 80.0 (:position/realized-pl pos)))))
 
 (deftest short-close-realized-pl
   (let [fills [(fill 1 "X" :sell 100.0 11.0)
                (fill 1 "X" :buy 100.0 10.0)]
         closed (last-emission fills {:method :average})]
     (is (= :closed (:position/side closed)))
-    (is (= 100.0 (:position/realized-pl closed)))))
+    (is (== 100.0 (:position/realized-pl closed)))))
 
 (deftest closed-emitted-once
   (let [fills [(fill 1 "X" :buy 10.0 1.0)
@@ -97,7 +97,7 @@
         last-pos (last ems)]
     (is (= 2 (count ems)))
     (is (= :short (:position/side (first ems))))
-    (is (= 0.001 (:position/qty (first ems))))
+    (is (== 0.001 (:position/qty (first ems))))
     (is (= :short (:position/side last-pos)))
-    (is (= 0.002 (:position/qty last-pos)))
-    (is (= 100.5 (:position/average-entry-price last-pos)))))
+    (is (== 0.002 (:position/qty last-pos)))
+    (is (== 100.5 (:position/average-entry-price last-pos)))))

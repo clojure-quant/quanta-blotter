@@ -5,57 +5,78 @@
    [tick.core :as t])
   (:import [missionary Cancelled]))
 
-(defn random-fill
-  "probabilistically returns either a filled order, or nil"
-  [fill-probability {:keys [order-id qty side asset limit] :as order}]
-  (when (< (rand-int 100) fill-probability)
-    {:type :broker/order-filled
-     :account/id (:account/id order)
-     :order-id order-id
-     :fill-id (nano-id 6)
-     :date (t/instant)
-     :asset asset
-     :qty qty
-     :side side
-     :price limit}))
+(defn fill-slices
+  "Splits `qty` into a sequence of fill quantities according to `fill-qty-prct`,
+   a vector of percentages of the original order quantity (e.g. [50 25 25]).
+   The last slice gets the remainder so that all slices sum exactly to `qty`."
+  [fill-qty-prct qty]
+  (let [prcts (or (seq fill-qty-prct) [100])]
+    (loop [[p & more] prcts
+           filled 0
+           slices []]
+      (if (nil? p)
+        slices
+        (let [slice (if (seq more)
+                      (/ (* qty p) 100)
+                      (- qty filled))]
+          (recur more (+ filled slice) (conj slices slice)))))))
+
+(defn ->fill
+  "Builds a :broker/order-filled message for the given slice quantity."
+  [{:keys [order-id side asset limit] :as order} slice-qty]
+  {:type :broker/order-filled
+   :account/id (:account/id order)
+   :order-id order-id
+   :fill-id (nano-id 6)
+   :date (t/instant)
+   :asset asset
+   :qty slice-qty
+   :side side
+   :price limit})
+
+(defn fill?
+  "Probabilistic decision whether a fill happens this cycle.
+   A fill-probability of 100 guarantees a fill."
+  [fill-probability]
+  (< (rand-int 100) fill-probability))
 
 (defn random-fill-flow
-  "returns a flow of fills. 
-   fills happen randomly. 
-   when the order is filled, the flow stops."
+  "Returns a flow of fills.
+   Each cycle first waits `wait-seconds`, then probabilistically (fill-probability)
+   emits the next fill slice (sized via fill-qty-prct). When all slices have been
+   emitted the flow stops. If cancelled while waiting, a :broker/order-canceled is
+   emitted instead."
   [{:keys [fill-probability
-           wait-seconds]}
-   log-fn   
-   {:keys [order-id] :as order}]
-  (let [log (fn [order-id & data]
-              (log-fn (str "random-fill order-id [" order-id "] :" data)))]
-    (m/ap (log order-id "order created")
-          (loop [i 0]
-            (if (= i 0)
-              (m/amb
-               #_{:type :broker/order-confirmed
-                :order-id order-id
-                :date (t/instant)}
-               (recur (inc i)))
-              (let [fill (random-fill fill-probability order)]
-                (if fill
-                  (do (log order-id "filled: " fill)
-                      (m/amb fill))
-                  (let [cancelled? (try
-                                     (log order-id "not filled. sleeping: " wait-seconds)
-                                     (m/? (m/sleep (* 1000 wait-seconds) false))
-                                     (catch Cancelled _ true))]
-                    (if cancelled?
-                      (do (log order-id " cancelled")
-                          (m/amb  {:type :broker/order-canceled
-                                   :order-id order-id
-                                   :date (t/instant)}))
-                      (m/amb (recur (inc i))))))))))))
-
+           wait-seconds
+           fill-qty-prct]}
+   log-fn
+   {:keys [order-id qty] :as order}]
+  (let [log (fn [& data]
+              (log-fn (str "random-fill order-id [" order-id "] :" (vec data))))
+        slices (fill-slices fill-qty-prct qty)]
+    (m/ap (log "order created. fill slices: " slices)
+          (loop [remaining slices]
+            (if (empty? remaining)
+              (m/amb)
+              (let [cancelled? (try
+                                 (log "waiting " wait-seconds " seconds for next fill")
+                                 (m/? (m/sleep (* 1000 wait-seconds) false))
+                                 (catch Cancelled _ true))]
+                (if cancelled?
+                  (do (log "cancelled")
+                      (m/amb {:type :broker/order-canceled
+                              :order-id order-id
+                              :date (t/instant)}))
+                  (if (fill? fill-probability)
+                    (let [fill (->fill order (first remaining))]
+                      (log "filled: " fill)
+                      (m/amb fill (recur (rest remaining))))
+                    (m/amb (recur remaining))))))))))
 
 
 (comment
   (def order {:order-id 2
+              :account/id 3
               :asset "BTCUSDT"
               :side :buy
               :limit 100.0
@@ -63,8 +84,13 @@
 
   (defn log-fn [s] (println "log orderfiller: " s))
 
-  (def fill-flow (random-fill-flow {:fill-probability 20
-                                    :wait-seconds 5}
+  (fill-slices [50 25 25] 0.001)
+  ;; => (5.0E-4 2.5E-4 2.5E-4)
+
+  (def fill-flow (random-fill-flow {:reject-probability 0
+                                    :fill-probability 100
+                                    :fill-qty-prct [50 25 25]
+                                    :wait-seconds 1}
                                    log-fn
                                    order))
 
@@ -84,4 +110,3 @@
 
 ; 
   )
-

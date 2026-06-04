@@ -1,20 +1,22 @@
 (ns quanta.blotter.oms.flow.open-positions
   (:require
    [missionary.core :as m]
+   [quanta.market.precision :as precision]
    [taoensso.timbre :refer [info]])
   (:import [java.math BigDecimal]))
 
 (defn- num-abs [n]
   (cond
-    (nil? n) 0
+    (nil? n) 0M
     (instance? BigDecimal n) (.abs ^BigDecimal n)
     :else (Math/abs (double n))))
 
 (defn- initial-state []
-  {:net-qty 0.0
-   :avg-entry-price 0.0
+  {:net-qty 0M
+   :avg-entry-price 0M
    :lots []
-   :realized-pl 0.0
+   :realized-pl 0M
+   :price-scale 0
    :account nil
    :asset nil
    :closed-emitted false
@@ -24,7 +26,7 @@
   [(:account/id msg) (:asset msg)])
 
 (defn- signed-trade-qty [{:keys [side qty]}]
-  (let [q (or qty 0.0)]
+  (let [q (or qty 0M)]
     (case side
       :buy q
       :sell (- q))))
@@ -40,31 +42,32 @@
 (defn- short-realized-pl [entry exit close-qty]
   (* (- entry exit) close-qty))
 
-(defn- lots->avg-entry [lots]
+(defn- lots->avg-entry [lots scale]
   (if (empty? lots)
-    0.0
-    (/ (reduce + 0.0 (map #(* (:qty %) (:price %)) lots))
-       (reduce + 0.0 (map :qty lots)))))
+    0M
+    (precision/div (reduce + 0M (map #(* (:qty %) (:price %)) lots))
+                   (reduce + 0M (map :qty lots))
+                   scale)))
 
 (defn- to-position-view
-  [{:keys [account asset net-qty avg-entry-price realized-pl lots]}]
+  [{:keys [account asset net-qty avg-entry-price realized-pl lots price-scale]}]
   (if (zero? net-qty)
     {:position/account account
      :position/asset asset
      :position/side :closed
-     :position/qty 0.0
+     :position/qty 0M
      :position/average-entry-price nil
-     :position/realized-pl (or realized-pl 0.0)}
+     :position/realized-pl (or realized-pl 0M)}
     (let [long? (pos? net-qty)
           avg (if (seq lots)
-                (lots->avg-entry lots)
+                (lots->avg-entry lots (or price-scale 0))
                 avg-entry-price)]
       {:position/account account
        :position/asset asset
        :position/side (if long? :long :short)
        :position/qty (if long? net-qty (- net-qty))
        :position/average-entry-price avg
-       :position/realized-pl (or realized-pl 0.0)})))
+       :position/realized-pl (or realized-pl 0M)})))
 
 (defn- view-changed? [state]
   (not= (to-position-view state) (:last-view state)))
@@ -81,17 +84,20 @@
            :last-view view
            :closed-emitted (= :closed (:position/side view)))))
 
-(defn- stamp-ids [state msg]
+(defn- stamp-ids [state {:keys [price] :as msg}]
   (assoc state
          :account (or (:account state) (:account/id msg))
-         :asset (or (:asset state) (:asset msg))))
+         :asset (or (:asset state) (:asset msg))
+         :price-scale (max (or (:price-scale state) 0)
+                           (if price (.scale ^BigDecimal price) 0))))
 
 (defn- apply-fill-average
   [state {:keys [price] :as fill}]
   (let [trade (signed-trade-qty fill)
-        net (or (:net-qty state) 0.0)
-        avg (or (:avg-entry-price state) 0.0)
-        realized (or (:realized-pl state) 0.0)
+        net (or (:net-qty state) 0M)
+        avg (or (:avg-entry-price state) 0M)
+        realized (or (:realized-pl state) 0M)
+        scale (or (:price-scale state) 0)
         new-net (+ net trade)]
     (cond
       (same-direction? net trade)
@@ -100,7 +106,7 @@
             abs-old (num-abs net)
             new-avg (if (zero? net)
                       price
-                      (/ (+ (* abs-old avg) (* abs-trade price)) abs-new))]
+                      (precision/div (+ (* abs-old avg) (* abs-trade price)) abs-new scale))]
         (assoc state
                :net-qty new-net
                :avg-entry-price new-avg
@@ -118,8 +124,8 @@
         (cond
           (zero? remainder-net)
           (assoc state
-                 :net-qty 0.0
-                 :avg-entry-price 0.0
+                 :net-qty 0M
+                 :avg-entry-price 0M
                  :realized-pl new-realized
                  :closed-emitted false)
 
@@ -138,7 +144,7 @@
                  :closed-emitted false))))))
 
 (defn- fifo-consume-long [lots exit-price close-qty]
-  (loop [lots lots, rem close-qty, pl 0.0]
+  (loop [lots lots, rem close-qty, pl 0M]
     (if (or (zero? rem) (empty? lots))
       [lots rem pl]
       (let [{:keys [qty price]} (first lots)
@@ -152,7 +158,7 @@
         (recur lots rem pl)))))
 
 (defn- fifo-consume-short [lots exit-price close-qty]
-  (loop [lots lots, rem close-qty, pl 0.0]
+  (loop [lots lots, rem close-qty, pl 0M]
     (if (or (zero? rem) (empty? lots))
       [lots rem pl]
       (let [{:keys [qty price]} (first lots)
@@ -168,9 +174,10 @@
 (defn- apply-fill-fifo
   [state {:keys [price] :as fill}]
   (let [trade (signed-trade-qty fill)
-        net (or (:net-qty state) 0.0)
+        net (or (:net-qty state) 0M)
         lots (or (:lots state) [])
-        realized (or (:realized-pl state) 0.0)
+        realized (or (:realized-pl state) 0M)
+        scale (or (:price-scale state) 0)
         trade-qty (num-abs trade)
         new-net (+ net trade)]
     (cond
@@ -198,9 +205,9 @@
         (cond
           (zero? new-net)
           (assoc state
-                 :net-qty 0.0
+                 :net-qty 0M
                  :lots []
-                 :avg-entry-price 0.0
+                 :avg-entry-price 0M
                  :realized-pl new-realized
                  :closed-emitted false)
 
@@ -217,7 +224,7 @@
           (assoc state
                  :net-qty new-net
                  :lots lots
-                 :avg-entry-price (lots->avg-entry lots)
+                 :avg-entry-price (lots->avg-entry lots scale)
                  :realized-pl new-realized
                  :closed-emitted false))))))
 

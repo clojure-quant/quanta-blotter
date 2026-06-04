@@ -51,8 +51,8 @@
   (let [emissions (all-emissions)
         last-2 (final-for-order emissions 2)]
     (is (= :done (:order/status last-2)))
-    (is (= 0.0 (:order/qty-working last-2)))
-    (is (= 0.0 (:order/qty-filled last-2)))
+    (is (== 0.0 (:order/qty-working last-2)))
+    (is (== 0.0 (:order/qty-filled last-2)))
     (is (nil? (:order/avg-price last-2)))
     (is (some #(= :broker/order-canceled (:type %)) (:order/history last-2)))))
 
@@ -60,9 +60,9 @@
   (let [emissions (all-emissions)
         last-4 (final-for-order emissions 4)]
     (is (= :done (:order/status last-4)))
-    (is (= 0.001 (:order/qty-filled last-4)))
-    (is (= 0.0 (:order/qty-working last-4)))
-    (is (= 100.0 (:order/avg-price last-4)))))
+    (is (== 0.001 (:order/qty-filled last-4)))
+    (is (== 0.0 (:order/qty-working last-4)))
+    (is (== 100.0 (:order/avg-price last-4)))))
 
 (deftest avg-price-nil-before-fill
   (let [emissions (all-emissions)
@@ -76,7 +76,7 @@
         last-1 (last order-1)]
     (is (every? #(= :working (:order/status %)) before-fill))
     (is (= :done (:order/status last-1)))
-    (is (= 10000.0 (:order/avg-price last-1)))))
+    (is (== 10000.0 (:order/avg-price last-1)))))
 
 (deftest working-order-list-flow-keeps-open-orders-only
   (let [flow (m/seed [{:type :trader/new-order, :account/id 1, :order-id 9

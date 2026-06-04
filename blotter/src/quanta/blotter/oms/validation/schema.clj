@@ -68,6 +68,18 @@
    [:date Instant]
    [:message {:optional true} :string]])
 
+(def RejectReason
+  [:enum "market-closed" "too-many-orders" "temporary-broker-problem"])
+
+(def BrokerOrderRejected
+  [:map
+   [:type [:= :broker/order-rejected]]
+   [:account/id AccountId]
+   [:order-id OrderId]
+   [:reason {:optional true} RejectReason]
+   [:date {:optional true} Instant]
+   [:message {:optional true} :string]])
+
 (def BrokerCancelConfirmed
   [:map
    [:type [:= :broker/cancel-confirmed]]
@@ -95,6 +107,7 @@
    [:trader/cancel-order TraderCancelOrder]
    [:broker/order-filled BrokerOrderFilled]
    [:broker/order-confirmed BrokerOrderConfirmed]
+   [:broker/order-rejected BrokerOrderRejected]
    [:broker/cancel-confirmed BrokerCancelConfirmed]
    [:broker/cancel-rejected BrokerCancelRejected]
    [:broker/order-canceled BrokerOrderCanceled]])

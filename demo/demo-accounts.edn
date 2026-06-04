@@ -1,16 +1,41 @@
 [{:account/id 1
   :account/api :paper
-  :account/settings {:fill-probability 20
-                    :wait-seconds 5}}
+  :account/notes "always fills order with 2 fills; timing is random"
+  :account/settings {:reject-probability 0
+                     :fill-probability 20
+                     :fill-qty-prct [50 50]
+                     :wait-seconds 5}}
  {:account/id 2
   :account/api :paper
-  :account/settings {:fill-probability 10
+  :account/notes "always fills 100% of the order; timing is random"
+  :account/settings {:reject-probability 0
+                     :fill-probability 10
+                     :fill-qty-prct [100]
                      :wait-seconds 5}}
- 
-{:account/id 3
- :account/api :paper
- :account/settings {:fill-probability 0
-                    :wait-seconds 50}}
- 
+ {:account/id 3
+  :account/api :paper
+  :account/notes "always fills 100% of the order after 1 second"
+  :account/settings {:reject-probability 0
+                     :fill-probability 100
+                     :fill-qty-prct [100]
+                     :wait-seconds 1}}
+ {:account/id 4
+  :account/api :paper
+  :account/notes "all orders will be rejected"
+  :account/settings {:reject-probability 100
+                     :fill-probability 100
+                     :fill-qty-prct [100]
+                     :wait-seconds 1}}
+ {:account/id 5
+  :account/api :paper
+  :account/notes "a real world account with an unreliable but fast broker."
+  :account/settings {:reject-probability 20
+                     :fill-probability 20
+                     :fill-qty-prct [25 25 50]
+                     :wait-seconds 1}}
 
+
+ 
+ 
+ 
  ]
