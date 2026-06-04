@@ -1,7 +1,7 @@
 (ns quanta.blotter.oms.flow.open-positions
   (:require
    [missionary.core :as m]
-   [quanta.market.precision :as precision]
+   [quanta.blotter.precision :as precision]
    [taoensso.timbre :refer [info]])
   (:import [java.math BigDecimal]))
 

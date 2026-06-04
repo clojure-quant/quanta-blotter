@@ -1,4 +1,4 @@
-(ns quanta.market.precision)
+(ns quanta.blotter.precision)
 
 ;; => ({:lotSizeFilter
 ;;      {:basePrecision "0.000001",

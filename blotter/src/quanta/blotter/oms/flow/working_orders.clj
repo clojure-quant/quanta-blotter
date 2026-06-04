@@ -1,7 +1,7 @@
 (ns quanta.blotter.oms.flow.working-orders
   (:require
    [missionary.core :as m]
-   [quanta.market.precision :as precision]
+   [quanta.blotter.precision :as precision]
    [taoensso.timbre :refer [info]]))
 
 (defn- initial-state []

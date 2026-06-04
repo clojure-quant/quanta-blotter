@@ -7,3 +7,5 @@ demo/log/*.txt
 blotter/target
 blotter/test/test-db
 demo/trade-db
+.gorilla
+.flowy
