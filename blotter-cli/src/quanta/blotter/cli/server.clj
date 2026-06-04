@@ -1,12 +1,12 @@
 (ns quanta.blotter.cli.server
   (:require
+   [missionary.core :as m]
    [reitit.ring :as ring]
    [ring.adapter.jetty :refer [run-jetty]]
    [ring.util.response :as response]
    [clj-service.core :as clj :refer [start-clj-services call-fn get-service]]
    [clj-service.browser-id :refer [session-request]]
    [clj-service.executor :as exec]
-   [missionary.core :as m]
    [flowy.ring-adapter :refer [flowy-handler-ws]]
    [flowy.jetty-config :refer [jetty-configurator]]))
 
@@ -29,13 +29,29 @@
     (ring/create-default-handler
      {:not-found (constantly {:status 404 :body "Not found"})}))))
 
-(defn -main [& _args]
+(defn start-socket-server [oms trade-db]
   (let [port 9000
         clj (start-clj-services
-             {:app-services [; sp 
+             {:env {:oms oms
+                    :trade-db trade-db}
+              :app-services [; test api 
                              {:fun 'demo.fortune-cookie/get-cookie}
-                            ; ap
-                             {:fun 'demo.counter/counter-fn :mode :ap}]})
+                             {:fun 'demo.counter/counter-fn :mode :ap}
+                             ; oms api
+                             {:fun 'quanta.blotter.oms.core/create-limit-order
+                              :ctx :oms :permission nil :mode :sp}
+                             {:fun 'quanta.blotter.oms.core/combined-flow 
+                              :ctx :oms :permission nil :mode :ap}
+                             ; trade db
+                             {:fun 'quanta.blotter.oms.db/query-messages
+                              :ctx :trade-db :permission nil :mode :clj}
+                             {:fun 'quanta.blotter.oms.db/query-orders
+                              :ctx :trade-db :permission nil :mode :clj}
+                             {:fun 'quanta.blotter.oms.db/query-fills
+                              :ctx :trade-db :permission nil :mode :clj}
+                             {:fun 'quanta.blotter.oms.db/query-positions
+                              :ctx :trade-db :permission nil :mode :clj}
+                             ]})
         h (make-handler clj)]
     (println "demo cookie:"
              (call-fn (get-service clj {:fun 'demo.fortune-cookie/get-cookie}) {}))

@@ -1,0 +1,9 @@
+{:deps {http-kit/http-kit {:mvn/version "2.8.0"}
+        io.github.clojure-quant/blotter-cli {:local/root "../blotter-cli" :deps/manifest :deps}
+        }
+ :paths ["src"]
+ :tasks
+ {:requires ([org.httpkit.client :as http]
+             [quanta.blotter.cli.client :as b])
+  client {:doc "Run the WebSocket client"
+          :task (b/start-client)}}}

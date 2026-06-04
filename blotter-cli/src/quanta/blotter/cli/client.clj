@@ -71,9 +71,41 @@
     (send! ws {:op :exec
                :fun 'demo.fortune-cookie/get-cookie
                :id 777})
+    
+
+    (send! ws {:op :exec
+               :fun 'quanta.blotter.oms.db/query-orders
+               :id 1})
+
+    (send! ws {:op :exec
+               :fun 'quanta.blotter.oms.db/query-fills
+               :id 2})
+
+    (send! ws {:op :exec
+               :fun 'quanta.blotter.oms.db/query-positions 
+               :id 3})
+    
+    (send! ws {:op :exec
+               :fun 'quanta.blotter.oms.db/query-messages
+               :id 4})
+
     (send! ws {:op :exec
                :fun 'demo.counter/counter-fn
                :id "x347"})
+    
+    (send! ws {:op :exec
+               :fun 'quanta.blotter.oms.core/combined-flow 
+               :id 1234567890})
+    
+    (send! ws {:op :exec
+           :fun 'quanta.blotter.oms.core/create-limit-order
+           :args [{:account/id 3
+                   :asset "USDJPY"
+                   :side :buy
+                   :limit 110.30M
+                   :qty 10000.0M}]
+           :id 45})
+       
 
     (Thread/sleep 5000)
     (send! ws {:a 1 :b "b" :y [1 2 3]})

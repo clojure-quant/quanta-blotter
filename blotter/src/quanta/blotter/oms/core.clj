@@ -73,4 +73,10 @@
                    (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
      (println "create limit order: " order)
      (m/? ((:order-rdv this) order))
+     (println "create limit order success!")
      order)))
+
+
+(defn combined-flow [this]
+  (get-in this [:consolidator :combined-flow]))
+

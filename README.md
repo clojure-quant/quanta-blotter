@@ -2,6 +2,18 @@
 
 orders executions positions with account/trader routing
 
+DEMO
+
+```
+cd demo
+clj -M:cli-server
+
+in other terminal
+bb client
+
+
+```
+
 
 ## MESSAGE TYPES
 
