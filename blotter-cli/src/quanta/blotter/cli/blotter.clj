@@ -15,6 +15,11 @@
 
 (def per-page 15)
 
+;; A crockery table is `3 separators + 1 header + N data rows`, so a full page
+;; is `per-page + 4` lines. The table window is always rendered at this height
+;; (padded with blank background rows) so it never changes size.
+(def table-height (+ per-page 4))
+
 (def pages [:orders :trades :positions])
 
 (def page-title
@@ -34,12 +39,43 @@
 (defn- working? [o]
   (contains? working-statuses (:order/status o)))
 
+(defn- position-open?
+  "A position is open while it still holds a (non-zero) quantity."
+  [p]
+  (let [q (:position/qty p)]
+    (boolean (and q (not (zero? q))))))
+
+;; filter buttons cycle on `f`
+(def order-filter-cycle {:working :closed, :closed :all, :all :working})
+(def position-filter-cycle {:open :closed, :closed :all, :all :open})
+
 ;; ---------------------------------------------------------------------------
 ;; styling
 
+(def page-key {:orders "1" :trades "2" :positions "3"})
+
+(def menu-bg (charm/hex "#add8e6"))   ; light blue: the whole menu row
+(def key-bg (charm/hex "#ffd43b"))    ; gold: the shortcut number cell
+(def table-bg (charm/hex "#d3d3d3"))  ; light gray: behind the table
+
 (def active-style (charm/style :fg charm/cyan :bold true))
-(def dim-style (charm/style :faint true))
 (def error-style (charm/style :fg charm/red :bold true))
+(def dim-style (charm/style :faint true))
+
+(def filter-active-bg (charm/hex "#4dabf7"))    ; blue: selected filter box
+(def filter-inactive-bg (charm/hex "#e9ecef"))  ; light gray: other filter boxes
+
+(defn- filter-cell
+  "A small button-like box for a filter option."
+  [label active?]
+  (charm/render
+   (if active?
+     (charm/style :bg filter-active-bg :fg charm/white :bold true)
+     (charm/style :bg filter-inactive-bg :fg charm/black))
+   (str " " label " ")))
+
+(defn- pad-spaces [n]
+  (apply str (repeat (max 0 n) \space)))
 
 ;; ---------------------------------------------------------------------------
 ;; row massaging (mirrors demo.db-print)
@@ -52,15 +88,22 @@
 
 (defn- displayed-rows
   "Massage + filter + sort the raw rows for the current page."
-  [{:keys [page raw-rows order-filter]}]
+  [{:keys [page raw-rows order-filter position-filter]}]
   (case page
     :orders (->> raw-rows
                  (map order-row)
-                 (filter (if (= :working order-filter) working? (complement working?)))
+                 (filter (case order-filter
+                           :working working?
+                           :closed (complement working?)
+                           :all (constantly true)))
                  (sort-by (comp str :order/id))
                  vec)
     :trades (->> raw-rows (sort-by :fill/date) vec)
     :positions (->> raw-rows
+                    (filter (case position-filter
+                              :open position-open?
+                              :closed (complement position-open?)
+                              :all (constantly true)))
                     (sort-by (juxt :position/account :position/asset))
                     vec)))
 
@@ -95,24 +138,50 @@
 ;; ---------------------------------------------------------------------------
 ;; view
 
-(defn- menu-line [state]
-  (->> pages
-       (map (fn [p]
-              (if (= p (:page state))
-                (charm/render active-style (str "[" (page-title p) "]"))
-                (charm/render dim-style (str " " (page-title p) " ")))))
-       (str/join "  ")))
+(defn- menu-segment
+  "Returns {:plain ... :styled ...} for one page entry: the title on the
+   light-blue row background followed by its shortcut number in a contrasting
+   cell."
+  [state p]
+  (let [active? (= p (:page state))
+        label (str " " (page-title p) " ")
+        k (str " " (page-key p) " ")
+        sep "  "
+        label-style (charm/style :bg menu-bg
+                                 :fg (if active? charm/blue charm/black)
+                                 :bold active?)
+        key-style (charm/style :bg key-bg :fg charm/black :bold true)
+        sep-style (charm/style :bg menu-bg)]
+    {:plain (str label k sep)
+     :styled (str (charm/render label-style label)
+                  (charm/render key-style k)
+                  (charm/render sep-style sep))}))
+
+(defn- menu-line
+  "The full-width light-blue menu row."
+  [state width]
+  (let [segs (map #(menu-segment state %) pages)
+        styled (apply str (map :styled segs))
+        used (reduce + (map (comp count :plain) segs))]
+    (str styled
+         (charm/render (charm/style :bg menu-bg) (pad-spaces (- width used))))))
+
 
 (defn- params-line [state]
   (case (:page state)
-    :orders (let [working? (= :working (:order-filter state))]
+    :orders (let [f (:order-filter state)]
               (str "filter: "
-                   (charm/render (if working? active-style dim-style) "working")
-                   (charm/render dim-style " | ")
-                   (charm/render (if working? dim-style active-style) "closed")
+                   (filter-cell "working" (= :working f)) " "
+                   (filter-cell "closed" (= :closed f)) " "
+                   (filter-cell "all orders" (= :all f))
                    (charm/render dim-style "   (f to toggle)")))
-    :trades (charm/render dim-style (str (count (displayed-rows state)) " trades"))
-    :positions (charm/render dim-style (str (count (displayed-rows state)) " positions"))))
+    :positions (let [f (:position-filter state)]
+                 (str "filter: "
+                      (filter-cell "open" (= :open f)) " "
+                      (filter-cell "closed" (= :closed f)) " "
+                      (filter-cell "all positions" (= :all f))
+                      (charm/render dim-style "   (f to toggle)")))
+    :trades (charm/render dim-style (str (count (displayed-rows state)) " trades"))))
 
 (defn- table-str [state]
   (let [rows (displayed-rows state)
@@ -123,18 +192,31 @@
       :trades (print/trades-table slice)
       :positions (print/open-positions-table slice))))
 
+(defn- gray-block
+  "Render `lines` on the light-gray table background, padded to a common width
+   and to `table-height` rows so the table window is always the same size,
+   whether the table is full, partial or empty."
+  [lines]
+  (let [lines (vec lines)
+        w (reduce max 0 (map count lines))
+        rows (concat lines (repeat (max 0 (- table-height (count lines))) ""))
+        style (charm/style :bg table-bg :fg charm/black)]
+    (->> rows
+         (map (fn [line] (charm/render style (str line (pad-spaces (- w (count line)))))))
+         (str/join "\n"))))
+
 (defn- body [state]
-  (cond
-    (:error state) (charm/render error-style (str "error: " (:error state)))
-    (:loading? state) "loading..."
-    (empty? (displayed-rows state)) (charm/render dim-style "(no rows)")
-    :else (table-str state)))
+  (if (:error state)
+    (gray-block (str/split (str "error: " (:error state)) #"\r?\n"))
+    (gray-block (->> (str/split (table-str state) #"\r?\n")
+                     (remove str/blank?)))))
 
 (defn- view [state]
-  (str (menu-line state) "\n"
+  (str (menu-line state (:width state)) "\n"
        (params-line state) "\n\n"
        (body state) "\n"
-       "page " (charm/paginator-view (:pager state)) "\n\n"
+       "page " (charm/paginator-view (:pager state))
+       (when (:loading? state) (charm/render dim-style "  loading\u2026")) "\n\n"
        (charm/render dim-style
                      "1/2/3 or tab: page    \u2190/\u2192 or h/l: paginate    f: filter    q: quit")))
 
@@ -169,10 +251,10 @@
     (goto state (nth pages (mod (inc (page-index (:page state))) (count pages))))
 
     (and (= :orders (:page state)) (charm/key-match? msg "f"))
-    [(-> state
-         (update :order-filter {:working :closed :closed :working})
-         with-pager)
-     nil]
+    [(-> state (update :order-filter order-filter-cycle) with-pager) nil]
+
+    (and (= :positions (:page state)) (charm/key-match? msg "f"))
+    [(-> state (update :position-filter position-filter-cycle) with-pager) nil]
 
     (= :data-loaded (:type msg))
     (if (= (:page msg) (:page state))
@@ -186,6 +268,9 @@
     (if (= (:page msg) (:page state))
       [(assoc state :loading? false :error (:error msg)) nil]
       [state nil])
+
+    (charm/window-size? msg)
+    [(assoc state :width (:width msg)) nil]
 
     :else
     (let [[pager _] (charm/paginator-update (:pager state) msg)]
@@ -208,9 +293,11 @@
                  [{:conn conn
                    :page :orders
                    :order-filter :working
+                   :position-filter :open
                    :raw-rows []
                    :loading? true
                    :error nil
+                   :width 100
                    :pager (new-pager 1)}
                   (fetch-cmd conn :orders)])
          :update update-fn
