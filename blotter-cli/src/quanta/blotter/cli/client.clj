@@ -1,17 +1,16 @@
 (ns quanta.blotter.cli.client
   "Babashka websocket client for the flowy OMS server.
 
-   Exposes a small request/response layer on top of the flowy `:op :exec`
-   protocol: every request is tagged with an `:id`, and the matching server
-   response (`{:op :exec :id <id> :result <rows>}`) is delivered back to a
-   promise so callers can use a synchronous request/response style."
+   Exposes request/response RPC (`request-sync!`) and async push
+   subscriptions (`subscribe!` / `unsubscribe!`) on the flowy protocol."
   (:require
    [cognitect.transit :as transit]
    [clojure.java.io :as io]
    [babashka.http-client.websocket :as bws])
   (:import
    (java.io ByteArrayOutputStream)
-   (java.nio ByteBuffer)))
+   (java.nio ByteBuffer)
+   (java.util.concurrent LinkedBlockingQueue TimeUnit)))
 
 (defn decode-str
   "Decode a transit-json string into clojure data."
@@ -31,13 +30,38 @@
 ;; ---------------------------------------------------------------------------
 ;; incoming messages
 
+(defn- deliver-rpc! [conn id msg]
+  (when-let [p (get @(:pending conn) id)]
+    (swap! (:pending conn) dissoc id)
+    (deliver p msg)))
+
+(defn- deliver-subscription! [conn id msg]
+  (when-let [sub (get @(:subscriptions conn) id)]
+    (when-let [cb (:on-val sub)]
+      (cb (:val msg)))
+    (when-let [q (:snapshot-queue conn)]
+      (.offer ^LinkedBlockingQueue q (:val msg)))))
+
+(defn- deliver-subscription-error! [conn id msg]
+  (when-let [sub (get @(:subscriptions conn) id)]
+    (when-let [cb (:on-error sub)]
+      (cb msg))))
+
 (defn- handle-decoded
-  "Route a decoded server message to the waiting request promise (if any)."
+  "Route a decoded server message to RPC promises or subscription callbacks."
   [conn msg]
   (when-let [id (and (map? msg) (:id msg))]
-    (when-let [p (get @(:pending conn) id)]
-      (swap! (:pending conn) dissoc id)
-      (deliver p msg))))
+    (cond
+      (contains? msg :val)
+      (deliver-subscription! conn id msg)
+
+      (contains? msg :result)
+      (deliver-rpc! conn id msg)
+
+      (or (:error msg) (contains? msg :err))
+      (do
+        (deliver-subscription-error! conn id msg)
+        (deliver-rpc! conn id msg)))))
 
 (defn- on-message
   "Accumulate (possibly fragmented) websocket frames, decode complete
@@ -80,11 +104,12 @@
 ;; connection + requests
 
 (defn connect!
-  "Open a websocket connection to the flowy server. Returns a `conn` map with
-   `:ws`, `:pending` and `:counter` used by `request!` / `request-sync!`."
+  "Open a websocket connection to the flowy server. Returns a `conn` map."
   ([] (connect! "ws://localhost:9000/flowy"))
   ([ws-url]
    (let [conn {:pending (atom {})
+               :subscriptions (atom {})
+               :snapshot-queue (LinkedBlockingQueue.)
                :counter (atom 0)
                :buf (StringBuilder.)
                :ws (atom nil)}
@@ -133,9 +158,33 @@
        :else
        (:result msg)))))
 
+(defn subscribe!
+  "Subscribe to a flowy `:mode :ap` function. Returns the subscription `:id`.
+   Pushed values are delivered to `on-val` and enqueued on `:snapshot-queue`."
+  ([conn fun] (subscribe! conn fun {}))
+  ([conn fun {:keys [on-val on-error]}]
+   (let [id (swap! (:counter conn) inc)
+         req {:op :exec :fun fun :id id}]
+     (swap! (:subscriptions conn) assoc id {:on-val on-val :on-error on-error})
+     (bws/send! @(:ws conn) (encode req))
+     id)))
+
+(defn unsubscribe!
+  "Cancel an active `:ap` subscription."
+  [conn id]
+  (swap! (:subscriptions conn) dissoc id)
+  (bws/send! @(:ws conn) (encode {:op :cancel :id id})))
+
+(defn take-snapshot!
+  "Block up to `timeout-ms` for the next pushed snapshot on `:snapshot-queue`."
+  [conn timeout-ms]
+  (.poll ^LinkedBlockingQueue (:snapshot-queue conn) timeout-ms TimeUnit/MILLISECONDS))
+
 (defn close!
-  "Stop the keepalive thread and close the websocket."
+  "Cancel subscriptions, stop keepalive, and close the websocket."
   [conn]
+  (doseq [id (keys @(:subscriptions conn))]
+    (unsubscribe! conn id))
   (when-let [stop (:keepalive conn)]
     (reset! stop true))
   (when-let [ws @(:ws conn)]

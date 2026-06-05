@@ -2,6 +2,7 @@
   (:require
    [missionary.core :as m]
    [quanta.blotter.precision :as precision]
+   [tick.core :as t]
    [taoensso.timbre :refer [info]])
   (:import [java.math BigDecimal]))
 
@@ -98,8 +99,8 @@
                       :position/qty max-qty
                       :position/average-entry-price entry
                       :position/realized-pl (or realized-pl 0M)
-                      :position/date-open date-open}
-               (not open?) (assoc :position/date-close date-close))]
+                      :position/date-open (some-> date-open t/inst)}
+               (not open?) (assoc :position/date-close (some-> date-close t/inst)))]
     (assoc view :position/avg-exit-price (derive-avg-exit-price view))))
 
 (defn- view-changed? [state]
@@ -129,15 +130,15 @@
 (defn- finalize-after-fill [state fill prev-net]
   (let [net (or (:net-qty state) 0M)
         abs-net (num-abs net)
-        date (:fill/date fill)
+        event-date (or (some-> (:fill/date fill) t/inst) (t/instant))
         avg (current-avg-entry state)
         max-q (max (or (:max-qty state) 0M) abs-net)]
     (cond-> (assoc state :max-qty max-q)
-      (and (zero? prev-net) (not (zero? net)) date)
-      (assoc :date-open date)
+      (and (zero? prev-net) (not (zero? net)))
+      (assoc :date-open event-date)
 
-      (and (zero? net) (not (zero? prev-net)) date)
-      (assoc :date-close date)
+      (and (zero? net) (not (zero? prev-net)))
+      (assoc :date-close event-date)
 
       (not (zero? net))
       (-> (assoc :last-side (if (pos? net) :long :short))

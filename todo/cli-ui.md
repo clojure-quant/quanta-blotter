@@ -20,7 +20,9 @@ you improve the current babashka driven cli-ui
    - the tables get updated accordingly
 
 
-
+ask me questions
+write a plan
+when I give go implement.
 
 
 

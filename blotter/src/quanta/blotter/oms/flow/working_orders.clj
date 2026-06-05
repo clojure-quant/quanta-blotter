@@ -20,7 +20,7 @@
 
 (defn- stamp-order-date [state msg]
   (if (and (nil? (:order-date state)) (:date msg))
-    (assoc state :order-date (:date msg))
+    (assoc state :order-date (t/inst (:date msg)))
     state))
 
 (defn- apply-fill [state {:keys [qty price]}]
@@ -79,7 +79,7 @@
              :order/qty-filled qty-filled
              :order/qty-working (if done? 0M (- qty qty-filled))
              :order/avg-price (when (pos? qty-filled) (precision/div fill-notional qty-filled scale))
-             :order/date (or order-date (t/inst))
+             :order/date (t/inst (or order-date (t/instant)))
              :order/history history}
       (and done? (= :rejected terminal-status) reject-text)
       (assoc :order/text (str reject-text)))))

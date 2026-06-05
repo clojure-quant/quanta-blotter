@@ -78,7 +78,19 @@
     (is (false? (:position/open closed)))
     (is (= :short (:position/side closed)))
     (is (== 11.0 (:position/average-entry-price closed)))
-    (is (== 100.0 (:position/realized-pl closed)))))
+    (is (== 100.0 (:position/realized-pl closed)))
+    (is (instance? java.util.Date (:position/date-open closed)))
+    (is (instance? java.util.Date (:position/date-close closed)))))
+
+(deftest date-open-when-fill-has-no-date
+  (let [pos (last-emission [(fill 1 "X" :buy 10.0 1.0)])]
+    (is (instance? java.util.Date (:position/date-open pos)))
+    (is (nil? (:position/date-close pos)))))
+
+(deftest date-open-from-fill-date
+  (let [msg (assoc (fill 1 "X" :buy 10.0 1.0) :date #inst "2026-06-01T12:00:00.000Z")
+        pos (last-emission [msg])]
+    (is (= #inst "2026-06-01T12:00:00.000Z" (:position/date-open pos)))))
 
 (deftest closed-emitted-once
   (let [fills [(fill 1 "X" :buy 10.0 1.0)

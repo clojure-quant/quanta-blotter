@@ -14,6 +14,7 @@
   :cli-server {:main-opts ["-m" "demo.oms-server"]}
 
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
+  :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
   
 
 ;

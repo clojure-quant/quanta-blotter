@@ -39,7 +39,16 @@
   (let [emissions (all-emissions)]
     (is (every? map? emissions))
     (is (every? #(contains? % :order/id) emissions))
-    (is (not-any? vector? emissions))))
+    (is (not-any? vector? emissions))
+    (is (every? #(instance? java.util.Date (:order/date %)) emissions))))
+
+(deftest order-date-from-first-dated-channel-message
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 9 :asset "BTC" :side :buy :qty 0.001M}
+                      {:type :broker/order-confirmed :account/id 1 :order-id 9 :asset "BTC"
+                       :side :buy :qty 0.001M :limit 100M :date #inst "2026-06-01T12:00:00.000Z"}])
+        order (first (last (m/? (m/reduce conj [] (wo/working-order-list-flow (wo/order-change-flow flow))))))]
+    (is (= #inst "2026-06-01T12:00:00.000Z" (:order/date order)))
+    (is (instance? java.util.Date (:order/date order)))))
 
 (deftest incremental-emissions-per-order
   (let [by-id (emissions-by-order-id (all-emissions))]

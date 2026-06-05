@@ -9,8 +9,10 @@ cd demo
 clj -M:cli-server
 
 in other terminal
+bb tasks                (to find out which tasks are available)
 bb client
-
+bb send-orders fx1
+bb send-orders qqq
 
 ```
 
