@@ -29,7 +29,7 @@
 (deftest reject-message-shape
   (let [msg (broker/reject-message new-order "market-closed")]
     (is (= :broker/order-rejected (:type msg)))
-    (is (= "market-closed" (:reason msg)))
+    (is (= "market-closed" (:message msg)))
     (is (= 1 (:order-id msg)))
     (is (= 3 (:account/id msg)))
     (is (s/validate-message msg)
@@ -63,7 +63,7 @@
                                1)]
       (is (= :broker/order-rejected (:type update)))
       (is (= 1 (:order-id update)))
-      (is ((set broker/reject-reasons) (:reason update))))))
+      (is (re-find #"paper broker rejected order:" (:message update))))))
 
 (deftest accepts-and-fills-when-not-rejected
   (testing "reject-probability 0 confirms then fills"

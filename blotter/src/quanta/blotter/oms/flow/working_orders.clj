@@ -104,7 +104,7 @@
 
       :broker/order-rejected
       (if (:qty state)
-        (mark-terminal state :rejected :text (:reason msg))
+        (mark-terminal state :rejected :text (:message msg))
         state)
 
       :broker/order-expired

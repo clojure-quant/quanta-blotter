@@ -68,15 +68,11 @@
    [:date Instant]
    [:message {:optional true} :string]])
 
-(def RejectReason
-  [:enum "market-closed" "too-many-orders" "temporary-broker-problem"])
-
 (def BrokerOrderRejected
   [:map
    [:type [:= :broker/order-rejected]]
    [:account/id AccountId]
    [:order-id OrderId]
-   [:reason {:optional true} RejectReason]
    [:date {:optional true} Instant]
    [:message {:optional true} :string]])
 

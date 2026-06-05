@@ -5,31 +5,65 @@
    [tick.core :as t]
    [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
+   [quanta.blotter.oms.validation.channel
+    :refer [create-validation-channel start-validation-channel! stop-validation-channel!]]
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
    [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.paper.broker]))
 
-(defn create-order-manager [{:keys [log-file transaction-log-file]}]
-  (let [;; logger
-        l (create-logger log-file false)
-        _ (log l {:type :oms/started :date (t/instant)})
-        log-fn (partial log l)
-        ; setup rdvs
-        order-rdv (create-rdv "oms/order")
-        orderupdate-rdv (create-rdv "oms/orderupdate")
-        ;; consolidator
-        consolidator (create-consolidator {:order order-rdv :orderupdate orderupdate-rdv :log log-fn})
+(defn- create-validated-channel-stack
+  "Consolidator (public) -> validator -> account manager."
+  [log-fn order-rdv orderupdate-rdv]
+  (let [consolidator (create-consolidator {:order order-rdv
+                                           :orderupdate orderupdate-rdv
+                                           :log log-fn})
         {:keys [order orderupdate]} (:channel consolidator)
-        ;; transaction log
-        log-transaction (create-logger transaction-log-file false)
-        ; account manager
-        account-manager (create-account-manager order orderupdate log-fn)]
+        account-order-rdv (create-rdv "oms/account/order")
+        account-orderupdate-rdv (create-rdv "oms/account/orderupdate")
+        validator (create-validation-channel {:order account-order-rdv
+                                            :orderupdate account-orderupdate-rdv
+                                            :log log-fn}
+                                           {:order order
+                                            :orderupdate orderupdate})
+        account-manager (create-account-manager account-order-rdv
+                                                  account-orderupdate-rdv
+                                                  log-fn)]
     {:order-rdv order-rdv
      :orderupdate-rdv orderupdate-rdv
      :consolidator consolidator
-     :log-transaction log-transaction
-     :account-manager account-manager
-     :dispose-a (atom nil)}))
+     :validator validator
+     :account-manager account-manager}))
+
+(defn create-order-manager [{:keys [log-file transaction-log-file validate?]}]
+  (let [l (create-logger log-file false)
+        _ (log l {:type :oms/started :date (t/instant)})
+        log-fn (partial log l)
+        log-transaction (create-logger transaction-log-file false)
+        {:keys [order-rdv orderupdate-rdv consolidator validator account-manager]}
+        (if validate?
+          (let [order-rdv (create-rdv "oms/order")
+                orderupdate-rdv (create-rdv "oms/orderupdate")]
+            (create-validated-channel-stack log-fn order-rdv orderupdate-rdv))
+          (let [order-rdv (create-rdv "oms/order")
+                orderupdate-rdv (create-rdv "oms/orderupdate")
+                consolidator (create-consolidator {:order order-rdv
+                                                   :orderupdate orderupdate-rdv
+                                                   :log log-fn})
+                {:keys [order orderupdate]} (:channel consolidator)]
+            {:order-rdv order-rdv
+             :orderupdate-rdv orderupdate-rdv
+             :consolidator consolidator
+             :validator nil
+             :account-manager (create-account-manager order orderupdate log-fn)}))]
+    (assoc {:log l
+            :log-transaction log-transaction
+            :validate? (boolean validate?)
+            :dispose-a (atom nil)}
+           :order-rdv order-rdv
+           :orderupdate-rdv orderupdate-rdv
+           :consolidator consolidator
+           :validator validator
+           :account-manager account-manager)))
 
 
 (defn consume-orderupdate [r]
@@ -40,25 +74,30 @@
 
 (defn start-order-manager!
   "Start paper trade-account 1 fed by simulated orderflow for that account."
-  [{:keys [order-rdv orderupdate-rdv consolidator log-transaction account-manager] :as this}]
+  [{:keys [order-rdv orderupdate-rdv consolidator validator log-transaction account-manager] :as this}]
   (let [{:keys [combined-flow]} consolidator
         dispose-transaction-logger (start-log-flow-to-logger log-transaction combined-flow)
         dispose-orderupdate-consumer!  ((consume-orderupdate orderupdate-rdv)
                                         #(println "orderupdate-consumer done " %)
                                         #(println "orderupdate-consumer error " %))
+        dispose-validation! (when validator
+                              (start-validation-channel! validator))
         dispose-consolidator! (start-consolidator! consolidator)
         dispose-account-manager! (start-account-manager account-manager)]
     (reset! (:dispose-a this)
             {:dispose-transaction-logger dispose-transaction-logger
              :dispose-orderupdate-consumer! dispose-orderupdate-consumer!
+             :dispose-validation! dispose-validation!
              :dispose-consolidator! dispose-consolidator!
              :dispose-account-manager! dispose-account-manager!})
     (log log-transaction {:type :oms/started :date (t/instant)})))
 
 
-(defn stop-order-manager! [{:keys [dispose-a] :as this}]
+(defn stop-order-manager! [{:keys [dispose-a validator] :as this}]
   (when-let [d @dispose-a]
     (:dispose-account-manager! d)
+    (when validator
+      (stop-validation-channel! validator))
     (:dispose-consolidator! d)
     (:dispose-orderupdate-consumer! d)
     (:dispose-transaction-logger d)

@@ -67,20 +67,13 @@
        {:type :broker/order-rejected
         :account/id 3
         :order-id 7
-        :reason "market-closed"
         :date (t/instant)
-        :message "paper broker rejected order: market-closed"}))
+        :message "market-closed"}))
   (is (s/validate-message
        {:type :broker/order-rejected
         :account/id 3
         :order-id 7})
-      "reason/date/message are optional")
-  (is (not (s/validate-message
-            {:type :broker/order-rejected
-             :account/id 3
-             :order-id 7
-             :reason "no-such-reason"}))
-      "reason must be one of the documented reasons"))
+      "date/message are optional"))
 
 (deftest channel-paper-edn-schema-test
   (is (.exists channel-paper-edn)

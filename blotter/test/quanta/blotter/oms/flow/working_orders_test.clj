@@ -97,7 +97,7 @@
 
 (deftest rejected-order-has-text
   (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy :qty 1.0}
-                      {:type :broker/order-rejected :account/id 1 :order-id 1 :reason "market-closed"}])
+                      {:type :broker/order-rejected :account/id 1 :order-id 1 :message "market-closed"}])
         last-order (final-for-order (m/? (m/reduce conj [] (wo/order-change-flow flow))) 1)]
     (is (= :rejected (:order/status last-order)))
     (is (= "market-closed" (:order/text last-order)))))
