@@ -6,6 +6,17 @@
  :paths ["src"]
  :tasks
  {:requires ([org.httpkit.client :as http]
-             [quanta.blotter.cli.blotter :as blotter])
+             [quanta.blotter.cli.blotter :as blotter]
+             [quanta.blotter.cli.send :as send]
+             [quanta.blotter.cli.cookie :as cookie]
+             [quanta.blotter.cli.test-order :as test-order])
   client {:doc "Run the blotter TUI client"
-          :task (blotter/start!)}}}
+          :task (blotter/start!)}
+  send-orders {:doc "Send all orders from orderlist/<name>.edn, then print them"
+               :task (send/send-orders! (first *command-line-args*))}
+  cookie {:doc "RPC smoke test: call demo.fortune-cookie/get-cookie and print result"
+          :task (cookie/cookie!)}
+  cookie-poller {:doc "Print a cookie after connect, then every 120s over the websocket"
+                 :task (cookie/cookie-poller!)}
+  test-order {:doc "RPC smoke test: call demo.oms-server/send-test-order and print result"
+              :task (test-order/test-order!)}}}

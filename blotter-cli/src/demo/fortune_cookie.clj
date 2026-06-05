@@ -43,12 +43,12 @@
    "Yes by calling full, you created emptiness."])
 
 (defn get-cookie
-  ([index]
-   (nth db index))
-  ([]
+  ([cookie-db index]
+   (nth cookie-db index))
+  ([cookie-db]
    (let [size (count db)
          index (rand-int size)]
-     (get-cookie index))))
+     (get-cookie cookie-db index))))
 
 
 (defn get-cookie-bad []

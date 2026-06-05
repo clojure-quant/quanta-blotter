@@ -23,7 +23,9 @@ oms
 (add-edn-accounts (:account-manager oms) "demo-accounts.edn")
 
 
+
 (def dispose-wo-op-logger (start-open-positions-working-order-logger! oms "log/oms-wo-op.txt"))
+
 
 ;; persistence: open the datahike trade-db and stream all OMS flows into it.
 (def trade-db (db/trade-db-start "trade-db"))

@@ -8,7 +8,9 @@
    [clj-service.browser-id :refer [session-request]]
    [clj-service.executor :as exec]
    [flowy.ring-adapter :refer [flowy-handler-ws]]
-   [flowy.jetty-config :refer [jetty-configurator]]))
+   [flowy.jetty-config :refer [jetty-configurator]]
+   [demo.fortune-cookie :as cookie]
+   ))
 
 (defn prepare-flowy-request [clj req]
   (-> req session-request (assoc :ctx {:clj clj})))
@@ -29,15 +31,20 @@
     (ring/create-default-handler
      {:not-found (constantly {:status 404 :body "Not found"})}))))
 
-(defn start-socket-server [oms trade-db]
+(defn start-socket-server [oms trade-db oms-server]
   (let [port 9000
+        cookie-db cookie/db
         clj (start-clj-services
              {:env {:oms oms
-                    :trade-db trade-db}
+                    :trade-db trade-db
+                    :oms-server oms-server
+                    :cookie-db cookie-db}
               :app-services [; test api 
-                             {:fun 'demo.fortune-cookie/get-cookie}
+                             {:fun 'demo.fortune-cookie/get-cookie :ctx :cookie-db}
                              {:fun 'demo.counter/counter-fn :mode :ap}
                              ; oms api
+                             {:fun 'quanta.blotter.oms.core/send-test-order
+                              :ctx :oms :permission nil :mode :sp}
                              {:fun 'quanta.blotter.oms.core/create-limit-order
                               :ctx :oms :permission nil :mode :sp}
                              {:fun 'quanta.blotter.oms.core/combined-flow 

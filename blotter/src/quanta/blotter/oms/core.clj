@@ -68,15 +68,32 @@
   [this {:keys [asset side qty limit order-id broker]
          :as order-details}]
   (m/sp
+   (assert (map? order-details) "order-details must be a map")
+   (assert (map? this) "this (oms) needs to be a map")
+   (assert (:order-rdv this) "this (oms) needs to have an order-rdv")
+   
    (let [order (-> order-details
                    (assoc :type :trader/new-order)
                    (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
      (println "create limit order: " order)
      (m/? ((:order-rdv this) order))
-     (println "create limit order success!")
+     (println "create limit order success! order: " order)
      order)))
 
 
 (defn combined-flow [this]
   (get-in this [:consolidator :combined-flow]))
 
+
+(defn send-test-order [oms account-id]
+  (m/sp 
+   (m/? (create-limit-order oms {:account/id account-id
+                                 :asset "__TEST"
+                                 :side :buy
+                                 :limit 110.30M
+                                 :qty 10000.0M}))
+   (m/? (create-limit-order oms {:account/id account-id
+                                 :asset "__TEST"
+                                 :side :sell
+                                 :limit 110.32M
+                                 :qty 10000.0M}))))

@@ -67,7 +67,7 @@
     (doto (Thread.
            (fn []
              (while (not @stop)
-               (Thread/sleep 20000)
+               (Thread/sleep 5000)
                (when-not @stop
                  (try
                    (bws/send! @(:ws conn) "HEARTBEAT")
@@ -115,8 +115,8 @@
 (defn request-sync!
   "Issue a request and block until the response arrives (or `timeout-ms`).
    Returns the `:result` rows, or throws on timeout / server error."
-  ([conn fun] (request-sync! conn fun nil 10000))
-  ([conn fun args] (request-sync! conn fun args 10000))
+  ([conn fun] (request-sync! conn fun nil 30000))
+  ([conn fun args] (request-sync! conn fun args 30000))
   ([conn fun args timeout-ms]
    (let [p (request! conn fun args)
          msg (deref p timeout-ms ::timeout)]
