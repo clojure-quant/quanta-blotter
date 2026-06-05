@@ -50,16 +50,17 @@
 (deftest order-2-cancelled
   (let [emissions (all-emissions)
         last-2 (final-for-order emissions 2)]
-    (is (= :done (:order/status last-2)))
+    (is (= :cancelled (:order/status last-2)))
     (is (== 0.0 (:order/qty-working last-2)))
     (is (== 0.0 (:order/qty-filled last-2)))
     (is (nil? (:order/avg-price last-2)))
-    (is (some #(= :broker/order-canceled (:type %)) (:order/history last-2)))))
+    (is (some #(= :broker/order-canceled (:type %)) (:order/history last-2)))
+    (is (= #inst "2026-06-01T20:10:09.740517009Z" (:order/date last-2)))))
 
 (deftest order-4-filled
   (let [emissions (all-emissions)
         last-4 (final-for-order emissions 4)]
-    (is (= :done (:order/status last-4)))
+    (is (= :filled (:order/status last-4)))
     (is (== 0.001 (:order/qty-filled last-4)))
     (is (== 0.0 (:order/qty-working last-4)))
     (is (== 100.0 (:order/avg-price last-4)))))
@@ -75,7 +76,7 @@
         before-fill (butlast order-1)
         last-1 (last order-1)]
     (is (every? #(= :working (:order/status %)) before-fill))
-    (is (= :done (:order/status last-1)))
+    (is (= :filled (:order/status last-1)))
     (is (== 10000.0 (:order/avg-price last-1)))))
 
 (deftest working-order-list-flow-keeps-open-orders-only
@@ -84,3 +85,10 @@
         lists (m/? (m/reduce conj [] (wo/working-order-list-flow (wo/order-change-flow flow))))]
     (is (= 1 (count (last lists))))
     (is (= 9 (:order/id (first (last lists)))))))
+
+(deftest rejected-order-has-text
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy :qty 1.0}
+                      {:type :broker/order-rejected :account/id 1 :order-id 1 :reason "market-closed"}])
+        last-order (final-for-order (m/? (m/reduce conj [] (wo/order-change-flow flow))) 1)]
+    (is (= :rejected (:order/status last-order)))
+    (is (= "market-closed" (:order/text last-order)))))

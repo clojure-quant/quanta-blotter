@@ -53,6 +53,15 @@
    {:db/ident :order/avg-price
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
+   {:db/ident :order/date
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :order/text
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :order/history
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
    ;; fill (stored once)
    {:db/ident :fill/id
     :db/valueType :db.type/string
@@ -94,11 +103,26 @@
    {:db/ident :position/qty
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
+   {:db/ident :position/qty-open
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :position/open
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
    {:db/ident :position/average-entry-price
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :position/avg-exit-price
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/realized-pl
     :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :position/date-open
+    :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :position/date-close
+    :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}])
 
 (defn- path->id
@@ -192,7 +216,7 @@
 (defn order->entity [eid order]
   (cond-> {:db/id eid
            :order/id (as-str (:order/id order))}
-    (:order/account order) (assoc :order/account-id (:order/account order))
+    (:order/account-id order) (assoc :order/account-id (:order/account-id order))
     (:order/asset order) (assoc :order/asset (:order/asset order))
     (:order/side order) (assoc :order/side (:order/side order))
     (:order/type order) (assoc :order/type (:order/type order))
@@ -200,29 +224,38 @@
     (some? (:order/qty order)) (assoc :order/qty (as-bigdec (:order/qty order)))
     (some? (:order/qty-filled order)) (assoc :order/qty-filled (as-bigdec (:order/qty-filled order)))
     (some? (:order/qty-working order)) (assoc :order/qty-working (as-bigdec (:order/qty-working order)))
-    (some? (:order/avg-price order)) (assoc :order/avg-price (as-bigdec (:order/avg-price order)))))
+    (some? (:order/avg-price order)) (assoc :order/avg-price (as-bigdec (:order/avg-price order)))
+    (:order/date order) (assoc :order/date (as-date (:order/date order)))
+    (:order/text order) (assoc :order/text (:order/text order))
+    (:order/history order) (assoc :order/history (pr-str (:order/history order)))))
 
 (defn fill->entity [eid order-ref fill]
   (cond-> {:db/id eid
-           :fill/id (as-str (:fill-id fill))
-           :fill/order-id (as-str (:order-id fill))
-           :fill/account-id (:account/id fill)
-           :fill/side (:side fill)}
+           :fill/id (as-str (:fill/id fill))
+           :fill/order-id (as-str (:fill/order-id fill))
+           :fill/account-id (:fill/account-id fill)
+           :fill/side (:fill/side fill)}
     order-ref (assoc :fill/order order-ref)
-    (:asset fill) (assoc :fill/asset (:asset fill))
-    (some? (:qty fill)) (assoc :fill/qty (as-bigdec (:qty fill)))
-    (some? (:price fill)) (assoc :fill/price (as-bigdec (:price fill)))
-    (:date fill) (assoc :fill/date (as-date (:date fill)))))
+    (:fill/asset fill) (assoc :fill/asset (:fill/asset fill))
+    (some? (:fill/qty fill)) (assoc :fill/qty (as-bigdec (:fill/qty fill)))
+    (some? (:fill/price fill)) (assoc :fill/price (as-bigdec (:fill/price fill)))
+    (:fill/date fill) (assoc :fill/date (as-date (:fill/date fill)))))
 
 (defn position->entity [eid position]
   (cond-> {:db/id eid
            :position/account (:position/account position)
            :position/asset (:position/asset position)
            :position/side (:position/side position)
+           :position/open (:position/open position)
            :position/realized-pl (as-bigdec (or (:position/realized-pl position) 0M))}
     (some? (:position/qty position)) (assoc :position/qty (as-bigdec (:position/qty position)))
+    (some? (:position/qty-open position)) (assoc :position/qty-open (as-bigdec (:position/qty-open position)))
     (some? (:position/average-entry-price position))
-    (assoc :position/average-entry-price (as-bigdec (:position/average-entry-price position)))))
+    (assoc :position/average-entry-price (as-bigdec (:position/average-entry-price position)))
+    (some? (:position/avg-exit-price position))
+    (assoc :position/avg-exit-price (as-bigdec (:position/avg-exit-price position)))
+    (:position/date-open position) (assoc :position/date-open (as-date (:position/date-open position)))
+    (:position/date-close position) (assoc :position/date-close (as-date (:position/date-close position)))))
 
 ;; ---------------------------------------------------------------------------
 ;; process a block
@@ -285,11 +318,11 @@
         msg-tx (mapv (fn [m] (message->entity (msg-eid block-tempids) m)) msgs)
         fill-tx (reduce
                  (fn [tx f]
-                   (let [fid (as-str (:fill-id f))]
+                   (let [fid (as-str (:fill/id f))]
                      (if (or (contains? (:seen-fills snapshot) fid)
                              (contains? @block-tempids [:fill fid]))
                        tx ; fills stored only once
-                       (let [oid (as-str (:order-id f))
+                       (let [oid (as-str (:fill/order-id f))
                              order-ref (or (get (:order-id->eid snapshot) oid)
                                            (get @block-tempids [:order oid]))
                              eid (fill-eid block-tempids fid)]

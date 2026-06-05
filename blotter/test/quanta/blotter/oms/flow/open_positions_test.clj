@@ -28,11 +28,15 @@
         ems (emissions fills {:method :average})]
     (is (= 2 (count ems)))
     (is (= :long (:position/side (nth ems 0))))
+    (is (true? (:position/open (nth ems 0))))
+    (is (== 100.0 (:position/qty-open (nth ems 0))))
     (is (== 100.0 (:position/qty (nth ems 0))))
     (is (== 10.0 (:position/average-entry-price (nth ems 0))))
     (is (== 0.0 (:position/realized-pl (nth ems 0))))
     (is (= :short (:position/side (nth ems 1))))
-    (is (== 10.0 (:position/qty (nth ems 1))))
+    (is (true? (:position/open (nth ems 1))))
+    (is (== 10.0 (:position/qty-open (nth ems 1))))
+    (is (== 100.0 (:position/qty (nth ems 1))))
     (is (== 11.0 (:position/average-entry-price (nth ems 1))))
     (is (== 100.0 (:position/realized-pl (nth ems 1))))))
 
@@ -52,7 +56,8 @@
                (fill 1 "X" :sell 60.0 15.0)]
         pos (last-emission fills {:method :fifo})]
     (is (= :long (:position/side pos)))
-    (is (== 40.0 (:position/qty pos)))
+    (is (== 40.0 (:position/qty-open pos)))
+    (is (== 100.0 (:position/qty pos)))
     (is (== 12.0 (:position/average-entry-price pos)))
     (is (== 280.0 (:position/realized-pl pos)))))
 
@@ -61,7 +66,8 @@
                (fill 1 "X" :sell 40.0 12.0)]
         pos (last-emission fills {:method :average})]
     (is (= :long (:position/side pos)))
-    (is (== 60.0 (:position/qty pos)))
+    (is (== 60.0 (:position/qty-open pos)))
+    (is (== 100.0 (:position/qty pos)))
     (is (== 10.0 (:position/average-entry-price pos)))
     (is (== 80.0 (:position/realized-pl pos)))))
 
@@ -69,7 +75,9 @@
   (let [fills [(fill 1 "X" :sell 100.0 11.0)
                (fill 1 "X" :buy 100.0 10.0)]
         closed (last-emission fills {:method :average})]
-    (is (= :closed (:position/side closed)))
+    (is (false? (:position/open closed)))
+    (is (= :short (:position/side closed)))
+    (is (== 11.0 (:position/average-entry-price closed)))
     (is (== 100.0 (:position/realized-pl closed)))))
 
 (deftest closed-emitted-once
@@ -77,7 +85,7 @@
                (fill 1 "X" :sell 10.0 2.0)]
         ems (emissions fills)]
     (is (= 2 (count ems)))
-    (is (= :closed (:position/side (last ems))))))
+    (is (false? (:position/open (last ems))))))
 
 (deftest ignores-non-fill-messages
   (let [flow (m/seed [{:type :trader/new-order :account/id 1 :asset "X" :side :buy :qty 1.0}
@@ -97,7 +105,17 @@
         last-pos (last ems)]
     (is (= 2 (count ems)))
     (is (= :short (:position/side (first ems))))
-    (is (== 0.001 (:position/qty (first ems))))
+    (is (== 0.001 (:position/qty-open (first ems))))
     (is (= :short (:position/side last-pos)))
-    (is (== 0.002 (:position/qty last-pos)))
+    (is (== 0.002 (:position/qty-open last-pos)))
     (is (== 100.5 (:position/average-entry-price last-pos)))))
+
+(deftest derived-avg-exit-matches-formula
+  (let [fills [(fill 1 "X" :buy 100.0 10.0)
+               (fill 1 "X" :sell 40.0 12.0)]
+        pos (last-emission fills {:method :average})
+        max-qty (:position/qty pos)
+        entry (:position/average-entry-price pos)
+        exit (:position/avg-exit-price pos)
+        pl (:position/realized-pl pos)]
+    (is (== pl (* max-qty (- exit entry))))))

@@ -2,8 +2,11 @@
   (:require
    [clojure.test :refer [deftest is testing]]
    [missionary.core :as m]
+   [quanta.blotter.util :as util]
    [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.db-transactor :as dbt]))
+   [quanta.blotter.oms.flow.fill :as fill]
+   [quanta.blotter.oms.flow.open-positions :as op]
+   [quanta.blotter.oms.flow.working-orders :as wo]))
 
 (def channel-events
   "A small channel flow (orders + broker messages) similar to channel-paper.edn."
@@ -13,11 +16,22 @@
    {:type :broker/order-filled :account/id 2 :order-id 2 :fill-id "f-1" :asset "ETHUSDT" :side :sell :qty 0.001 :price 100.0}
    {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f-2" :asset "BTCUSDT" :side :buy :qty 0.001 :price 10000.0}])
 
+(defn- seed->tx-vector [events]
+  (let [flow (m/seed events)
+        fill-flow (fill/fill-flow flow)
+        combined (util/mix
+                  (m/eduction (map (fn [v] {:msg v})) flow)
+                  (m/eduction (map (fn [v] {:order v})) (wo/order-change-flow flow))
+                  (m/eduction (map (fn [v] {:fill v})) fill-flow)
+                  (m/eduction (map (fn [v] {:position v}))
+                                (op/position-change-flow fill-flow {:method :fifo})))
+        block (m/? (m/reduce conj [] combined))]
+    (into [] (mapcat (fn [m] (first (seq m))) block))))
+
 (deftest transactor-persists-channel-flow
   (let [conn (db/trade-db-start-mem)
-        ;; fake "this" exposing a finite combined-flow
-        this {:consolidator {:combined-flow (m/seed channel-events)}}]
-    (m/? (dbt/transact-task this conn))
+        state (db/new-state)]
+    (db/process conn state (seed->tx-vector channel-events))
     (testing "messages persisted"
       (is (= (count channel-events) (count (db/query-messages conn)))))
     (testing "orders persisted (one per order-id)"

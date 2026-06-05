@@ -2,7 +2,12 @@
   (:require
    [missionary.core :as m]
    [quanta.blotter.precision :as precision]
+   [tick.core :as t]
    [taoensso.timbre :refer [info]]))
+
+(def closed-statuses
+  "Order statuses that mean the order is no longer open."
+  #{:cancelled :rejected :expired :filled})
 
 (defn- initial-state []
   {:history []})
@@ -12,6 +17,11 @@
 
 (defn- terminal? [state]
   (true? (:terminal? state)))
+
+(defn- stamp-order-date [state msg]
+  (if (and (nil? (:order-date state)) (:date msg))
+    (assoc state :order-date (:date msg))
+    state))
 
 (defn- apply-fill [state {:keys [qty price]}]
   (let [fill-qty (or (:fill-qty state) 0M)
@@ -24,11 +34,11 @@
         filled? (and order-qty (>= new-fill-qty order-qty))
         price-scale (max (or (:price-scale state) 0)
                          (.scale ^BigDecimal p))]
-    (assoc state
-           :fill-qty new-fill-qty
-           :fill-notional new-notional
-           :price-scale price-scale
-           :terminal? (or (terminal? state) filled?))))
+    (cond-> (assoc state
+                   :fill-qty new-fill-qty
+                   :fill-notional new-notional
+                   :price-scale price-scale)
+      filled? (assoc :terminal? true :terminal-status :filled))))
 
 (defn- init-from-new-order [state msg]
   (assoc state
@@ -41,34 +51,41 @@
          :fill-qty 0M
          :fill-notional 0M
          :price-scale 0
-         :terminal? false))
+         :terminal? false
+         :terminal-status nil
+         :reject-text nil))
 
-(defn- mark-terminal [state]
-  (assoc state :terminal? true))
+(defn- mark-terminal [state status & {:keys [text]}]
+  (cond-> (assoc state :terminal? true :terminal-status status)
+    text (assoc :reject-text text)))
 
 (defn- ready-to-emit? [state]
   (some? (:qty state)))
 
 (defn to-order-view
   "Projects internal accumulator state to the public order map."
-  [{:keys [order-id account asset side qty order-type fill-qty fill-notional price-scale history terminal?]}]
+  [{:keys [order-id account asset side qty order-type fill-qty fill-notional
+           price-scale history terminal? terminal-status reject-text order-date]}]
   (let [qty-filled (or fill-qty 0M)
         scale (or price-scale 0)
         done? (true? terminal?)]
-    {:order/id order-id
-     :order/account account
-     :order/asset asset
-     :order/side side
-     :order/type order-type
-     :order/status (if done? :done :working)
-     :order/qty qty
-     :order/qty-filled qty-filled
-     :order/qty-working (if done? 0M (- qty qty-filled))
-     :order/avg-price (when (pos? qty-filled) (precision/div fill-notional qty-filled scale))
-     :order/history history}))
+    (cond-> {:order/id order-id
+             :order/account-id account
+             :order/asset asset
+             :order/side side
+             :order/type order-type
+             :order/status (if done? terminal-status :working)
+             :order/qty qty
+             :order/qty-filled qty-filled
+             :order/qty-working (if done? 0M (- qty qty-filled))
+             :order/avg-price (when (pos? qty-filled) (precision/div fill-notional qty-filled scale))
+             :order/date (or order-date (t/inst))
+             :order/history history}
+      (and done? (= :rejected terminal-status) reject-text)
+      (assoc :order/text (str reject-text)))))
 
 (defn- process-order-msg [state msg]
-  (let [state (conj-history state msg)]
+  (let [state (-> state (conj-history msg) (stamp-order-date msg))]
     (case (:type msg)
       :trader/new-order
       (if (:qty state)
@@ -82,17 +99,17 @@
 
       :broker/order-canceled
       (if (:qty state)
-        (mark-terminal state)
+        (mark-terminal state :cancelled)
         state)
 
       :broker/order-rejected
       (if (:qty state)
-        (mark-terminal state)
+        (mark-terminal state :rejected :text (:reason msg))
         state)
 
       :broker/order-expired
       (if (:qty state)
-        (mark-terminal state)
+        (mark-terminal state :expired)
         state)
 
       ;; :broker/order-confirmed, :broker/cancel-confirmed, :trader/cancel-order, default
@@ -118,19 +135,19 @@
      order-status)))
 
 (defn working-order-dict-flow
-  "Latest {:order/...} per order-id; removes orders when status is :done."
+  "Latest {:order/...} per order-id; removes closed orders."
   [order-change-f]
   (m/reductions
    (fn [acc order]
      (let [k (:order/id order)]
-       (if (= :done (:order/status order))
+       (if (contains? closed-statuses (:order/status order))
          (dissoc acc k)
          (assoc acc k order))))
    {}
    order-change-f))
 
 (defn working-order-list-flow
-  "Emits a vector of working (non-done) orders, sorted by order-id."
+  "Emits a vector of working (open) orders, sorted by order-id."
   [order-change-f]
   (m/eduction
    (map (fn [dict] (vals dict)))

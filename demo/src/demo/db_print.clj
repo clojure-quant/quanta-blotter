@@ -2,21 +2,13 @@
   "Print orders and positions stored in the datahike trade-db, reusing the
    table formatting from quanta.blotter.oms.print."
   (:require
-   [clojure.set :refer [rename-keys]]
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.print :as print]))
 
 (def db-path "trade-db")
 
-(defn- order-row
-  "The print table keys orders by :order/account, but the db stores
-   :order/account-id; align them."
-  [order]
-  (rename-keys order {:order/account-id :order/account}))
-
 (defn print-orders! [conn]
   (let [orders (->> (db/query-orders conn)
-                    (map order-row)
                     (sort-by :order/id))]
     (println (print/timestamped-table "orders (db)" (print/working-orders-table orders)))))
 
@@ -40,7 +32,7 @@
   (def trade-db (db/trade-db-start db-path))
 
   (print-orders! trade-db)
-  
+
   (print-trades! trade-db)
 
   (print-positions! trade-db)

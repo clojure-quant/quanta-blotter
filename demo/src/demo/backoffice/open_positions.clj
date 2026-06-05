@@ -13,16 +13,20 @@
   (slurp-edn "data/channel-paper.edn"))
 
 (defn- position->row
-  [{:position/keys [account asset side qty average-entry-price realized-pl]}]
+  [{:position/keys [account asset side open qty-open qty average-entry-price
+                    avg-exit-price realized-pl]}]
   {:account account
    :asset asset
    :side side
-   :qty qty
+   :open open
+   :qty-open qty-open
+   :qty-max qty
    :avg-entry average-entry-price
+   :avg-exit avg-exit-price
    :realized-pl realized-pl})
 
 (def ^:private table-cols
-  [:account :asset :side :qty :avg-entry :realized-pl])
+  [:account :asset :side :open :qty-open :qty-max :avg-entry :avg-exit :realized-pl])
 
 (defn- position-key [row]
   [(:account row) (:asset row)])
@@ -55,7 +59,7 @@
     (m/? (m/reduce
           (fn [positions-by-key position]
             (let [k [(:position/account position) (:position/asset position)]
-                  positions-by-key (if (= :closed (:position/side position))
+                  positions-by-key (if (false? (:position/open position))
                                      (do (swap! closed-positions conj position)
                                          (dissoc positions-by-key k))
                                      (assoc positions-by-key k position))]
@@ -65,18 +69,15 @@
           position-change-flow))))
 
 
-(def dispose! 
+(def dispose!
   (let [pos-change-f (op/position-change-flow (fill/fill-flow channel-flow) {:method :fifo})
         open-pos-list-f (op/open-position-list-flow pos-change-f)
         t (m/reduce
            (fn [_ positions]
-             ;(println "positions:" positions)
              (print-positions-table! "open positions" positions)
              nil)
            nil
-           open-pos-list-f
-           ;pos-change-f
-           )]
+           open-pos-list-f)]
     (t #(println "success:  " %) #(println "error:  " %))))
 
 
@@ -86,6 +87,5 @@
 (comment
   (run-demo! {:method :fifo})
 
-
- ; 
+  ;
   )

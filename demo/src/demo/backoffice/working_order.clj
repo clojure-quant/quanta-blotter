@@ -13,8 +13,8 @@
 
 
 (defn- order->row
-  [{:order/keys [id account asset side status qty qty-filled qty-working avg-price history]}]
-  {:account account
+  [{:order/keys [id account-id asset side status qty qty-filled qty-working avg-price history text date]}]
+  {:account account-id
    :order-id id
    :asset asset
    :side side
@@ -23,10 +23,12 @@
    :qty-filled qty-filled
    :qty-working qty-working
    :avg-price avg-price
+   :text text
+   :date date
    :# (count history)})
 
 (def ^:private table-cols
-  [:account :order-id :asset :side :status :qty :qty-filled :qty-working :avg-price :#])
+  [:account :order-id :asset :side :status :qty :qty-filled :qty-working :avg-price :text :#])
 
 (defn- print-orders-table! [orders-by-id]
   (println)
@@ -47,7 +49,7 @@
     (m/? (m/reduce
           (fn [orders-by-id order]
             (let [order-id (:order/id order)
-                  orders-by-id (if (= :done (:order/status order))
+                  orders-by-id (if (contains? wo/closed-statuses (:order/status order))
                                  (do (swap! closed-orders conj order)
                                      (println "Closed Orders:")
                                      (print-table table-cols (->> @closed-orders (map order->row) (sort-by :order-id)))  

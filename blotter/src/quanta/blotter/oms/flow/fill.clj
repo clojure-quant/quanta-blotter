@@ -8,20 +8,16 @@
   (= :broker/order-filled (:type msg)))
 
 (defn ->fill
-  "Projects a :broker/order-filled message to a fill record.
-   Keeps the keys downstream consumers need:
-   - open-positions: :account/id :asset :side :qty :price
-   - db persistence:  :fill-id :order-id :date :type"
+  "Projects a :broker/order-filled message to a db-shaped fill record."
   [msg]
-  {:type :broker/order-filled
-   :fill-id (:fill-id msg)
-   :order-id (:order-id msg)
-   :account/id (:account/id msg)
-   :asset (:asset msg)
-   :side (:side msg)
-   :qty (some-> (:qty msg) bigdec)
-   :price (some-> (:price msg) bigdec)
-   :date (:date msg)})
+  {:fill/id (:fill-id msg)
+   :fill/order-id (:order-id msg)
+   :fill/account-id (:account/id msg)
+   :fill/asset (:asset msg)
+   :fill/side (:side msg)
+   :fill/qty (some-> (:qty msg) bigdec)
+   :fill/price (some-> (:price msg) bigdec)
+   :fill/date (:date msg)})
 
 (defn fill-flow
   "Consumes a mixed channel flow; emits one fill record per :broker/order-filled

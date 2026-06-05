@@ -4,6 +4,7 @@
   (:require
    [clojure.test :refer [deftest is testing use-fixtures]]
    [clojure.java.io :as io]
+   [tick.core :as t]
    [quanta.blotter.oms.db :as db]))
 
 (def db-path "test/test-db")
@@ -30,17 +31,19 @@
    :fill-id "m-9By0" :qty 0.001 :side :sell :price 100.0})
 
 (def demo-order
-  {:order/id 4 :order/account 2 :order/asset "ETHUSDT" :order/side :sell
+  {:order/id 4 :order/account-id 2 :order/asset "ETHUSDT" :order/side :sell
    :order/type :limit :order/status :working :order/qty 0.001
-   :order/qty-filled 0.0 :order/qty-working 0.001 :order/avg-price nil})
+   :order/qty-filled 0.0 :order/qty-working 0.001 :order/avg-price nil
+   :order/date (t/instant) :order/history []})
 
 (def demo-fill
-  {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
-   :fill-id "m-9By0" :qty 0.001 :side :sell :price 100.0})
+  {:fill/id "m-9By0" :fill/order-id 4 :fill/account-id 2 :fill/asset "ETHUSDT"
+   :fill/side :sell :fill/qty 0.001 :fill/price 100.0 :fill/date (t/instant)})
 
 (def demo-position
   {:position/account 2 :position/asset "ETHUSDT" :position/side :short
-   :position/qty 0.001 :position/average-entry-price 100.0 :position/realized-pl 0.0})
+   :position/open true :position/qty-open 0.001 :position/qty 0.001
+   :position/average-entry-price 100.0 :position/realized-pl 0.0})
 
 (deftest creates-db-on-disk-and-persists
   (let [conn (db/trade-db-start db-path)

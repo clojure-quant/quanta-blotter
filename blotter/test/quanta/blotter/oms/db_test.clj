@@ -13,22 +13,26 @@
    :fill-id "m-9By0" :qty 0.001M :side :sell :price 100.0M})
 
 (def demo-order
-  {:order/id 4 :order/account 2 :order/asset "ETHUSDT" :order/side :sell
-   :order/status :working :order/qty 0.001M :order/qty-filled 0.0M
-   :order/qty-working 0.001M :order/avg-price nil})
+  {:order/id 4 :order/account-id 2 :order/asset "ETHUSDT" :order/side :sell
+   :order/type :limit :order/status :working :order/qty 0.001M :order/qty-filled 0.0M
+   :order/qty-working 0.001M :order/avg-price nil :order/date (t/instant)
+   :order/history []})
 
 (def demo-order-update
-  {:order/id 4 :order/account 2 :order/asset "ETHUSDT" :order/side :sell
-   :order/status :done :order/qty 0.001M :order/qty-filled 0.001M
-   :order/qty-working 0.0M :order/avg-price 100.0M})
+  {:order/id 4 :order/account-id 2 :order/asset "ETHUSDT" :order/side :sell
+   :order/type :limit :order/status :filled :order/qty 0.001M :order/qty-filled 0.001M
+   :order/qty-working 0.0M :order/avg-price 100.0M :order/date (t/instant)
+   :order/history []})
 
 (def demo-fill
-  {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
-   :fill-id "m-9By0" :qty 0.001M :side :sell :price 100.0M})
+  {:fill/id "m-9By0" :fill/order-id 4 :fill/account-id 2 :fill/asset "ETHUSDT"
+   :fill/side :sell :fill/qty 0.001M :fill/price 100.0M :fill/date (t/instant)})
 
 (def demo-position
   {:position/account 2 :position/asset "ETHUSDT" :position/side :short
-   :position/qty 0.001M :position/average-entry-price 100.0M :position/realized-pl 0.0M})
+   :position/open true :position/qty-open 0.001M :position/qty 0.001M
+   :position/average-entry-price 100.0M :position/realized-pl 0.0M
+   :position/avg-exit-price nil})
 
 (deftest process-stores-all-kinds
   (let [conn (fresh-db)
@@ -57,7 +61,8 @@
     (testing "position stored"
       (let [positions (db/query-positions conn)]
         (is (= 1 (count positions)))
-        (is (= :short (:position/side (first positions))))))
+        (is (= :short (:position/side (first positions))))
+        (is (true? (:position/open (first positions))))))
     (db/trade-db-stop conn)))
 
 (deftest order-update-reuses-db-id
@@ -69,7 +74,7 @@
       (testing "same :db/id reused for the update"
         (is (= eid-after-create (get-in @state [:order-id->eid "4"])))
         (is (= 1 (count (db/query-orders conn))) "no duplicate order entity")
-        (is (= :done (:order/status (first (db/query-orders conn)))))))
+        (is (= :filled (:order/status (first (db/query-orders conn)))))))
     (db/trade-db-stop conn)))
 
 (deftest instant-date-coerced-to-date
@@ -88,4 +93,14 @@
     (db/process conn state [:fill demo-fill])
     (db/process conn state [:fill demo-fill])
     (is (= 1 (count (db/query-fills conn))) "duplicate fill ignored")
+    (db/trade-db-stop conn)))
+
+(deftest order-history-stored-as-string
+  (let [conn (fresh-db)
+        state (db/new-state)
+        order (assoc demo-order :order/history [{:type :trader/new-order :order-id 4}])]
+    (db/process conn state [:order order])
+    (let [stored (:order/history (first (db/query-orders conn)))]
+      (is (string? stored))
+      (is (vector? (read-string stored))))
     (db/trade-db-stop conn)))

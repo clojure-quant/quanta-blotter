@@ -7,7 +7,6 @@
    crockery tables and paginated with charm's paginator."
   (:require
    [clojure.string :as str]
-   [clojure.set :refer [rename-keys]]
    [charm.core :as charm]
    [charm.components.paginator :as pag]
    [quanta.blotter.cli.client :as client]
@@ -30,20 +29,18 @@
    :trades 'quanta.blotter.oms.db/query-fills
    :positions 'quanta.blotter.oms.db/query-positions})
 
-;; Orders whose status means they are still live / working. Everything else
-;; (filled, cancelled, rejected, expired, ...) counts as closed.
-(def working-statuses
-  #{:order/new :order/order-confirm :order/cancel-req
-    :order/cancel-reject :order/fill-partial})
+;; Only :working means the order is still open in the OMS flow.
+(def working-statuses #{:working})
 
 (defn- working? [o]
   (contains? working-statuses (:order/status o)))
 
 (defn- position-open?
-  "A position is open while it still holds a (non-zero) quantity."
   [p]
-  (let [q (:position/qty p)]
-    (boolean (and q (not (zero? q))))))
+  (if (contains? p :position/open)
+    (true? (:position/open p))
+    (let [q (or (:position/qty-open p) (:position/qty p))]
+      (boolean (and q (not (zero? q)))))))
 
 ;; filter buttons cycle on `f`
 (def order-filter-cycle {:working :closed, :closed :all, :all :working})
@@ -80,18 +77,11 @@
 ;; ---------------------------------------------------------------------------
 ;; row massaging (mirrors demo.db-print)
 
-(defn- order-row
-  "query-orders stores :order/account-id, but the print table keys on
-   :order/account."
-  [o]
-  (rename-keys o {:order/account-id :order/account}))
-
 (defn- displayed-rows
   "Massage + filter + sort the raw rows for the current page."
   [{:keys [page raw-rows order-filter position-filter]}]
   (case page
     :orders (->> raw-rows
-                 (map order-row)
                  (filter (case order-filter
                            :working working?
                            :closed (complement working?)
