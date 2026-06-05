@@ -14,5 +14,5 @@
           :task (cookie/cookie!)}
   cookie-poller {:doc "Print a cookie after connect, then every 120s over the websocket"
                  :task (cookie/cookie-poller!)}
-  test-order {:doc "RPC smoke test: call demo.oms-server/send-test-order and print result"
+  test-order {:doc "RPC smoke test: call quanta.blotter.oms.core/send-test-order and print result"
               :task (test-order/test-order!)}}}

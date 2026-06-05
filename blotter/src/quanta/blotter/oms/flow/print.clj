@@ -11,20 +11,27 @@
    ))
 
 
+(defn- log-table-flow [label raw-flow table-fn]
+  (m/ap
+   (loop []
+     (m/amb
+      (let [data (m/?> raw-flow)]
+        (m/? (m/via m/blk (print/timestamped-table label (table-fn data))))
+        data)
+      (recur)))))
+
 (defn- positions-log-flow
   [channel-flow & [{:keys [method] :or {method :fifo}}]]
-  (m/eduction
-   (map (fn [positions]
-          (print/timestamped-table "open positions" (print/open-positions-table positions))))
-   (op/open-position-list-flow
-    (op/position-change-flow (fill/fill-flow channel-flow) {:method method}))))
+  (log-table-flow "open positions"
+                  (op/open-position-list-flow
+                   (op/position-change-flow (fill/fill-flow channel-flow) {:method method}))
+                  print/open-positions-table))
 
 (defn- working-orders-log-flow [channel-flow]
-  (m/eduction
-   (map (fn [orders]
-          (print/timestamped-table "working orders" (print/working-orders-table orders))))
-   (wo/working-order-list-flow
-    (wo/order-change-flow channel-flow))))
+  (log-table-flow "working orders"
+                  (wo/working-order-list-flow
+                   (wo/order-change-flow channel-flow))
+                  print/working-orders-table))
 
 (defn- snapshot-log-flow
   [channel-flow & [{:keys [method] :or {method :fifo}}]]

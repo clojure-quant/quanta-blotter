@@ -12,7 +12,7 @@
              [quanta.blotter.cli.test-order :as test-order])
   client {:doc "Run the blotter TUI client"
           :task (blotter/start!)}
-  send-orders {:doc "Send all orders from orderlist/<name>.edn, then print them"
+  send-orders {:doc "Send orders from orderlist/<name>.edn (list available names when called with no args)"
                :task (send/send-orders! (first *command-line-args*))}
   cookie {:doc "RPC smoke test: call demo.fortune-cookie/get-cookie and print result"
           :task (cookie/cookie!)}

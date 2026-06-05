@@ -3,14 +3,14 @@
    [clojure.edn :as edn]
    [missionary.core :as m]
    [quanta.blotter.protocol :as p]
-   [quanta.blotter.paper.broker])
-  (:import [missionary Cancelled]))
+   [quanta.blotter.util-rdv :refer [create-rdv]]
+   [quanta.blotter.paper.broker]))
 
 
 (defn add-account [state account]
   (let [account-id (:account/id account)
-        account-order-rdf (m/rdv)
-        account-orderupdate-rdf (m/rdv)]
+        account-order-rdf (create-rdv (str "account/" account-id "/order"))
+        account-orderupdate-rdf (create-rdv (str "account/" account-id "/orderupdate"))]
     (assert account-id "account must have an :account/id")
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
     (let [trade-account (p/create-trade-account account account-order-rdf account-orderupdate-rdf (:log state))
@@ -42,10 +42,12 @@
 (defn wait-for-account-change [state]
   (let [next-change-f (m/eduction (drop 1)
                                   (take 1)
-                                  (:account-change-f state))]
-    (m/reduce (fn [_r v]
-                (println "** account change: " v)
-                v) nil next-change-f)))
+                                  (:account-change-f state))
+        waiting-f (m/ap
+                   (let [v (m/?> next-change-f)]
+                     (m/? (m/via m/blk (println "** account change: " v)))
+                     v))]
+    (m/reduce (fn [_r v] v) nil waiting-f)))
 
 
 (defn read-account-orderupdate [account]
@@ -60,7 +62,7 @@
            inputs (map read-account-orderupdate (vals accounts))
            data  (m/? (apply m/race (conj inputs (wait-for-account-change state))))]
        (if (= data ::account-change)
-         (println "consolidate account change!")
+         (m/? (m/via m/blk (println "consolidate account change!")))
          (m/? ((:orderupdate-rdv state) data)))
        (recur)))))
 
@@ -73,7 +75,7 @@
          (let [account (get @(:accounts state) account-id)]
            (when account
              (m/? ((:account-order-rdf account) data-in))))
-         (println "ignoring msg without account/id:")))
+         (m/? (m/via m/blk (println "ignoring msg without account/id:")))))
      (recur))))
 
 (defn multiplex-t [state]

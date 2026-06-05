@@ -6,6 +6,7 @@
    [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
+   [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.paper.broker]))
 
 (defn create-order-manager [{:keys [log-file transaction-log-file]}]
@@ -14,8 +15,8 @@
         _ (log l {:type :oms/started :date (t/instant)})
         log-fn (partial log l)
         ; setup rdvs
-        order-rdv (m/rdv)
-        orderupdate-rdv (m/rdv)
+        order-rdv (create-rdv "oms/order")
+        orderupdate-rdv (create-rdv "oms/orderupdate")
         ;; consolidator
         consolidator (create-consolidator {:order order-rdv :orderupdate orderupdate-rdv :log log-fn})
         {:keys [order orderupdate]} (:channel consolidator)
@@ -75,9 +76,9 @@
    (let [order (-> order-details
                    (assoc :type :trader/new-order)
                    (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
-     (println "create limit order: " order)
+     (m/? (m/via m/blk (println "create limit order: " order)))
      (m/? ((:order-rdv this) order))
-     (println "create limit order success! order: " order)
+     (m/? (m/via m/blk (println "create limit order success! order: " order)))
      order)))
 
 
@@ -97,3 +98,13 @@
                                  :side :sell
                                  :limit 110.32M
                                  :qty 10000.0M}))))
+
+(defn create-limit-order-rpc
+  "Blocking entry point for flowy/clj-service (:mode :clj) RPC calls."
+  [this order-details]
+  (m/? (create-limit-order this order-details)))
+
+(defn send-test-order-rpc
+  "Blocking entry point for flowy/clj-service (:mode :clj) RPC calls."
+  [oms account-id]
+  (m/? (send-test-order oms account-id)))

@@ -29,6 +29,11 @@
   [block]
   (into [] (mapcat (fn [m] (first (seq m))) block)))
 
+(defn- write-block! [db state block]
+  (let [tx-vector (block->tx-vector block)]
+    (info "db-transactor writing block of" (count block) "events")
+    (db/process db state tx-vector)))
+
 (defn transact-task
   "Missionary task that persists all OMS flows of `this` into `db`.
    Writes are buffered into time blocks and processed together."
@@ -37,15 +42,15 @@
         _ (assert channel-flow "start-db-transactor needs a consolidator combined-flow")
         state (db/new-state)
         combined (apply util/mix (tagged-flows channel-flow))
-        buffered (logger/time-buffered buffer-ms combined)]
-    (m/reduce
-     (fn [_ block]
-       (let [tx-vector (block->tx-vector block)]
-         (info "db-transactor writing block of" (count block) "events")
-         (db/process db state tx-vector)
-         nil))
-     nil
-     buffered)))
+        buffered (logger/time-buffered buffer-ms combined)
+        transacting-f (m/ap
+                       (loop []
+                         (m/amb
+                          (let [block (m/?> buffered)]
+                            (m/? (m/via m/blk (write-block! db state block)))
+                            block)
+                          (recur))))]
+    (m/reduce (fn [_r _v] nil) nil transacting-f)))
 
 (defn start-db-transactor
   "Starts persisting the OMS flows of `this` (from create-order-manager) into

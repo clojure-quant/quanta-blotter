@@ -9,10 +9,37 @@
 
 (def create-order-fn 'quanta.blotter.oms.core/create-limit-order)
 
+(def ^:private orderlist-dir "orderlist")
+
+(defn- list-orderlists
+  "Return names of orderlist/<name>.edn files (without extension), sorted."
+  []
+  (let [dir (java.io.File. orderlist-dir)]
+    (if (.isDirectory dir)
+      (->> (.listFiles dir)
+           (filter #(.isFile %))
+           (map #(.getName %))
+           (filter #(.endsWith % ".edn"))
+           (map #(subs % 0 (- (count %) 4)))
+           sort
+           vec)
+      [])))
+
+(defn- print-orderlist-usage []
+  (println "usage: bb send-orders <orderlist-name>")
+  (println)
+  (let [names (list-orderlists)]
+    (if (seq names)
+      (do
+        (println "available orderlists:")
+        (doseq [n names]
+          (println " " n)))
+      (println "no orderlists found in" orderlist-dir "/"))))
+
 (defn- read-orderlist
   "Read orderlist/<name>.edn (relative to the current working directory)."
   [name]
-  (let [path (str "orderlist/" name ".edn")]
+  (let [path (str orderlist-dir "/" name ".edn")]
     (edn/read-string (slurp path))))
 
 (defn- print-sent-orders-table
@@ -34,7 +61,8 @@
   ([name] (send-orders! name "ws://localhost:9000/flowy"))
   ([name ws-url]
    (when (nil? name)
-     (throw (ex-info "usage: bb send-orders <orderlist-name>  (e.g. fx1)" {})))
+     (print-orderlist-usage)
+     (System/exit 0))
    (let [orders (read-orderlist name)
          conn (client/connect! ws-url)]
      ;; give the websocket a moment to finish the handshake.

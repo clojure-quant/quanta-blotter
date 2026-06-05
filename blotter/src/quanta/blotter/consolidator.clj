@@ -1,7 +1,7 @@
 (ns quanta.blotter.consolidator
   (:require
-   [missionary.core :as m])
-  (:import [missionary Cancelled]))
+   [missionary.core :as m]
+   [quanta.blotter.util-rdv :refer [create-rdv]]))
 
 (defn msg-flow [!-a]
   ; without the stream the last subscriber gets all messages
@@ -29,8 +29,8 @@
   (assert orderupdate "consolidator needs orderupdate")
   (assert log "consolidator needs log")
   (let [{:keys [flow send]} (flow-sender)
-        order-2-rdv (m/rdv)
-        orderupdate-2-rdv (m/rdv)]
+        order-2-rdv (create-rdv "consolidator/order-out")
+        orderupdate-2-rdv (create-rdv "consolidator/orderupdate-in")]
     {:send send
      :combined-flow flow
      :channel-original channel

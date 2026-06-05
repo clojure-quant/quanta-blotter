@@ -11,7 +11,7 @@
         fill-send-flow (m/ap (let [fill (m/?> fill-flow)]
                                (m/? (push fill))))
         fill-task (m/reduce (fn [r v] nil) nil fill-send-flow)]
-    (fill-task #(println "fill-order-done" %) #(println "fill-order-error" %))))
+    (fill-task #(println "fill-order" (:order-id order) " done" %) #(println "fill-order " (:order-id order) " error" %))))
 
 (def reject-reasons
   ["market-closed" "too-many-orders" "temporary-broker-problem"])
@@ -62,7 +62,7 @@
                (log (str "cancel ignored, unknown order-id " order-id))  
                (m/? (push (assoc action
                                  :type :broker/cancel-rejected
-                                 :message "paper broker cannot cancel unkonw order")))))
+                                 :message "paper broker cannot cancel unknown order")))))
 
            ; else
            (m/? (push {:type :broker/message
