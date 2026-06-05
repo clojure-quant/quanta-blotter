@@ -10,3 +10,4 @@ demo/trade-db
 demo/trade-db-oms-server
 .gorilla
 .flowy
+blotter-cli/target

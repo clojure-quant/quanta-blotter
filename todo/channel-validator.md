@@ -26,14 +26,21 @@ ot match the spec, then put on the orderupdate channel a
 :type :orderupdate-spec-error :data original orderupdate.
 if it matches, put the order to the output orderupdate.
 
-ask me questions.
+modify the paper broker, and add a :bad-orderupdate-probability 0-100
+whenver sending an orerupdate back, you will send with :bad-orderupdate-probability
+a message that cannot be validated.
 
-setup a unit test for this.
+write a unit test 
+where you have m/seed of a order flow that contains at least one order that has bad format.
+use a paper trading account that always fills but that has :bad-orderupdate-probability 100%.
+
 
 the unit test should define with m/seed original-orders and
 with m/seed original-orderupdates.
 
-then you have a feeder that feeds this seeded flows to the m/rdv
-of order and orderupdate. 
+configure the quanta.blotter.oms.core so that it will use quanta.blotter.oms.validation-channel.
+
+
+
 
 

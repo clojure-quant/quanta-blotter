@@ -7,8 +7,8 @@
    [clojure.string :as str]
    [charm.core :as charm]
    [charm.components.paginator :as pag]
-   [quanta.blotter.cli.client :as client]
-   [quanta.blotter.oms.print :as print]))
+   [quanta.blotter.oms.print :as print]
+   [quanta.blotter.cli.client :as client]))
 
 (def per-page 15)
 (def table-height (+ per-page 4))
