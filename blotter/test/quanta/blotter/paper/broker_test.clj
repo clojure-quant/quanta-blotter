@@ -63,7 +63,8 @@
                                1)]
       (is (= :broker/order-rejected (:type update)))
       (is (= 1 (:order-id update)))
-      (is (re-find #"paper broker rejected order:" (:message update))))))
+      (is (contains? (set broker/reject-reasons) (:message update))
+          "message is one of the documented reject reasons"))))
 
 (deftest accepts-and-fills-when-not-rejected
   (testing "reject-probability 0 confirms then fills"
