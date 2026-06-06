@@ -1,47 +1,56 @@
 [{:account/id 3
   :asset "USDJPY"
   :side :buyit 
+  :order-type :limit
   :limit 110.30M
   :qty 10000.0M}
  {:account/id 3
   :asset "USDJPY"
   :side :buy
+  :order-type :limit
   :limit 110.30M
   ; missing qty
   }
  {:account/id 3
   :asset "USDJPY"
   :side :sell
+  :order-type :limit
   :limit 120.51M
   :qty 5000.0M}
  {:account/id 6 ; valid order, but corrupted orderupdate
   :asset "USDJPY"
   :side :sell
+  :order-type :limit
   :limit 120.51M
   :qty 5000.0M}
  {:account/id 6 ; valid order, but corrupted orderupdate
   :asset "USDJPY"
   :side :sell
+  :order-type :limit
   :limit 120.51M
   :qty 5000.0M}
  {:account/id 6 ; valid order, but corrupted orderupdate
   :asset "USDJPY"
   :side :sell
+  :order-type :limit
   :limit 120.51M
   :qty 5000.0M}
  {:account/id 6 ; valid order, but corrupted orderupdate
   :asset "EURUSD"
   :side :buy
+  :order-type :limit
   :limit 1.2051M
   :qty 6000.0M}
  {:account/id 6 ; valid order, but corrupted orderupdate
   :asset "EURUSD"
   :side :sell
+  :order-type :limit
   :limit 1.2021M
   :qty 4000.0M}
  {:account/id 6; valid order, but corrupted orderupdate
   :asset "EURUSD"
   :side :buy
+  :order-type :limit
   :limit 1.2023M
   :qty 2000.0M}
  ]

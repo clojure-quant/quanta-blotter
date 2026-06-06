@@ -21,9 +21,23 @@
                       (- qty filled))]
           (recur more (+ filled slice) (conj slices slice)))))))
 
+(def ^:private market-price-min 50.0M)
+(def ^:private market-price-max 100.0M)
+
+(defn random-market-price
+  "Returns a random BigDecimal fill price in [50.0M, 100.0M]."
+  []
+  (let [span (- market-price-max market-price-min)]
+    (+ market-price-min (* span (bigdec (rand))))))
+
+(defn- fill-price [{:keys [order-type limit]}]
+  (case order-type
+    :market (random-market-price)
+    :limit limit))
+
 (defn ->fill
   "Builds a :broker/order-filled message for the given slice quantity."
-  [{:keys [order-id side asset limit] :as order} slice-qty]
+  [{:keys [order-id side asset order-type] :as order} slice-qty]
   {:type :broker/order-filled
    :account/id (:account/id order)
    :order-id order-id
@@ -32,7 +46,7 @@
    :asset asset
    :qty slice-qty
    :side side
-   :price limit})
+   :price (fill-price order)})
 
 (defn fill?
   "Probabilistic decision whether a fill happens this cycle.

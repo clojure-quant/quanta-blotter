@@ -10,9 +10,9 @@
 
 (def channel-events
   "A small channel flow (orders + broker messages) similar to channel-paper.edn."
-  [{:type :trader/new-order :account/id 1 :order-id 1 :asset "BTCUSDT" :side :buy :qty 0.001}
-   {:type :broker/order-confirmed :account/id 1 :order-id 1 :asset "BTCUSDT" :side :buy :qty 0.001}
-   {:type :trader/new-order :account/id 2 :order-id 2 :asset "ETHUSDT" :side :sell :qty 0.001}
+  [{:type :trader/new-order :account/id 1 :order-id 1 :asset "BTCUSDT" :side :buy :order-type :limit :limit 100.0 :qty 0.001}
+   {:type :broker/order-confirmed :account/id 1 :order-id 1 :asset "BTCUSDT" :side :buy :order-type :limit :limit 100.0 :qty 0.001}
+   {:type :trader/new-order :account/id 2 :order-id 2 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
    {:type :broker/order-filled :account/id 2 :order-id 2 :fill-id "f-1" :asset "ETHUSDT" :side :sell :qty 0.001 :price 100.0}
    {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f-2" :asset "BTCUSDT" :side :buy :qty 0.001 :price 10000.0}])
 
@@ -37,7 +37,9 @@
     (testing "orders persisted (one per order-id)"
       (let [orders (db/query-orders conn)]
         (is (= 2 (count orders)))
-        (is (= #{"1" "2"} (set (map :order/id orders))))))
+        (is (= #{"1" "2"} (set (map :order/id orders))))
+        (is (= :limit (:order/type (first (filter #(= "1" (:order/id %)) orders)))))
+        (is (= :market (:order/type (first (filter #(= "2" (:order/id %)) orders)))))))
     (testing "fills persisted once with order ref"
       (let [fills (db/query-fills conn)]
         (is (= 2 (count fills)))

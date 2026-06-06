@@ -4,17 +4,26 @@
    [missionary.core :as m]
    [quanta.blotter.paper.orderfiller :as of]))
 
-(def order
+(def limit-order
   {:order-id 1
    :account/id 3
    :asset "BTCUSDT"
    :side :buy
+   :order-type :limit
    :limit 100.0M
+   :qty 0.001M})
+
+(def market-order
+  {:order-id 2
+   :account/id 3
+   :asset "BTCUSDT"
+   :side :buy
+   :order-type :market
    :qty 0.001M})
 
 (defn- collect
   "Runs the fill flow to completion and returns all emitted messages."
-  [settings]
+  [settings & {:keys [order] :or {order limit-order}}]
   (m/? (m/reduce conj [] (of/random-fill-flow settings (fn [_]) order))))
 
 (deftest fill-slices-single
@@ -55,7 +64,7 @@
   (testing "an unfilled order that is disposed emits :broker/order-canceled"
     (let [seen (atom [])
           flow (of/random-fill-flow {:fill-probability 0 :wait-seconds 60 :fill-qty-prct [100]}
-                                    (fn [_]) order)
+                                    (fn [_]) limit-order)
           task (m/reduce (fn [_ v] (swap! seen conj v) nil) nil flow)
           dispose (task (fn [_]) (fn [_]))]
       ;; the flow is parked in the wait; cancelling triggers the Cancelled branch
@@ -64,3 +73,17 @@
       (Thread/sleep 50)
       (is (some #(= :broker/order-canceled (:type %)) @seen))
       (is (not-any? #(= :broker/order-filled (:type %)) @seen)))))
+
+(deftest market-order-fill-prices-in-range
+  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+                           :order market-order)
+        fills (filter #(= :broker/order-filled (:type %)) emissions)]
+    (is (= 1 (count fills)))
+    (is (<= 50.0M (:price (first fills)) 100.0M))))
+
+(deftest market-order-partial-fills-can-differ-in-price
+  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [50 50]}
+                           :order market-order)
+        fills (vec (filter #(= :broker/order-filled (:type %)) emissions))]
+    (is (= 2 (count fills)))
+    (is (every? #(<= 50.0M (:price %) 100.0M) fills))))

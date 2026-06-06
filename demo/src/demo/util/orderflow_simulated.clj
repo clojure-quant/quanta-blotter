@@ -11,6 +11,7 @@
        :order-id 1
        :asset "BTCUSDT"
        :side :buy
+       :order-type :limit
        :limit 1000.0M
        :qty 0.001M}
     2 {:type :trader/new-order
@@ -18,6 +19,7 @@
        :order-id 2
        :asset "ETHUSDT"
        :side :sell
+       :order-type :limit
        :limit 101.0M
        :qty 0.001M}
     3 {:type :trader/cancel-order
@@ -28,6 +30,7 @@
        :order-id 3
        :asset "ETHUSDT"
        :side :sell
+       :order-type :limit
        :limit 99.3M
        :qty 0.001M}
     7 {:type :trader/new-order
@@ -35,6 +38,7 @@
        :order-id 4
        :asset "ETHUSDT"
        :side :sell
+       :order-type :limit
        :limit 98.7M
        :qty 0.001M}]))
 

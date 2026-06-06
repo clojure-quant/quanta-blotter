@@ -6,17 +6,17 @@
 
 (def channel-paper-flow
   (m/seed
-   [{:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :limit 100.0, :qty 0.001}
-    {:date #inst "2026-06-01T20:10:07.740265349Z", :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
-    {:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :limit 100.0, :qty 0.001}
-    {:date #inst "2026-06-01T20:10:09.740517009Z", :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+   [{:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
+    {:date #inst "2026-06-01T20:10:07.740265349Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
+    {:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    {:date #inst "2026-06-01T20:10:09.740517009Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
     {:type :trader/cancel-order, :account/id 2, :order-id 2}
     {:type :broker/cancel-confirmed, :account/id 2, :order-id 2}
     {:order-id 2, :date #inst "2026-06-01T20:10:12.740853585Z", :type :broker/order-canceled}
-    {:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :limit 100.0, :qty 0.001}
-    {:date #inst "2026-06-01T20:10:17.741032902Z", :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
-    {:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :limit 100.0, :qty 0.001}
-    {:date #inst "2026-06-01T20:10:24.741005992Z", :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+    {:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    {:date #inst "2026-06-01T20:10:17.741032902Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+    {:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    {:date #inst "2026-06-01T20:10:24.741005992Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
     {:type :broker/order-filled, :order-id 4, :fill-id "m-9By0", :date #inst "2026-06-01T20:10:29.741914267Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 100.0}
     {:type :broker/order-filled, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742482333Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
     {:type :broker/order-filled, :order-id 1, :fill-id "KKEY9v", :date #inst "2026-06-01T20:10:52.742779027Z", :asset "BTCUSDT", :qty 0.001, :side :buy, :price 10000.0}]))
@@ -43,9 +43,9 @@
     (is (every? #(instance? java.util.Date (:order/date %)) emissions))))
 
 (deftest order-date-from-first-dated-channel-message
-  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 9 :asset "BTC" :side :buy :qty 0.001M}
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 9 :asset "BTC" :side :buy :order-type :limit :qty 0.001M :limit 100M}
                       {:type :broker/order-confirmed :account/id 1 :order-id 9 :asset "BTC"
-                       :side :buy :qty 0.001M :limit 100M :date #inst "2026-06-01T12:00:00.000Z"}])
+                       :side :buy :order-type :limit :qty 0.001M :limit 100M :date #inst "2026-06-01T12:00:00.000Z"}])
         order (first (last (m/? (m/reduce conj [] (wo/working-order-list-flow (wo/order-change-flow flow))))))]
     (is (= #inst "2026-06-01T12:00:00.000Z" (:order/date order)))
     (is (instance? java.util.Date (:order/date order)))))
@@ -90,14 +90,16 @@
 
 (deftest working-order-list-flow-keeps-open-orders-only
   (let [flow (m/seed [{:type :trader/new-order, :account/id 1, :order-id 9
-                       :asset "BTCUSDT", :side :buy, :qty 0.001}])
+                       :asset "BTCUSDT", :side :buy, :order-type :market, :qty 0.001}])
         lists (m/? (m/reduce conj [] (wo/working-order-list-flow (wo/order-change-flow flow))))]
     (is (= 1 (count (last lists))))
-    (is (= 9 (:order/id (first (last lists)))))))
+    (is (= 9 (:order/id (first (last lists)))))
+    (is (= :market (:order/type (first (last lists)))))))
 
 (deftest rejected-order-has-text
-  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy :qty 1.0}
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
                       {:type :broker/order-rejected :account/id 1 :order-id 1 :message "market-closed"}])
         last-order (final-for-order (m/? (m/reduce conj [] (wo/order-change-flow flow))) 1)]
     (is (= :rejected (:order/status last-order)))
-    (is (= "market-closed" (:order/text last-order)))))
+    (is (= "market-closed" (:order/text last-order)))
+    (is (= :market (:order/type last-order)))))

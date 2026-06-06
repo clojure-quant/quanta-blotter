@@ -200,11 +200,6 @@ Will release the lock of l in all circumstances."
    (first-match #(> % 3)
                 (m/seed [1 2 3 4 5 6])))
 
-  (m/? (m/reduce println nil
-                 (current-value (m/seed [1 2 3]))))
-
-  (m/? (current-value-task (m/seed [1 2 3])))
-
   (m/?
    (m/reduce println nil
              (mix (m/seed [1 2 3 4 5 6 7 8]) (m/seed [:a :b :c]))))

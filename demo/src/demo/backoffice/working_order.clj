@@ -13,11 +13,12 @@
 
 
 (defn- order->row
-  [{:order/keys [id account-id asset side status qty qty-filled qty-working avg-price history text date]}]
+  [{:order/keys [id account-id asset side type status qty qty-filled qty-working avg-price history text date]}]
   {:account account-id
    :order-id id
    :asset asset
    :side side
+   :type type
    :status status
    :qty qty
    :qty-filled qty-filled
@@ -28,7 +29,7 @@
    :# (count history)})
 
 (def ^:private table-cols
-  [:account :order-id :asset :side :status :qty :qty-filled :qty-working :avg-price :text :#])
+  [:account :order-id :asset :side :type :status :qty :qty-filled :qty-working :avg-price :text :#])
 
 (defn- print-orders-table! [orders-by-id]
   (println)

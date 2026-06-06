@@ -1,15 +1,18 @@
 [{:account/id 7
   :asset "USDJPY"
   :side :buy
+  :order-type :limit
   :limit 110.30M
   :qty 10000.0M}
  {:account/id 7
   :asset "USDJPY"
   :side :sell
+  :order-type :limit
   :limit 120.51M
   :qty 5000.0M}
  {:account/id 7
   :asset "USDJPY"
   :side :sell
+  :order-type :limit
   :limit 120.51M
   :qty 5000.0M}]

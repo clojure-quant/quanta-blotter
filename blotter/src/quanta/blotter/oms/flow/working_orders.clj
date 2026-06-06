@@ -47,7 +47,7 @@
          :asset (:asset msg)
          :side (:side msg)
          :qty (some-> (:qty msg) bigdec)
-         :order-type (if (some? (:limit msg)) :limit :market)
+         :order-type (:order-type msg)
          :fill-qty 0M
          :fill-notional 0M
          :price-scale 0

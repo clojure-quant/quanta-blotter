@@ -109,21 +109,23 @@
     (reset! dispose-a nil))
   (dissoc this :trading-state))
 
-(defn create-limit-order
-  "Create a limit order and push it on the OMS order channel."
-  [this {:keys [asset side qty limit order-id broker]
+(defn create-order
+  "Create an order and push it on the OMS order channel.
+   `:order-type` is `:limit` or `:market`; limit orders require `:limit`."
+  [this {:keys [order-type asset side qty limit order-id]
          :as order-details}]
   (m/sp
    (assert (map? order-details) "order-details must be a map")
    (assert (map? this) "this (oms) needs to be a map")
    (assert (:order-rdv this) "this (oms) needs to have an order-rdv")
-   
+   (assert (some? order-type) "order-details must include :order-type")
+
    (let [order (-> order-details
                    (assoc :type :trader/new-order)
                    (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
-     (m/? (m/via m/blk (println "create limit order: " order)))
+     (m/? (m/via m/blk (println "create order: " order)))
      (m/? ((:order-rdv this) order))
-     (m/? (m/via m/blk (println "create limit order success! order: " order)))
+     (m/? (m/via m/blk (println "create order success! order: " order)))
      order)))
 
 
@@ -133,21 +135,23 @@
 
 (defn send-test-order [oms account-id]
   (m/sp 
-   (m/? (create-limit-order oms {:account/id account-id
-                                 :asset "__TEST"
-                                 :side :buy
-                                 :limit 110.30M
-                                 :qty 10000.0M}))
-   (m/? (create-limit-order oms {:account/id account-id
-                                 :asset "__TEST"
-                                 :side :sell
-                                 :limit 110.32M
-                                 :qty 10000.0M}))))
+   (m/? (create-order oms {:account/id account-id
+                           :order-type :limit
+                           :asset "__TEST"
+                           :side :buy
+                           :limit 110.30M
+                           :qty 10000.0M}))
+   (m/? (create-order oms {:account/id account-id
+                           :order-type :limit
+                           :asset "__TEST"
+                           :side :sell
+                           :limit 110.32M
+                           :qty 10000.0M}))))
 
-(defn create-limit-order-rpc
+(defn create-order-rpc
   "Blocking entry point for flowy/clj-service (:mode :clj) RPC calls."
   [this order-details]
-  (m/? (create-limit-order this order-details)))
+  (m/? (create-order this order-details)))
 
 (defn send-test-order-rpc
   "Blocking entry point for flowy/clj-service (:mode :clj) RPC calls."

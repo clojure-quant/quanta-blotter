@@ -7,12 +7,12 @@
    [quanta.blotter.oms.flow.trading-state :as trading-state]))
 
 (def three-working-orders
-  [{:type :trader/new-order :account/id 7 :order-id "n1" :asset "USDJPY" :side :buy :limit 110.30M :qty 10000M}
-   {:type :broker/order-confirmed :account/id 7 :order-id "n1" :asset "USDJPY" :side :buy :limit 110.30M :qty 10000M}
-   {:type :trader/new-order :account/id 7 :order-id "n2" :asset "USDJPY" :side :sell :limit 120.51M :qty 5000M}
-   {:type :broker/order-confirmed :account/id 7 :order-id "n2" :asset "USDJPY" :side :sell :limit 120.51M :qty 5000M}
-   {:type :trader/new-order :account/id 7 :order-id "n3" :asset "USDJPY" :side :sell :limit 120.51M :qty 5000M}
-   {:type :broker/order-confirmed :account/id 7 :order-id "n3" :asset "USDJPY" :side :sell :limit 120.51M :qty 5000M}])
+  [{:type :trader/new-order :account/id 7 :order-id "n1" :asset "USDJPY" :side :buy :order-type :limit :limit 110.30M :qty 10000M}
+   {:type :broker/order-confirmed :account/id 7 :order-id "n1" :asset "USDJPY" :side :buy :order-type :limit :limit 110.30M :qty 10000M}
+   {:type :trader/new-order :account/id 7 :order-id "n2" :asset "USDJPY" :side :sell :order-type :limit :limit 120.51M :qty 5000M}
+   {:type :broker/order-confirmed :account/id 7 :order-id "n2" :asset "USDJPY" :side :sell :order-type :limit :limit 120.51M :qty 5000M}
+   {:type :trader/new-order :account/id 7 :order-id "n3" :asset "USDJPY" :side :sell :order-type :limit :limit 120.51M :qty 5000M}
+   {:type :broker/order-confirmed :account/id 7 :order-id "n3" :asset "USDJPY" :side :sell :order-type :limit :limit 120.51M :qty 5000M}])
 
 (defn- oms-with-flow []
   (let [{:keys [flow send]} (flow-sender)]

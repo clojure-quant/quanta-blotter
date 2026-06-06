@@ -45,7 +45,7 @@
                              ; oms api
                              {:fun 'quanta.blotter.oms.core/send-test-order
                               :ctx :oms :permission nil :mode :sp}
-                             {:fun 'quanta.blotter.oms.core/create-limit-order
+                             {:fun 'quanta.blotter.oms.core/create-order
                               :ctx :oms :permission nil :mode :sp}
                              {:fun 'quanta.blotter.oms.core/combined-flow 
                               :ctx :oms :permission nil :mode :ap}

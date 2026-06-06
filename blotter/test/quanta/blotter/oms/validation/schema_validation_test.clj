@@ -17,6 +17,7 @@
    :order-id 1
    :asset "BTCUSDT"
    :side :buy
+   :order-type :limit
    :limit 100.0M
    :qty 0.001M})
 
@@ -26,6 +27,7 @@
    :order-id 99
    :asset "BTCUSDT"
    :side :buy
+   :order-type :limit
    :qty 0.001M
    :limit 100.0M
    :date (t/instant)})
@@ -46,6 +48,7 @@
                    :order-id 99
                    :asset "BTCUSDT"
                    :side :buy
+                   :order-type :limit
                    :qty 0.001M
                    :limit 100.0M
                    :date (t/instant)}
@@ -154,6 +157,7 @@
                    :order-id 1
                    :asset "BTCUSDT"
                    :side :buy
+                   :order-type :limit
                    :qty 0.001M
                    :limit 100.0M
                    :date (t/instant)}]

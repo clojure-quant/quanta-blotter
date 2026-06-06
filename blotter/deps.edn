@@ -22,5 +22,8 @@
                  slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default build}
 
+  :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2025.09.19"}}
+         :main-opts ["-m" "clj-kondo.main" "--lint" "src" "test" "deps.edn" "--fail-level" "error"]}
+
 ;
  }}

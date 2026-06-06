@@ -92,6 +92,18 @@
         fill-task (m/reduce (fn [r v] nil) nil fill-send-flow)]
     (fill-task #(println "fill-order" (:order-id order) " done" %) #(println "fill-order " (:order-id order) " error" %))))
 
+(defn- order-confirmed [action]
+  (cond-> {:type :broker/order-confirmed
+           :account/id (:account/id action)
+           :order-id (:order-id action)
+           :asset (:asset action)
+           :side (:side action)
+           :qty (:qty action)
+           :order-type (:order-type action)
+           :date (t/instant)
+           :message "paper broker confirmed new order"}
+    (= :limit (:order-type action)) (assoc :limit (:limit action))))
+
 (defn- paper-broker-task [settings pull push log]
   (m/sp
    (log (str "paper broker started " settings))
@@ -103,10 +115,7 @@
            :trader/new-order
            (if-let [reason (reject-reason (:reject-probability settings))]
              (m/? (push-update settings push (reject-message action reason)))
-             (let [_ (m/? (push-update settings push (assoc action
-                                                             :type :broker/order-confirmed
-                                                             :date (t/instant)
-                                                             :message "paper broker confirmed new order")))
+             (let [_ (m/? (push-update settings push (order-confirmed action)))
                    dispose-fill (start-fill! settings log action push)]
                (swap! orders assoc order-id dispose-fill)))
 

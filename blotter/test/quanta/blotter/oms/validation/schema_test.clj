@@ -27,6 +27,7 @@
         :order-id 1
         :asset "BTCUSDT"
         :side :buy
+        :order-type :limit
         :qty 0.001M
         :limit 100.0M}))
   (is (s/validate-message
@@ -35,6 +36,7 @@
         :order-id "abc"
         :asset "BTCUSDT"
         :side :sell
+        :order-type :market
         :qty 0.001M}))
   (is (not (s/validate-message
             {:type :trader/new-order
@@ -42,7 +44,36 @@
              :order-id 1
              :asset "BTCUSDT"
              :side :long
-             :qty 0.001}))))
+             :order-type :limit
+             :qty 0.001})))
+  (is (not (s/validate-message
+            {:type :trader/new-order
+             :account/id 1
+             :order-id 1
+             :asset "BTCUSDT"
+             :side :buy
+             :order-type :limit
+             :qty 0.001M}))
+        "limit order without :limit is invalid")
+  (is (not (s/validate-message
+            {:type :trader/new-order
+             :account/id 1
+             :order-id 1
+             :asset "BTCUSDT"
+             :side :buy
+             :order-type :market
+             :qty 0.001M
+             :limit 100.0M}))
+        "market order with :limit is invalid")
+  (is (not (s/validate-message
+            {:type :trader/new-order
+             :account/id 1
+             :order-id 1
+             :asset "BTCUSDT"
+             :side :buy
+             :qty 0.001M
+             :limit 100.0M}))
+        "missing :order-type is invalid"))
 
 (deftest trader-cancel-order-test
   (is (s/validate-message

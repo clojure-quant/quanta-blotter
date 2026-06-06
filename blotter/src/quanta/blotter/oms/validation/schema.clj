@@ -20,6 +20,16 @@
 
 (def Side [:enum :buy :sell])
 
+(def OrderType [:enum :limit :market])
+
+(defn limit-market-exclusive?
+  "Limit orders require :limit; market orders must not include :limit."
+  [{:keys [order-type limit]}]
+  (case order-type
+    :limit (some? limit)
+    :market (nil? limit)
+    false))
+
 (def Decimal [:fn decimal?])
 
 (def PositiveDecimal
@@ -29,14 +39,18 @@
 (def Instant :time/instant)
 
 (def TraderNewOrder
-  [:map
-   [:type [:= :trader/new-order]]
-   [:account/id AccountId]
-   [:order-id OrderId]
-   [:asset :string]
-   [:side Side]
-   [:qty PositiveDecimal]
-   [:limit {:optional true} PositiveDecimal]])
+  [:and
+   [:map
+    [:type [:= :trader/new-order]]
+    [:account/id AccountId]
+    [:order-id OrderId]
+    [:asset :string]
+    [:side Side]
+    [:qty PositiveDecimal]
+    [:order-type OrderType]
+    [:limit {:optional true} PositiveDecimal]]
+   [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}
+    limit-market-exclusive?]])
 
 (def TraderCancelOrder
   [:map
@@ -57,16 +71,20 @@
    [:price PositiveDecimal]])
 
 (def BrokerOrderConfirmed
-  [:map
-   [:type [:= :broker/order-confirmed]]
-   [:account/id AccountId]
-   [:order-id OrderId]
-   [:asset :string]
-   [:side Side]
-   [:qty PositiveDecimal]
-   [:limit PositiveDecimal]
-   [:date Instant]
-   [:message {:optional true} :string]])
+  [:and
+   [:map
+    [:type [:= :broker/order-confirmed]]
+    [:account/id AccountId]
+    [:order-id OrderId]
+    [:asset :string]
+    [:side Side]
+    [:qty PositiveDecimal]
+    [:order-type OrderType]
+    [:limit {:optional true} PositiveDecimal]
+    [:date Instant]
+    [:message {:optional true} :string]]
+   [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}
+    limit-market-exclusive?]])
 
 (def BrokerOrderRejected
   [:map

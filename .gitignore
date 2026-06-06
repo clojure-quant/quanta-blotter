@@ -1,5 +1,5 @@
 .lsp
-.clj-kondo
+.clj-kondo/.cache
 .cpcache
 .nrepl-port
 .calva
@@ -11,3 +11,4 @@ demo/trade-db-oms-server
 .gorilla
 .flowy
 blotter-cli/target
+blotter/.clj-kondo/.cache

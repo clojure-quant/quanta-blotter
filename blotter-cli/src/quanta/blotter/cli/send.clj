@@ -7,7 +7,7 @@
    [crockery.core :as crockery]
    [quanta.blotter.cli.client :as client]))
 
-(def create-order-fn 'quanta.blotter.oms.core/create-limit-order)
+(def create-order-fn 'quanta.blotter.oms.core/create-order)
 
 (def ^:private orderlist-dir "orderlist")
 
@@ -50,9 +50,9 @@
     {:name :account :title "account" :align :right :key-fn :account/id}
     {:name :asset :title "asset" :align :right :key-fn :asset}
     {:name :side :title "side" :align :right :key-fn :side}
+    {:name :order-type :title "order-type" :align :right :key-fn :order-type}
     {:name :qty :title "qty" :align :right :key-fn :qty}
-    {:name :limit :title "limit" :align :right :key-fn :limit}
-    {:name :type :title "type" :align :right :key-fn :type}]
+    {:name :limit :title "limit" :align :right :key-fn :limit}]
    orders))
 
 (defn send-orders!

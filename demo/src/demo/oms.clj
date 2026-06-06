@@ -1,7 +1,7 @@
 (ns demo.oms
   (:require
    [missionary.core :as m]
-   [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager! create-limit-order]]
+   [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager! create-order]]
    [quanta.blotter.account-manager :refer [add-edn-accounts]]
    ; demo order flow
    [quanta.blotter.util :refer [push-flow-to-rdv]]
@@ -40,26 +40,29 @@ oms
 
 
 (m/?
- (create-limit-order oms {:account/id 3
-                          :asset "USDJPY"
-                          :side :buy
-                          :limit 110.30M 
-                          :qty 10000.0M}))
+ (create-order oms {:account/id 3
+                    :order-type :limit
+                    :asset "USDJPY"
+                    :side :buy
+                    :limit 110.30M 
+                    :qty 10000.0M}))
 
 (m/?
- (create-limit-order oms {:account/id 3
-                          :asset "USDJPY"
-                          :side :sell
-                          :limit 120.51M 
-                          :qty 5000.0M}))
+ (create-order oms {:account/id 3
+                    :order-type :limit
+                    :asset "USDJPY"
+                    :side :sell
+                    :limit 120.51M 
+                    :qty 5000.0M}))
 
 
 (m/?
- (create-limit-order oms {:account/id 4
-                          :asset "EURUSD"
-                          :side :buy
-                          :limit 1.2051M
-                          :qty 6000.0M}))
+ (create-order oms {:account/id 4
+                    :order-type :limit
+                    :asset "EURUSD"
+                    :side :buy
+                    :limit 1.2051M
+                    :qty 6000.0M}))
 
 (comment
   ;; inspect what has been persisted to datahike

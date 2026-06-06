@@ -12,7 +12,17 @@
    :order-id 1
    :asset "BTCUSDT"
    :side :buy
+   :order-type :limit
    :limit 100.0M
+   :qty 0.001M})
+
+(def market-order
+  {:type :trader/new-order
+   :account/id 3
+   :order-id 2
+   :asset "BTCUSDT"
+   :side :buy
+   :order-type :market
    :qty 0.001M})
 
 (deftest reject-reason-accepts-when-zero
@@ -38,14 +48,14 @@
 (defn- run-broker
   "Drives the paper broker with one new-order and collects the broker's
    updates until `n` messages have been pushed back. Returns the updates."
-  [settings n]
+  [settings n & {:keys [order] :or {order new-order}}]
   (let [to-broker (m/rdv)
         from-broker (m/rdv)
         account {:account/id 3 :account/api :paper :account/settings settings}
         task (p/create-trade-account account to-broker from-broker (fn [_]))
         dispose (task (fn [_]) (fn [_]))
         program (m/sp
-                 (m/? (to-broker new-order))
+                 (m/? (to-broker order))
                  (loop [acc []]
                    (if (= n (count acc))
                      acc
@@ -73,7 +83,29 @@
                                :fill-qty-prct [100]
                                :wait-seconds 0}
                               2)
-          types (map :type updates)]
+          types (map :type updates)
+          confirmed (first updates)
+          fill (second updates)]
       (is (= :broker/order-confirmed (first types)))
+      (is (= :limit (:order-type confirmed)))
+      (is (= 100.0M (:limit confirmed)))
       (is (some #(= :broker/order-filled %) types))
+      (is (= 100.0M (:price fill)))
       (is (not-any? #(= :broker/order-rejected %) types)))))
+
+(deftest market-order-confirms-without-limit-and-fills-in-range
+  (testing "market order confirm omits :limit; fill price in [50M, 100M]"
+    (let [updates (run-broker {:reject-probability 0
+                               :fill-probability 100
+                               :fill-qty-prct [100]
+                               :wait-seconds 0}
+                              2
+                              :order market-order)
+          confirmed (first updates)
+          fill (second updates)]
+      (is (= :broker/order-confirmed (:type confirmed)))
+      (is (= :market (:order-type confirmed)))
+      (is (not (contains? confirmed :limit)))
+      (is (s/validate-message confirmed))
+      (is (= :broker/order-filled (:type fill)))
+      (is (<= 50.0M (:price fill) 100.0M)))))

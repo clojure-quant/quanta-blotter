@@ -29,6 +29,9 @@ jobs:
         with:
           cli: latest
 
+      - name: Lint
+        run: clojure -M:lint
+
       - name: Run unit tests
         run: clojure -M:test
 

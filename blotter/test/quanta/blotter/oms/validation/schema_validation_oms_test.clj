@@ -15,6 +15,7 @@
    :order-id 1
    :asset "BTCUSDT"
    :side :buy
+   :order-type :limit
    :limit 100.0M
    :qty 0.001M})
 

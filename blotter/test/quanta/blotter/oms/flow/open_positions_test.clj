@@ -100,7 +100,7 @@
     (is (false? (:position/open (last ems))))))
 
 (deftest ignores-non-fill-messages
-  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :asset "X" :side :buy :qty 1.0}
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
                       (fill 1 "X" :buy 1.0 5.0)])
         ems (emissions flow)]
     (is (= 1 (count ems)))
@@ -108,7 +108,7 @@
 
 (deftest channel-paper-fills
   (let [flow (m/seed
-              [{:type :trader/new-order :account/id 2 :order-id 4 :asset "ETHUSDT" :side :sell :qty 0.001}
+              [{:type :trader/new-order :account/id 2 :order-id 4 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
                {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
                 :qty 0.001 :side :sell :price 100.0}
                {:type :broker/order-filled :account/id 2 :order-id 3 :asset "ETHUSDT"
