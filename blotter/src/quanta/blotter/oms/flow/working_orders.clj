@@ -152,3 +152,10 @@
   (m/eduction
    (map (fn [dict] (vals dict)))
    (working-order-dict-flow order-change-f)))
+
+(defn working-order-list-from-dict-flow
+  "Emits a sorted vector of working orders from a shared dict flow."
+  [dict-flow]
+  (m/eduction
+   (map (fn [dict] (sort-by :order/id (vals dict))))
+   dict-flow))

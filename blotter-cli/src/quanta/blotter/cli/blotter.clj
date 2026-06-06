@@ -339,11 +339,12 @@
 (defn- history-table-str [state]
   (let [rows (displayed-rows state)
         [start end] (pag/slice-bounds (:pager state) (count rows))
-        slice (if (seq rows) (subvec rows start end) [])]
+        slice (if (seq rows) (subvec rows start end) [])
+        opts {:max-width (main-width state)}]
     (case (:history-page state)
-      :orders (print/working-orders-table slice)
-      :trades (print/trades-table slice)
-      :positions (print/open-positions-table slice))))
+      :orders (print/working-orders-table slice opts)
+      :trades (print/trades-table slice opts)
+      :positions (print/open-positions-table slice opts))))
 
 (def page-key {:orders "1" :trades "2" :positions "3"})
 

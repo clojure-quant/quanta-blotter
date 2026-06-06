@@ -4,10 +4,7 @@
    [taoensso.timbre :refer [info error]]
    [quanta.blotter.util :as util]
    [quanta.blotter.logger :as logger]
-   [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.flow.fill :as fill]
-   [quanta.blotter.oms.flow.open-positions :as op]
-   [quanta.blotter.oms.flow.working-orders :as wo]))
+   [quanta.blotter.oms.db :as db]))
 
 (def ^:private buffer-ms 500)
 
@@ -15,13 +12,14 @@
   (m/eduction (map (fn [v] {k v})) flow))
 
 (defn- tagged-flows
-  "Builds the four tagged flows derived from the channel flow."
-  [channel-flow]
-  (let [fill-flow (fill/fill-flow channel-flow)]
+  "Builds the four tagged flows from shared trading-state flows."
+  [{:keys [consolidator trading-state]}]
+  (let [{:keys [order-change-flow fill-flow position-change-flow]} trading-state
+        channel-flow (:combined-flow consolidator)]
     [(tag :msg channel-flow)
-     (tag :order (wo/order-change-flow channel-flow))
+     (tag :order order-change-flow)
      (tag :fill fill-flow)
-     (tag :position (op/position-change-flow fill-flow {:method :fifo}))]))
+     (tag :position position-change-flow)]))
 
 (defn- block->tx-vector
   "Turns a buffered block (vector of single-entry tagged maps like {:msg m})
@@ -38,10 +36,9 @@
   "Missionary task that persists all OMS flows of `this` into `db`.
    Writes are buffered into time blocks and processed together."
   [this db]
-  (let [channel-flow (get-in this [:consolidator :combined-flow])
-        _ (assert channel-flow "start-db-transactor needs a consolidator combined-flow")
+  (let [_ (assert (:trading-state this) "start-db-transactor needs :trading-state")
         state (db/new-state)
-        combined (apply util/mix (tagged-flows channel-flow))
+        combined (apply util/mix (tagged-flows this))
         buffered (logger/time-buffered buffer-ms combined)
         transacting-f (m/ap
                        (loop []

@@ -3,10 +3,22 @@
    [tick.core :as t]
    [crockery.core :as crockery]))
 
-(defn working-orders-table [working-orders]
-  (with-out-str
-    (crockery/print-table
-     [{:name :date, :align :left :title "date" :key-fn :order/date}
+(def default-table-max-width
+  "Avoid crockery terminal-width rebalancing, which can shrink columns below
+   ellipsis-safe widths and crash on narrow ttys."
+  170)
+
+(defn- table-opts [{:keys [max-width] :as opts}]
+  (merge {:max-width (or max-width default-table-max-width)} opts))
+
+(defn working-orders-table
+  ([working-orders]
+   (working-orders-table working-orders {}))
+  ([working-orders opts]
+   (with-out-str
+     (crockery/print-table
+      (table-opts opts)
+      [{:name :date, :align :left :title "date" :key-fn :order/date}
       {:name :account, :title "account" :align :left :key-fn :order/account-id}
       {:name :order-id, :title "order-id" :align :left :key-fn :order/id}
       {:name :asset, :align :right :title "asset" :key-fn :order/asset}
@@ -18,13 +30,17 @@
       {:name :qty-filled, :align :right :title "qty-filled" :key-fn :order/qty-filled}
       {:name :avg-price, :align :right :title "avg-price" :key-fn :order/avg-price}
       {:name :text, :align :right :title "text" :key-fn :order/text}]
-     working-orders)))
+      working-orders))))
 
 
-(defn trades-table [trades]
-  (with-out-str
-    (crockery/print-table
-     [{:name :date, :align :left :title "date" :key-fn :fill/date}
+(defn trades-table
+  ([trades]
+   (trades-table trades {}))
+  ([trades opts]
+   (with-out-str
+     (crockery/print-table
+      (table-opts opts)
+      [{:name :date, :align :left :title "date" :key-fn :fill/date}
       {:name :account, :title "account" :align :left :key-fn :fill/account-id}
       {:name :order-id, :title "order-id" :align :left :key-fn :fill/order-id}
       {:name :asset, :align :right :title "asset" :key-fn :fill/asset}
@@ -32,13 +48,17 @@
       {:name :qty, :align :right :title "qty" :key-fn :fill/qty}
       {:name :price, :align :right :title "price" :key-fn :fill/price}
       {:name :fill-id, :align :right :title "fill-id" :key-fn :fill/id}]
-     trades)))
+      trades))))
 
 
-(defn open-positions-table [open-positions]
-  (with-out-str
-    (crockery/print-table
-     [{:name :date-opened, :align :left :title "date-opened" :key-fn :position/date-open}
+(defn open-positions-table
+  ([open-positions]
+   (open-positions-table open-positions {}))
+  ([open-positions opts]
+   (with-out-str
+     (crockery/print-table
+      (table-opts opts)
+      [{:name :date-opened, :align :left :title "date-opened" :key-fn :position/date-open}
       {:name :account, :title "account" :align :left :key-fn :position/account}
       {:name :asset, :align :right :title "asset" :key-fn :position/asset}
       {:name :side, :align :right :title "side" :key-fn :position/side}
@@ -48,7 +68,7 @@
       {:name :avg-entry, :align :right :title "avg-entry" :key-fn :position/average-entry-price}
       {:name :avg-exit, :align :right :title "avg-exit" :key-fn :position/avg-exit-price}
       {:name :realized-pl, :align :right :title "realized-pl" :key-fn :position/realized-pl}]
-     open-positions)))
+      open-positions))))
 
 (defn timestamped-table [label table-str]
   (str (t/instant) " " label "\r\n" table-str))

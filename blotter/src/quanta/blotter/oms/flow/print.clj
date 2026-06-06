@@ -4,7 +4,6 @@
    [quanta.blotter.util :as util]
    [quanta.blotter.logger :as logger]
    [quanta.blotter.oms.validation.flow :as vf]
-   [quanta.blotter.oms.flow.fill :as fill]
    [quanta.blotter.oms.flow.open-positions :as op]
    [quanta.blotter.oms.flow.working-orders :as wo]
    [quanta.blotter.oms.print :as print]
@@ -21,29 +20,31 @@
       (recur)))))
 
 (defn- positions-log-flow
-  [channel-flow & [{:keys [method] :or {method :fifo}}]]
+  [open-position-dict-flow]
   (log-table-flow "open positions"
-                  (op/open-position-list-flow
-                   (op/position-change-flow (fill/fill-flow channel-flow) {:method method}))
+                  (op/open-position-list-from-dict-flow open-position-dict-flow)
                   print/open-positions-table))
 
-(defn- working-orders-log-flow [channel-flow]
+(defn- working-orders-log-flow [working-order-dict-flow]
   (log-table-flow "working orders"
-                  (wo/working-order-list-flow
-                   (wo/order-change-flow channel-flow))
+                  (wo/working-order-list-from-dict-flow working-order-dict-flow)
                   print/working-orders-table))
 
 (defn- snapshot-log-flow
-  [channel-flow & [{:keys [method] :or {method :fifo}}]]
+  [{:keys [working-order-dict-flow open-position-dict-flow]} channel-flow]
   (util/mix
-   (positions-log-flow channel-flow {:method method})
-   (working-orders-log-flow channel-flow)
+   (positions-log-flow open-position-dict-flow)
+   (working-orders-log-flow working-order-dict-flow)
    (vf/bad-message-with-explaination channel-flow)))
 
 (defn start-open-positions-working-order-logger! [oms log-file]
-  (let [channel-flow (get-in oms [:consolidator :combined-flow])
-        _ (assert channel-flow "start-open-positions-working-order-logger! needs channel-flow")
+  (let [{:keys [working-order-dict-flow open-position-dict-flow]}
+        (:trading-state oms)
+        channel-flow (get-in oms [:consolidator :combined-flow])
+        _ (assert working-order-dict-flow "start-open-positions-working-order-logger! needs :trading-state")
         l (logger/create-logger log-file false)
-        log-f (snapshot-log-flow channel-flow {:method :fifo})
+        log-f (snapshot-log-flow {:working-order-dict-flow working-order-dict-flow
+                                  :open-position-dict-flow open-position-dict-flow}
+                                 channel-flow)
         dispose! (logger/start-log-flow-to-logger l log-f)]
     {:dispose dispose!}))

@@ -12,6 +12,7 @@
   :cli-trade {:exec-fn demo.cli-trade/start-cli}
 
   :cli-server {:main-opts ["-m" "demo.oms-server"]}
+  :verify-multi-client {:main-opts ["-m" "demo.verify-multi-client"]}
 
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}

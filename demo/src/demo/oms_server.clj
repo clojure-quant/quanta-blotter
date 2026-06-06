@@ -33,6 +33,7 @@
                                     :transaction-log-file "log/oms-server-transaction.txt"
                                     :validate? true})
         _ (add-edn-accounts (:account-manager oms) "demo-accounts.edn")
+        oms (start-order-manager! oms)
         dispose-wo-op-logger (start-open-positions-working-order-logger! oms "log/oms-server-wo-op.txt")
         trade-db (db/trade-db-start "trade-db-oms-server")
         db-transactor (db-transactor/start-db-transactor oms trade-db)
@@ -40,9 +41,7 @@
                     :dispose-wo-op-logger dispose-wo-op-logger
                     :trade-db trade-db
                     :db-transactor db-transactor}
-        jetty (do
-                (start-order-manager! oms)
-                (start-socket-server oms trade-db oms-server))
+        jetty (start-socket-server oms trade-db oms-server)
         dispose-test-order-poller (start-test-order-poller! oms 3)
         ]
     (assoc oms-server

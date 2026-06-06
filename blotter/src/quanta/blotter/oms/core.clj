@@ -9,7 +9,8 @@
     :refer [create-validation-channel start-validation-channel! stop-validation-channel!]]
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
    [quanta.blotter.util-rdv :refer [create-rdv]]
-   [quanta.blotter.paper.broker]))
+   [quanta.blotter.paper.broker]
+   [quanta.blotter.oms.flow.trading-state :as trading-state]))
 
 (defn- create-validated-channel-stack
   "Consolidator (public) -> validator -> account manager."
@@ -83,14 +84,17 @@
         dispose-validation! (when validator
                               (start-validation-channel! validator))
         dispose-consolidator! (start-consolidator! consolidator)
-        dispose-account-manager! (start-account-manager account-manager)]
+        dispose-account-manager! (start-account-manager account-manager)
+        trading-state (trading-state/start-trading-state! this)]
     (reset! (:dispose-a this)
             {:dispose-transaction-logger dispose-transaction-logger
              :dispose-orderupdate-consumer! dispose-orderupdate-consumer!
              :dispose-validation! dispose-validation!
              :dispose-consolidator! dispose-consolidator!
-             :dispose-account-manager! dispose-account-manager!})
-    (log log-transaction {:type :oms/started :date (t/instant)})))
+             :dispose-account-manager! dispose-account-manager!
+             :dispose-trading-state! #(trading-state/stop-trading-state! trading-state)})
+    (log log-transaction {:type :oms/started :date (t/instant)})
+    (assoc this :trading-state trading-state)))
 
 
 (defn stop-order-manager! [{:keys [dispose-a validator] :as this}]
@@ -101,7 +105,9 @@
     (:dispose-consolidator! d)
     (:dispose-orderupdate-consumer! d)
     (:dispose-transaction-logger d)
-    (reset! dispose-a nil)))
+    (:dispose-trading-state! d)
+    (reset! dispose-a nil))
+  (dissoc this :trading-state))
 
 (defn create-limit-order
   "Create a limit order and push it on the OMS order channel."

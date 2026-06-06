@@ -337,3 +337,10 @@
   (m/eduction
    (map vals)
    (open-position-dict-flow position-change-f)))
+
+(defn open-position-list-from-dict-flow
+  "Emits a vector of open positions from a shared dict flow."
+  [dict-flow]
+  (m/eduction
+   (map vals)
+   dict-flow))

@@ -40,7 +40,7 @@
                                    :validate? true})
         combined-events (atom [])]
     (try
-      (start-order-manager! oms)
+      (start-order-manager! oms) ; returns oms with :trading-state
       (start-combined-collector! oms combined-events)
       (add-account (:account-manager oms)
                    {:account/id account-id
