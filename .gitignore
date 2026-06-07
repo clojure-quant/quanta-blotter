@@ -12,3 +12,4 @@ demo/trade-db-oms-server
 .flowy
 blotter-cli/target
 blotter/.clj-kondo/.cache
+demo/msg.log

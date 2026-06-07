@@ -10,6 +10,7 @@
    [quanta.blotter.oms.db-transactor :as db-transactor]
    ; side effects
    [quanta.blotter.paper.broker] ; side effect: brings in paper broker implementation
+   [fix-engine.blotter.fix-trade] ; side effect: brings in fix-trade broker implementation
    ; cli websocket server
    [quanta.blotter.cli.server :refer [start-socket-server]])
   (:import [missionary Cancelled]))

@@ -1,0 +1,22 @@
+[{:account/id 1000
+  :asset "EURUSD"
+  :side :buy
+  :order-type :limit
+  :limit 1.0500M
+  :qty 1000M}
+ {:account/id 1000
+  :asset "GBPUSD"
+  :side :sell
+  :order-type :limit
+  :limit 1.2500M
+  :qty 1000M}
+ {:account/id 1000
+  :asset "EURUSD"
+  :side :sell
+  :order-type :market
+  :qty 1000M}
+ {:account/id 1000
+  :asset "GBPUSD"
+  :side :buy
+  :order-type :market
+  :qty 1000M}]

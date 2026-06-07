@@ -56,5 +56,18 @@
                      :fill-probability 0
                      :fill-qty-prct [100]
                      :wait-seconds 60}}
- 
- ]
+
+ {:account/id 1000
+  :account/api :fix-trade
+  :account/notes "Pepperstone demo SSL"
+  :account/settings {:spec "fix-specs/ctrader.edn"
+                     :header {:begin-string "FIX.4.4"
+                              :target-comp-id "CSERVER"
+                              :sender-comp-id "demo.pepperstone.5292473"
+                              :target-sub-id "TRADE"
+                              :sender-sub-id "TRADE"}
+                     :tcp {:host "demo-us-eqx-01.p.c-trader.com"
+                           :port 5212
+                           :ssl true}
+                     :login {:username "5292473"
+                             :password "Regenschirm13!"}}}]
