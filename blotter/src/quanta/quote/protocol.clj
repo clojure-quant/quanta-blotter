@@ -1,27 +1,26 @@
-(ns quanta.blotter.protocol)
+(ns quanta.quote.protocol)
 
-(defmulti create-trade-account
+(defmulti create-quote-account
   "a trade-account must implement this method to create it.
    account-config is a map that must contain 
       :account/id  - unique identifier (long)
-      :account/api - the trade api identifier (keyword)s
+      :account/api - the quote api identifier (keyword)
       :account/settings - settings as required by the api
-   pull - a missionary task that receives order actions 
-   push - a missionary task of order updates that are sent back
+   subscription-a - a set of asset ids that the account is subscribed to
+   emit-quote - a function that can send quotes to the account
    log - a function that can log messages
    "
-  (fn [account-config pull push log]
+  (fn [account-config subscription-a emit-quote log]
     (:account/api account-config)))
 
+(defprotocol quote-messaging
+  (subscribe-msg [this sub])
+  (unsubscribe-msg [this unsub])
+  (read-quote [this msg-in]))
 
-(defprotocol trade-messaging
-  (api-order [this normalized-order-msg-in])
-  (blotter-order-update [this broker-orderupdate-msg-in]))
-
-(defmulti create-trade-messaging
+(defmulti create-quote-messaging
   "a tradeaccount must implement this method to create it.
    each quotefeed implementation must have a unique :type.
      A quotefeed must implement subscription-topic protocol."
   (fn [account-config asset-converter log]
     (:account/api account-config)))
-
