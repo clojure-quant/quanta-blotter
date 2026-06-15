@@ -1,0 +1,5 @@
+[{:account/id 1
+  :account/api :random
+  :account/notes "just random quotes"
+  :account/settings {}}
+ ]

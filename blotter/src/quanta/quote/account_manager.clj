@@ -2,7 +2,9 @@
   (:require
    [clojure.edn :as edn]
    [missionary.core :as m]
-   [quanta.quote.protocol :as p]))
+   [quanta.quote.protocol :as p]
+   [quanta.quote.random] ; side effects
+   ))
 
 
 (defn- msg-flow

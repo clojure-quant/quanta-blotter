@@ -24,3 +24,4 @@
      A quotefeed must implement subscription-topic protocol."
   (fn [account-config asset-converter log]
     (:account/api account-config)))
+
