@@ -55,7 +55,7 @@
       (try
         (let [q (m/?> quote-flow)]
           (assoc q :ts (t/instant)))
-        
+
         (catch Cancelled ex
           ;(println "quotes: removing asset from subscription-a" asset)
                            ;(m/with-lock (:lock feed))
@@ -63,6 +63,25 @@
           (throw ex)))))))
 
 (def quotes (memoize quotes-impl))
+
+(defn mix
+  "Return a flow which is mixed by flows"
+  ; will generate (count flows) processes, 
+  ; so each mixed flow has its own process
+  [& flows]
+  (m/ap (m/?> (m/?> (count flows) (m/seed flows)))))
+
+(defn quote-list-flow [this calc-id assets]
+  (let [flows (map (fn [asset]
+                     (quotes this (calc-id asset) asset))
+                   assets)]
+    (apply mix flows)))
+
+(defn quote-list-dict-flow [this calc-id assets]
+  (let [f (quote-list-flow this calc-id assets)]
+    (m/reductions (fn [s v]
+                    (assoc s (:asset v) v)) {} f)))
+
 
 
 (defn remove-account [state account-id]

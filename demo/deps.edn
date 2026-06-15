@@ -9,8 +9,12 @@
                        cider/cider-nrepl {:mvn/version "0.28.3"}}
           :main-opts  ["-m" "nrepl.cmdline"]}
   
+  ;; quote
   :cli-quote-print {:exec-fn demo.cli-quote-print/start-cli}
   :cli-quote-api {:exec-fn demo.cli-quote-api/start-cli}
+  :cli-quote-list {:exec-fn demo.cli-quote-list/start-cli}
+  
+  ;; trade
   :cli-trade {:exec-fn demo.cli-trade/start-cli}
 
   :cli-server {:main-opts ["-m" "demo.oms-server"]}
