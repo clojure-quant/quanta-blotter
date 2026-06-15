@@ -1,10 +1,12 @@
 (ns quanta.quote.account-manager
   (:require
    [clojure.edn :as edn]
+   [tick.core :as t]
    [missionary.core :as m]
    [quanta.quote.protocol :as p]
    [quanta.quote.random] ; side effects
-   ))
+   )
+  (:import missionary.Cancelled))
 
 
 (defn- msg-flow
@@ -35,9 +37,33 @@
     (let [quote-account (p/create-quote-account account subscription-a send (:log state))
           dispose-account! (quote-account #(println "account done" %) #(println "account error" %))]
       (swap! (:accounts state) assoc account-id {:account/id account-id
+                                                 :lock (m/sem)
                                                  :dispose-account dispose-account!
                                                  :flow flow
                                                  :subscription-a subscription-a}))))
+
+(defn quotes-impl [this account-id asset]
+  (let [feed (get @(:accounts this) account-id)
+        quote-flow (m/eduction
+                    (filter #(= (:asset %) asset))
+                    (:flow feed))]
+    (m/stream
+     (m/ap
+      ;(println "quotes: adding asset to subscription-a" asset)
+      (swap! (:subscription-a feed) conj asset)
+      #_(m/with-lock (:lock feed))
+      (try
+        (let [q (m/?> quote-flow)]
+          (assoc q :ts (t/instant)))
+        
+        (catch Cancelled ex
+          ;(println "quotes: removing asset from subscription-a" asset)
+                           ;(m/with-lock (:lock feed))
+          (swap! (:subscription-a feed) disj asset)
+          (throw ex)))))))
+
+(def quotes (memoize quotes-impl))
+
 
 (defn remove-account [state account-id]
   (let [account (get @(:accounts state) account-id)]

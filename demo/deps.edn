@@ -10,6 +10,7 @@
           :main-opts  ["-m" "nrepl.cmdline"]}
   
   :cli-quote-print {:exec-fn demo.cli-quote-print/start-cli}
+  :cli-quote-api {:exec-fn demo.cli-quote-api/start-cli}
   :cli-trade {:exec-fn demo.cli-trade/start-cli}
 
   :cli-server {:main-opts ["-m" "demo.oms-server"]}
