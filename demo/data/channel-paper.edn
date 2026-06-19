@@ -1,20 +1,20 @@
 
 [ 
-{:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0M, :qty 0.001M}
-{:date #time/instant "2026-06-01T20:10:07.740265349Z", :order-type :limit, :limit 100.0M, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001M, :asset "BTCUSDT", :message "paper broker confirmed new order"}
+{:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0M, :qty 0.001M, :campaign "paper-btc", :label :long}
+{:date #time/instant "2026-06-01T20:10:07.740265349Z", :order-type :limit, :limit 100.0M, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001M, :asset "BTCUSDT", :message "paper broker confirmed new order", :campaign "paper-btc", :label :long}
 
-{:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0M, :qty 0.001M}
-{:date #time/instant "2026-06-01T20:10:09.740517009Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001M, :asset "ETHUSDT", :message "paper broker confirmed new order"}
+{:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0M, :qty 0.001M, :campaign "paper-eth", :label :short}
+{:date #time/instant "2026-06-01T20:10:09.740517009Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001M, :asset "ETHUSDT", :message "paper broker confirmed new order", :campaign "paper-eth", :label :short}
 
 {:type :trader/cancel-order, :account/id 2, :order-id 2}
 {:type :broker/cancel-confirmed, :account/id 2, :order-id 2, :message "paper broker confirmed order canceled received."}
 {:order-id 2, :date #time/instant "2026-06-01T20:10:12.740853585Z", :type :broker/order-canceled}
 
-{:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0M, :qty 0.001M}
-{:date #time/instant "2026-06-01T20:10:17.741032902Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001M, :asset "ETHUSDT", :message "paper broker confirmed new order"}
+{:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0M, :qty 0.001M, :campaign "paper-eth", :label :short}
+{:date #time/instant "2026-06-01T20:10:17.741032902Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001M, :asset "ETHUSDT", :message "paper broker confirmed new order", :campaign "paper-eth", :label :short}
 
-{:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0M, :qty 0.001M}
-{:date #time/instant "2026-06-01T20:10:24.741005992Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001M, :asset "ETHUSDT", :message "paper broker confirmed new order"}
+{:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0M, :qty 0.001M, :campaign "paper-eth", :label :short}
+{:date #time/instant "2026-06-01T20:10:24.741005992Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001M, :asset "ETHUSDT", :message "paper broker confirmed new order", :campaign "paper-eth", :label :short}
 
 {:type :broker/order-filled :account/id 2 :order-id 4, :fill-id "m-9By0", :date #time/instant "2026-06-01T20:10:29.741914267Z", :asset "ETHUSDT", :qty 0.001M, :side :sell :price 100.0M}
 
@@ -22,12 +22,12 @@
 
 {:type :broker/order-filled, :account/id 1 :order-id 1, :fill-id "KKEY9v", :date #time/instant "2026-06-01T20:10:52.742779027Z", :asset "BTCUSDT", :qty 0.001M, :side :buy :price 10000.0M}
 
-{:type :trader/new-order, :account/id 2, :order-id 5, :asset "ETHUSDT", :side :buy, :order-type :limit, :limit 100.0M, :qty 0.002M}
-{:date #time/instant "2026-06-01T20:11:00.742779027Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 5, :side :buy, :qty 0.002M, :asset "ETHUSDT", :message "paper broker confirmed new order"}
+{:type :trader/new-order, :account/id 2, :order-id 5, :asset "ETHUSDT", :side :buy, :order-type :limit, :limit 100.0M, :qty 0.002M, :campaign "paper-eth", :label :long}
+{:date #time/instant "2026-06-01T20:11:00.742779027Z", :order-type :limit, :limit 100.0M, :account/id 2, :type :broker/order-confirmed, :order-id 5, :side :buy, :qty 0.002M, :asset "ETHUSDT", :message "paper broker confirmed new order", :campaign "paper-eth", :label :long}
 {:type :broker/order-filled, :account/id 2, :order-id 5, :fill-id "cL0s3d", :date #time/instant "2026-06-01T20:11:05.742779027Z", :asset "ETHUSDT", :qty 0.002M, :side :buy, :price 100.5M}
 
-{:type :trader/new-order, :account/id 1, :order-id 6, :asset "BTCUSDT", :side :sell, :order-type :limit, :limit 10100.0M, :qty 0.001M}
-{:date #time/instant "2026-06-01T20:11:10.742779027Z", :order-type :limit, :limit 10100.0M, :account/id 1, :type :broker/order-confirmed, :order-id 6, :side :sell, :qty 0.001M, :asset "BTCUSDT", :message "paper broker confirmed new order"}
+{:type :trader/new-order, :account/id 1, :order-id 6, :asset "BTCUSDT", :side :sell, :order-type :limit, :limit 10100.0M, :qty 0.001M, :campaign "paper-btc", :label :short}
+{:date #time/instant "2026-06-01T20:11:10.742779027Z", :order-type :limit, :limit 10100.0M, :account/id 1, :type :broker/order-confirmed, :order-id 6, :side :sell, :qty 0.001M, :asset "BTCUSDT", :message "paper broker confirmed new order", :campaign "paper-btc", :label :short}
 {:type :broker/order-filled, :account/id 1, :order-id 6, :fill-id "cL0s3b", :date #time/instant "2026-06-01T20:11:15.742779027Z", :asset "BTCUSDT", :qty 0.001M, :side :sell, :price 10100.0M}
 
 ]

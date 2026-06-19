@@ -104,3 +104,13 @@
       (is (string? stored))
       (is (vector? (read-string stored))))
     (db/trade-db-stop conn)))
+
+(deftest order-campaign-and-label-stored
+  (let [conn (fresh-db)
+        state (db/new-state)
+        order (assoc demo-order :order/campaign "fx-q2" :order/label :hedge)]
+    (db/process conn state [:order order])
+    (let [stored (first (db/query-orders conn))]
+      (is (= "fx-q2" (:order/campaign stored)))
+      (is (= :hedge (:order/label stored))))
+    (db/trade-db-stop conn)))

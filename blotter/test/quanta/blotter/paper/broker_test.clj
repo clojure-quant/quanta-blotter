@@ -93,6 +93,19 @@
       (is (= 100.0M (:price fill)))
       (is (not-any? #(= :broker/order-rejected %) types)))))
 
+(deftest echoes-campaign-and-label-on-confirm
+  (let [order (assoc new-order :campaign "fx-q2" :label :hedge)
+        updates (run-broker {:reject-probability 0
+                             :fill-probability 0
+                             :fill-qty-prct [100]
+                             :wait-seconds 0}
+                            1
+                            :order order)
+        confirmed (first updates)]
+    (is (= "fx-q2" (:campaign confirmed)))
+    (is (= :hedge (:label confirmed)))
+    (is (s/validate-message confirmed))))
+
 (deftest market-order-confirms-without-limit-and-fills-in-range
   (testing "market order confirm omits :limit; fill price in [50M, 100M]"
     (let [updates (run-broker {:reject-probability 0

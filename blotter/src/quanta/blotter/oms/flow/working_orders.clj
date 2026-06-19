@@ -53,7 +53,9 @@
          :price-scale 0
          :terminal? false
          :terminal-status nil
-         :reject-text nil))
+         :reject-text nil
+         :campaign (:campaign msg)
+         :label (:label msg)))
 
 (defn- mark-terminal [state status & {:keys [text]}]
   (cond-> (assoc state :terminal? true :terminal-status status)
@@ -65,7 +67,8 @@
 (defn to-order-view
   "Projects internal accumulator state to the public order map."
   [{:keys [order-id account asset side qty order-type fill-qty fill-notional
-           price-scale history terminal? terminal-status reject-text order-date]}]
+           price-scale history terminal? terminal-status reject-text order-date
+           campaign label]}]
   (let [qty-filled (or fill-qty 0M)
         scale (or price-scale 0)
         done? (true? terminal?)]
@@ -82,7 +85,9 @@
              :order/date (t/inst (or order-date (t/instant)))
              :order/history history}
       (and done? (= :rejected terminal-status) reject-text)
-      (assoc :order/text (str reject-text)))))
+      (assoc :order/text (str reject-text))
+      campaign (assoc :order/campaign campaign)
+      label (assoc :order/label label))))
 
 (defn- process-order-msg [state msg]
   (let [state (-> state (conj-history msg) (stamp-order-date msg))]

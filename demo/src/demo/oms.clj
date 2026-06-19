@@ -45,7 +45,9 @@ oms
                     :asset "USDJPY"
                     :side :buy
                     :limit 110.30M 
-                    :qty 10000.0M}))
+                    :qty 10000.0M
+                    :campaign "fx-q2"
+                    :label :hedge}))
 
 (m/?
  (create-order oms {:account/id 3
@@ -53,7 +55,9 @@ oms
                     :asset "USDJPY"
                     :side :sell
                     :limit 120.51M 
-                    :qty 5000.0M}))
+                    :qty 5000.0M
+                    :campaign "fx-q2"
+                    :label :scalp}))
 
 
 (m/?
@@ -62,7 +66,9 @@ oms
                     :asset "EURUSD"
                     :side :buy
                     :limit 1.2051M
-                    :qty 6000.0M}))
+                    :qty 6000.0M
+                    :campaign "fx-q2"
+                    :label :hedge}))
 
 (comment
   ;; inspect what has been persisted to datahike

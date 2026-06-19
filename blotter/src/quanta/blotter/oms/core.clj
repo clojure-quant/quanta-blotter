@@ -140,13 +140,17 @@
                            :asset "__TEST"
                            :side :buy
                            :limit 110.30M
-                           :qty 10000.0M}))
+                           :qty 10000.0M
+                           :campaign "test-order"
+                           :label :buy-leg}))
    (m/? (create-order oms {:account/id account-id
                            :order-type :limit
                            :asset "__TEST"
                            :side :sell
                            :limit 110.32M
-                           :qty 10000.0M}))))
+                           :qty 10000.0M
+                           :campaign "test-order"
+                           :label :sell-leg}))))
 
 (defn create-order-rpc
   "Blocking entry point for flowy/clj-service (:mode :clj) RPC calls."

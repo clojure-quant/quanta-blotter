@@ -13,7 +13,9 @@
        :side :buy
        :order-type :limit
        :limit 1000.0M
-       :qty 0.001M}
+       :qty 0.001M
+       :campaign "paper-btc"
+       :label :long}
     2 {:type :trader/new-order
        :account/id 2
        :order-id 2
@@ -21,7 +23,9 @@
        :side :sell
        :order-type :limit
        :limit 101.0M
-       :qty 0.001M}
+       :qty 0.001M
+       :campaign "paper-eth"
+       :label :short}
     3 {:type :trader/cancel-order
        :account/id 2
        :order-id 2}
@@ -32,7 +36,9 @@
        :side :sell
        :order-type :limit
        :limit 99.3M
-       :qty 0.001M}
+       :qty 0.001M
+       :campaign "paper-eth"
+       :label :short}
     7 {:type :trader/new-order
        :account/id 2
        :order-id 4
@@ -40,7 +46,9 @@
        :side :sell
        :order-type :limit
        :limit 98.7M
-       :qty 0.001M}]))
+       :qty 0.001M
+       :campaign "paper-eth"
+       :label :short}]))
 
 
 
@@ -59,10 +67,8 @@
 
 
 
-
 ; 
   )
-
 
 
 

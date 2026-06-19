@@ -59,6 +59,12 @@
    {:db/ident :order/text
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
+   {:db/ident :order/campaign
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :order/label
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
    {:db/ident :order/history
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
@@ -227,6 +233,8 @@
     (some? (:order/avg-price order)) (assoc :order/avg-price (as-bigdec (:order/avg-price order)))
     (:order/date order) (assoc :order/date (as-date (:order/date order)))
     (:order/text order) (assoc :order/text (:order/text order))
+    (:order/campaign order) (assoc :order/campaign (:order/campaign order))
+    (:order/label order) (assoc :order/label (:order/label order))
     (:order/history order) (assoc :order/history (pr-str (:order/history order)))))
 
 (defn fill->entity [eid order-ref fill]

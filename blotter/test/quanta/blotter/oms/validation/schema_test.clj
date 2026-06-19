@@ -75,6 +75,55 @@
              :limit 100.0M}))
         "missing :order-type is invalid"))
 
+(deftest trader-new-order-campaign-and-label-test
+  (is (s/validate-message
+       {:type :trader/new-order
+        :account/id 1
+        :order-id 1
+        :asset "BTCUSDT"
+        :side :buy
+        :order-type :limit
+        :qty 0.001M
+        :limit 100.0M
+        :campaign "fx-q2"
+        :label :hedge}))
+  (is (not (s/validate-message
+            {:type :trader/new-order
+             :account/id 1
+             :order-id 1
+             :asset "BTCUSDT"
+             :side :buy
+             :order-type :limit
+             :qty 0.001M
+             :limit 100.0M
+             :campaign :not-a-string}))
+      "campaign must be a string")
+  (is (not (s/validate-message
+            {:type :trader/new-order
+             :account/id 1
+             :order-id 1
+             :asset "BTCUSDT"
+             :side :buy
+             :order-type :limit
+             :qty 0.001M
+             :limit 100.0M
+             :label "not-a-keyword"}))
+      "label must be a keyword"))
+
+(deftest broker-order-confirmed-campaign-and-label-test
+  (is (s/validate-message
+       {:type :broker/order-confirmed
+        :account/id 1
+        :order-id 1
+        :asset "BTCUSDT"
+        :side :buy
+        :order-type :limit
+        :qty 0.001M
+        :limit 100.0M
+        :date (t/instant)
+        :campaign "fx-q2"
+        :label :hedge})))
+
 (deftest trader-cancel-order-test
   (is (s/validate-message
        {:type :trader/cancel-order

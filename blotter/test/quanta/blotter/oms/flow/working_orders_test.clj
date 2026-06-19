@@ -103,3 +103,11 @@
     (is (= :rejected (:order/status last-order)))
     (is (= "market-closed" (:order/text last-order)))
     (is (= :market (:order/type last-order)))))
+
+(deftest campaign-and-label-in-order-view
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X"
+                       :side :buy :order-type :market :qty 1.0M
+                       :campaign "fx-q2" :label :hedge}])
+        order (final-for-order (m/? (m/reduce conj [] (wo/order-change-flow flow))) 1)]
+    (is (= "fx-q2" (:order/campaign order)))
+    (is (= :hedge (:order/label order)))))

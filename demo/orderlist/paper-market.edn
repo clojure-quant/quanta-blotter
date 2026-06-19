@@ -2,19 +2,27 @@
   :asset "QQQ"
   :side :buy
   :order-type :market
-  :qty 5000.0M}
+  :qty 5000.0M
+  :campaign "paper-demo"
+  :label :market-test}
  {:account/id 3
   :asset "QQQ"
   :side :buy
   :order-type :market
-  :qty 5000.0M}
+  :qty 5000.0M
+  :campaign "paper-demo"
+  :label :market-test}
  {:account/id 3
   :asset "QQQ"
   :side :sell
   :order-type :market
-  :qty 3000.0M}
+  :qty 3000.0M
+  :campaign "paper-demo"
+  :label :market-test}
  {:account/id 3
   :asset "QQQ"
   :side :sell
   :order-type :market
-  :qty 3000.0M}]
+  :qty 3000.0M
+  :campaign "paper-demo"
+  :label :market-test}]

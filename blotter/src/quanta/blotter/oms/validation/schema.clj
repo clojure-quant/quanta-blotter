@@ -48,7 +48,9 @@
     [:side Side]
     [:qty PositiveDecimal]
     [:order-type OrderType]
-    [:limit {:optional true} PositiveDecimal]]
+    [:limit {:optional true} PositiveDecimal]
+    [:campaign {:optional true} :string]
+    [:label {:optional true} :keyword]]
    [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}
     limit-market-exclusive?]])
 
@@ -81,6 +83,8 @@
     [:qty PositiveDecimal]
     [:order-type OrderType]
     [:limit {:optional true} PositiveDecimal]
+    [:campaign {:optional true} :string]
+    [:label {:optional true} :keyword]
     [:date Instant]
     [:message {:optional true} :string]]
    [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}

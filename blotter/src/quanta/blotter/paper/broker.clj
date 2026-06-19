@@ -102,7 +102,9 @@
            :order-type (:order-type action)
            :date (t/instant)
            :message "paper broker confirmed new order"}
-    (= :limit (:order-type action)) (assoc :limit (:limit action))))
+    (= :limit (:order-type action)) (assoc :limit (:limit action))
+    (some? (:campaign action)) (assoc :campaign (:campaign action))
+    (some? (:label action)) (assoc :label (:label action))))
 
 (defn- paper-broker-task [settings pull push log]
   (m/sp
