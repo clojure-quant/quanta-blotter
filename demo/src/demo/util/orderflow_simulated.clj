@@ -1,7 +1,7 @@
 (ns demo.util.orderflow-simulated
   (:require
    [missionary.core :as m]
-   [demo.util.time-flow :refer [create-time-flow]]))
+   [quanta.missionary.time-flow :refer [create-time-flow]]))
 
 
 (def demo-order-action-flow

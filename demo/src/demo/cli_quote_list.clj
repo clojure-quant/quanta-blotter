@@ -2,7 +2,7 @@
   (:require
    [missionary.core :as m]
    [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts quote-list-dict-flow]]
-   [quanta.blotter.logger :refer [create-logger log start-log-flow-to-logger]]))
+   [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]))
 
 (defn quote-printer [f]
   (m/reduce

@@ -3,7 +3,7 @@
    [missionary.core :as m]
    [nano-id.core :refer [nano-id]]
    [tick.core :as t]
-   [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
+   [quanta.missionary.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
    [quanta.blotter.oms.validation.channel
     :refer [create-validation-channel start-validation-channel! stop-validation-channel!]]

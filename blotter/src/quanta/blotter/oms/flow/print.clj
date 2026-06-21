@@ -2,7 +2,7 @@
   (:require
    [missionary.core :as m]
    [quanta.blotter.util :as util]
-   [quanta.blotter.logger :as logger]
+   [quanta.missionary.logger :as logger]
    [quanta.blotter.oms.validation.flow :as vf]
    [quanta.blotter.oms.flow.open-positions :as op]
    [quanta.blotter.oms.flow.working-orders :as wo]

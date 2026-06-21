@@ -5,7 +5,7 @@
    [quanta.blotter.paper.broker] ;; side effect: brings in paper broker implementation
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator! stop-consolidator!]]
-   [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
+   [quanta.missionary.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
    [quanta.blotter.util :refer [push-flow-to-rdv]]
    [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
    [demo.util.update-printer :refer [create-orderupdate-printer]])

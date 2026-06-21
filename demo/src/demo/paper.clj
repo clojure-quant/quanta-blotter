@@ -6,7 +6,7 @@
    [quanta.blotter.protocol :as p]
    [quanta.blotter.paper.broker]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
-   [quanta.blotter.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
+   [quanta.missionary.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
    [quanta.blotter.util :refer [push-flow-to-rdv]]
    [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
    [demo.util.update-printer :refer [create-orderupdate-printer]])
