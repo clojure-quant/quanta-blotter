@@ -3,6 +3,8 @@
    [tick.core :as t]
    [missionary.core :as m]))
 
+;; todo: moved to quanta-missionary
+
 (defn time-buffered [duration-ms flow]
   (m/ap
    (let [restartable (second (m/?> (m/group-by {} flow)))]

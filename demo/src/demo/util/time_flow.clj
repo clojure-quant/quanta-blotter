@@ -2,6 +2,8 @@
   (:require
    [missionary.core :as m]))
 
+;; todo moved to quanta-missionary
+
 (defn create-time-flow
   "returns a missionary flow that fires input orders over time.
      input is a partition-2 seq.
