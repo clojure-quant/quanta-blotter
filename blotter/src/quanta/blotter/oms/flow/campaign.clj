@@ -2,7 +2,8 @@
   (:require
    [missionary.core :as m]
    [quanta.blotter.oms.flow.working-orders :as wo]
-   [quanta.blotter.oms.flow.fill :as fill]))
+   [quanta.blotter.oms.flow.fill :as fill]
+   [quanta.blotter.oms.flow.open-positions :as op]))
 
 (defn campaign-tagged-combined-flow
   "ensures that all messages on combined flow have a campaign and label (if they were used)
