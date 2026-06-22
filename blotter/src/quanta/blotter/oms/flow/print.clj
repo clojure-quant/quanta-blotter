@@ -6,9 +6,7 @@
    [quanta.blotter.oms.validation.flow :as vf]
    [quanta.blotter.oms.flow.open-positions :as op]
    [quanta.blotter.oms.flow.working-orders :as wo]
-   [quanta.blotter.oms.print :as print]
-   ))
-
+   [quanta.blotter.oms.print :as print]))
 
 (defn- log-table-flow [label raw-flow table-fn]
   (m/ap

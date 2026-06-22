@@ -146,8 +146,6 @@
    ;:schema-flexibility :read ; transact any  kind of data into the database you can set :schema-flexibility to read
    :initial-tx schema ; commit a schema
    })
-
-
 (defn- mem-cfg [id]
   {:store {:backend :memory
            :id id}

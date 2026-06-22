@@ -2,8 +2,7 @@
   (:require
    [missionary.core :as m]
    [quanta.blotter.oms.flow.working-orders :as wo]
-   [quanta.blotter.oms.flow.fill :as fill]
-   ))
+   [quanta.blotter.oms.flow.fill :as fill]))
 
 (defn campaign-tagged-combined-flow
   "ensures that all messages on combined flow have a campaign and label (if they were used)
@@ -40,16 +39,16 @@
 (defn oms-campaign-tagged-combined-flow [oms]
   (campaign-tagged-combined-flow (get-in oms [:consolidator :combined-flow])))
 
-
 (defn campaign-flows [combined-tagged-flow campaign]
   (let [filtered-combined-tagged-flow  (m/eduction
                                         (filter #(= (:campaign %) campaign))
                                         combined-tagged-flow)
-        order-change-flow (m/stream (wo/order-change-flow filtered-combined-tagged-flow))]
+        order-change-flow (m/stream (wo/order-change-flow filtered-combined-tagged-flow))
+        fill-flow (m/stream (fill/fill-flow filtered-combined-tagged-flow))
+        position-method :fifo
+        position-change-flow (m/stream (op/position-change-flow fill-flow {:method position-method}))
+        open-position-dict-flow (m/stream (op/open-position-dict-flow position-change-flow))]
     {:working-order-dict-flow (m/stream (wo/working-order-dict-flow order-change-flow))
-     :fill-flow (m/stream (fill/fill-flow filtered-combined-tagged-flow))
-     }
-    
-    
-    ))
+     :fill-flow fill-flow
+     :open-position-dict-flow open-position-dict-flow}))
 

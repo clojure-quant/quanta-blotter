@@ -23,7 +23,6 @@
              (when-let [! @!-a]
                (! v)))}))
 
-
 (defn create-consolidator [{:keys [order orderupdate log] :as channel}]
   (assert order "consolidator needs order")
   (assert orderupdate "consolidator needs orderupdate")
@@ -39,7 +38,6 @@
                :log log}
      :dispose! (atom nil)}))
 
-
 (defn start-consolidator! [{:keys [send _combined-flow channel-original channel dispose!] :as this}]
   (let [{:keys [order orderupdate _log]} channel-original
         order-2-rdv (:order channel)
@@ -53,7 +51,7 @@
                            (recur))))
         copy-orderupdate-sp (m/sp
                              (loop []
-                               (let [data (m/? orderupdate-2-rdv )] ; read original orderupdate
+                               (let [data (m/? orderupdate-2-rdv)] ; read original orderupdate
                                  ;(println "ORDERUPDATE: " data)
                                  (send data)
                                  (m/? (orderupdate data)) ; copy orderupdate
@@ -61,8 +59,6 @@
         t (m/join concat copy-order-sp copy-orderupdate-sp)
         dispose (t #(println "consolidator done" %) #(println "consolidator error" %))]
     dispose))
-
-
 
 (defn stop-consolidator! [{:keys [dispose!] :as this}]
   (when-let [d @dispose!]

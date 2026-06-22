@@ -22,13 +22,13 @@
         account-order-rdv (create-rdv "oms/account/order")
         account-orderupdate-rdv (create-rdv "oms/account/orderupdate")
         validator (create-validation-channel {:order account-order-rdv
-                                            :orderupdate account-orderupdate-rdv
-                                            :log log-fn}
-                                           {:order order
-                                            :orderupdate orderupdate})
+                                              :orderupdate account-orderupdate-rdv
+                                              :log log-fn}
+                                             {:order order
+                                              :orderupdate orderupdate})
         account-manager (create-account-manager account-order-rdv
-                                                  account-orderupdate-rdv
-                                                  log-fn)]
+                                                account-orderupdate-rdv
+                                                log-fn)]
     {:order-rdv order-rdv
      :orderupdate-rdv orderupdate-rdv
      :consolidator consolidator
@@ -66,7 +66,6 @@
            :validator validator
            :account-manager account-manager)))
 
-
 (defn consume-orderupdate [r]
   (m/sp
    (loop []
@@ -95,7 +94,6 @@
              :dispose-trading-state! #(trading-state/stop-trading-state! trading-state)})
     (log log-transaction {:type :oms/started :date (t/instant)})
     (assoc this :trading-state trading-state)))
-
 
 (defn stop-order-manager! [{:keys [dispose-a validator] :as this}]
   (when-let [d @dispose-a]
@@ -128,13 +126,11 @@
      (m/? (m/via m/blk (println "create order success! order: " order)))
      order)))
 
-
 (defn combined-flow [this]
   (get-in this [:consolidator :combined-flow]))
 
-
 (defn send-test-order [oms account-id]
-  (m/sp 
+  (m/sp
    (m/? (create-order oms {:account/id account-id
                            :order-type :limit
                            :asset "__TEST"

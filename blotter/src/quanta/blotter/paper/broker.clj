@@ -124,22 +124,21 @@
            :trader/cancel-order
            (if-let [dispose-fill (get @orders order-id)]
              (do (m/? (push-update settings push (assoc action
-                                                         :type :broker/cancel-confirmed
-                                                         :message "paper broker confirmed order canceled received.")))
+                                                        :type :broker/cancel-confirmed
+                                                        :message "paper broker confirmed order canceled received.")))
                  (dispose-fill)
                  (swap! orders dissoc order-id))
              (do
                (log (str "cancel ignored, unknown order-id " order-id))
                (m/? (push-update settings push (assoc action
-                                                       :type :broker/cancel-rejected
-                                                       :message "paper broker cannot cancel unknown order")))))
+                                                      :type :broker/cancel-rejected
+                                                      :message "paper broker cannot cancel unknown order")))))
 
            ; else
            (m/? (push-update settings push {:type :broker/message
                                             :message (str "unsupported message type: " type)
                                             :order-action action})))
          (recur))))))
-
 
 (defmethod p/create-trade-account :paper
   [{:keys [account/id account/settings]} pull push log]

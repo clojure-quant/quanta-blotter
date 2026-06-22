@@ -140,19 +140,18 @@
   (->> (explain-message message)
        (me/humanize)))
 
-
 (comment
 
   (require  '[ednx.edn :refer [slurp-edn read-edn]]
             '[ednx.tick.edn :refer [add-tick-edn-handlers!]])
-  
+
   (add-tick-edn-handlers!)
-  
+
   (def messages
     (slurp-edn "data/channel-paper.edn"))
-  
+
   (doseq [msg messages]
     (println (:type msg) (validate-message msg) (human-error-message msg)))
-  
+
   ;
   )

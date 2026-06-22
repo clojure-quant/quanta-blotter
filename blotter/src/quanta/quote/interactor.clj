@@ -33,14 +33,12 @@
        (let [msg (p/unsubscribe-msg quote-message-processor unsub)]
          (m/? (push msg)))))))
 
-
 (defn subscription-watcher
   [account quote-message-processor subscription-a push session-log]
   (let [sub-f (m/watch subscription-a)
         sub-f (m/relieve sub-f)
         sub-process-f (process-subscription-changes account quote-message-processor sub-f push session-log)]
     (m/reduce (fn [_ _] nil) nil sub-process-f)))
-
 
 (defn- message-loop
   [quote-message-processor pull log send-quote]

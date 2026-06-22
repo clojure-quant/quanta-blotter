@@ -11,7 +11,6 @@
                (m/eduction (take-while #(not= % ::end)))
                (m/reduce conj))))))
 
-
 (defn start-logging-flow [filename f]
   (let [blocked-f (time-buffered 500 f)
         t (m/reduce (fn [r v]
@@ -28,7 +27,6 @@
     (start-logging-flow filename log-f)
     (fn [t]
       (reset! log-a t))))
-
 
 (defn log [t data]
   (println t ": " data)

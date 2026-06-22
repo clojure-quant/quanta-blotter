@@ -6,7 +6,6 @@
    [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.paper.broker]))
 
-
 (defn add-account [state account]
   (let [account-id (:account/id account)
         account-order-rdf (create-rdv (str "account/" account-id "/order"))
@@ -24,7 +23,6 @@
     (when account
       (:dispose-account account)
       (swap! (:accounts state) dissoc account-id))))
-
 
 (defn create-account-manager [orderflow-rdv orderupdate-rdv log]
   (let [accounts-a (atom {})]
@@ -48,7 +46,6 @@
                      (m/? (m/via m/blk (println "** account change: " v)))
                      v))]
     (m/reduce (fn [_r v] v) nil waiting-f)))
-
 
 (defn read-account-orderupdate [account]
   (m/sp
@@ -82,7 +79,6 @@
   (m/join concat
           (consolidate-accounts-orderupdate state)
           (forward-new-order-to-account state)))
-
 
 (defn start-account-manager [state]
   (reset! (:dispose! state)

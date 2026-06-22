@@ -8,7 +8,6 @@
    )
   (:import missionary.Cancelled))
 
-
 (defn- msg-flow
   "Missionary flow backed by a single downstream subscription (see flow-sender)."
   [!-a]
@@ -82,14 +81,11 @@
     (m/reductions (fn [s v]
                     (assoc s (:asset v) v)) {} f)))
 
-
-
 (defn remove-account [state account-id]
   (let [account (get @(:accounts state) account-id)]
     (when account
       (:dispose-account account)
       (swap! (:accounts state) dissoc account-id))))
-
 
 (defn create-account-manager [log]
   (let [accounts-a (atom {})]
@@ -98,7 +94,6 @@
 
 (defn get-account [this account-id]
   (get @(:accounts this) account-id))
-
 
 (defn account-flow [this account-id]
   (when-let [account (get-account this account-id)]
@@ -109,7 +104,6 @@
     (let [{:keys [subscription-a flow]} account]
       (m/ap
        (swap! subscription-a conj asset)))))
-
 
 ;; EDN
 

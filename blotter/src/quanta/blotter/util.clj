@@ -16,9 +16,6 @@
         dispose!  (process-t #(println "process done" %) #(println "process error " %))]
     dispose!))
 
-
-
-
 (defn first-match [predicate flow]
   (m/reduce (fn [_r v]
               (debug "first-match check: " v)

@@ -74,7 +74,6 @@
   (read-quote [_ fix-vec-in]
     nil))
 
-
 ;; create quote account
 
 (defn dump-rdv [rdv]
@@ -93,6 +92,5 @@
      (m/? (m/join vector
                   (subscription-watcher account rmp subscription-a push log)
                   (message-loop account price-a log send-quote)
-                  (dump-rdv push)
-                  )))))
+                  (dump-rdv push))))))
 

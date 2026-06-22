@@ -24,7 +24,7 @@
                   (m/eduction (map (fn [v] {:order v})) (wo/order-change-flow flow))
                   (m/eduction (map (fn [v] {:fill v})) fill-flow)
                   (m/eduction (map (fn [v] {:position v}))
-                                (op/position-change-flow fill-flow {:method :fifo})))
+                              (op/position-change-flow fill-flow {:method :fifo})))
         block (m/? (m/reduce conj [] combined))]
     (into [] (mapcat (fn [m] (first (seq m))) block))))
 

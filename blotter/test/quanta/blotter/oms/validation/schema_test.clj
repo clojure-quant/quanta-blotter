@@ -54,7 +54,7 @@
              :side :buy
              :order-type :limit
              :qty 0.001M}))
-        "limit order without :limit is invalid")
+      "limit order without :limit is invalid")
   (is (not (s/validate-message
             {:type :trader/new-order
              :account/id 1
@@ -64,7 +64,7 @@
              :order-type :market
              :qty 0.001M
              :limit 100.0M}))
-        "market order with :limit is invalid")
+      "market order with :limit is invalid")
   (is (not (s/validate-message
             {:type :trader/new-order
              :account/id 1
@@ -73,7 +73,7 @@
              :side :buy
              :qty 0.001M
              :limit 100.0M}))
-        "missing :order-type is invalid"))
+      "missing :order-type is invalid"))
 
 (deftest trader-new-order-campaign-and-label-test
   (is (s/validate-message

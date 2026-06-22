@@ -13,7 +13,6 @@
   (fn [account-config pull push log]
     (:account/api account-config)))
 
-
 (defprotocol trade-messaging
   (api-order [this normalized-order-msg-in])
   (blotter-order-update [this broker-orderupdate-msg-in]))

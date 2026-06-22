@@ -15,8 +15,8 @@
 
 (defn- emissions [fills-or-flow & [opts]]
   (let [flow (if (sequential? fills-or-flow)
-                (m/seed fills-or-flow)
-                fills-or-flow)]
+               (m/seed fills-or-flow)
+               fills-or-flow)]
     (m/? (m/reduce conj [] (op/position-change-flow (fill/fill-flow flow) opts)))))
 
 (defn- last-emission [fills & [opts]]

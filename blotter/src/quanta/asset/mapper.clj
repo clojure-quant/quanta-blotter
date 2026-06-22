@@ -1,6 +1,5 @@
 (ns quanta.asset.mapper)
 
-
 (defprotocol asset-mapper
   (to-api [this asset])
   (from-api [this asset-api]))
