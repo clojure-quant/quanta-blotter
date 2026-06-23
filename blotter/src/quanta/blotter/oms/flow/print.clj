@@ -1,7 +1,7 @@
 (ns quanta.blotter.oms.flow.print
   (:require
    [missionary.core :as m]
-   [quanta.blotter.util :as util]
+   [quanta.missionary :refer [mix-tagged mix]]
    [quanta.missionary.logger :as logger]
    [quanta.blotter.oms.validation.flow :as vf]
    [quanta.blotter.oms.flow.open-positions :as op]
@@ -28,12 +28,6 @@
                   (wo/working-order-list-from-dict-flow working-order-dict-flow)
                   print/working-orders-table))
 
-(defn- snapshot-log-flow
-  [{:keys [working-order-dict-flow open-position-dict-flow]} channel-flow]
-  (util/mix
-   (positions-log-flow open-position-dict-flow)
-   (working-orders-log-flow working-order-dict-flow)
-   (vf/bad-message-with-explaination channel-flow)))
 
 (defn start-open-positions-working-order-logger! [oms log-file]
   (let [{:keys [working-order-dict-flow open-position-dict-flow]}
@@ -41,8 +35,11 @@
         channel-flow (get-in oms [:consolidator :combined-flow])
         _ (assert working-order-dict-flow "start-open-positions-working-order-logger! needs :trading-state")
         l (logger/create-logger log-file false)
-        log-f (snapshot-log-flow {:working-order-dict-flow working-order-dict-flow
-                                  :open-position-dict-flow open-position-dict-flow}
-                                 channel-flow)
+        log-f  (mix (working-orders-log-flow working-order-dict-flow)
+                    (positions-log-flow open-position-dict-flow)
+                    (vf/bad-message-with-explaination channel-flow))
+        #_log-f  #_(mix-tagged  {:working-order (working-orders-log-flow working-order-dict-flow)
+                                 :open-position (positions-log-flow open-position-dict-flow)
+                                 :bad-message (vf/bad-message-with-explaination channel-flow)})
         dispose! (logger/start-log-flow-to-logger l log-f)]
     {:dispose dispose!}))
