@@ -6,16 +6,12 @@
    [quanta.blotter.oms.validation.flow :as vf]
    [quanta.blotter.oms.flow.open-positions :as op]
    [quanta.blotter.oms.flow.working-orders :as wo]
-   [quanta.blotter.oms.print :as print]))
+   [quanta.blotter.oms.print :as print])) 
 
 (defn- log-table-flow [label raw-flow table-fn]
   (m/ap
-   (loop []
-     (m/amb
-      (let [data (m/?> raw-flow)]
-        (m/? (m/via m/blk (print/timestamped-table label (table-fn data))))
-        data)
-      (recur)))))
+   (let [data (m/?> raw-flow)]
+     (m/? (m/via m/blk (print/timestamped-table label (table-fn data)))))))
 
 (defn- positions-log-flow
   [open-position-dict-flow]
@@ -30,8 +26,7 @@
 
 
 (defn start-open-positions-working-order-logger! [oms log-file]
-  (let [{:keys [working-order-dict-flow open-position-dict-flow]}
-        (:trading-state oms)
+  (let [{:keys [working-order-dict-flow open-position-dict-flow]} (:trading-state oms)
         channel-flow (get-in oms [:consolidator :combined-flow])
         _ (assert working-order-dict-flow "start-open-positions-working-order-logger! needs :trading-state")
         l (logger/create-logger log-file false)
