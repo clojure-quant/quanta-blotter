@@ -1,0 +1,16 @@
+
+{:order-type :limit, :limit 1.1260M, :account/id 1, :type :trader/new-order, :order-id "dtb56s", :label :entry, :campaign "EURUSD-20260621-007", :side :buy, :qty 10000.0M, :asset "EURUSD"}
+{:order-type :limit, :date #time/instant "2026-06-23T01:49:11.039232838Z", :limit 1.1260M, :account/id 1, :type :broker/order-confirmed, :order-id "dtb56s", :label :entry, :campaign "EURUSD-20260621-007", :side :buy, :qty 10000.0M, :asset "EURUSD", :message "paper broker confirmed new order"}
+{:order-type :limit, :limit 1.1260M, :account/id 1000, :type :trader/new-order, :order-id "QyFy2N", :label :entry, :campaign "EURUSD-20260621-007", :side :buy, :qty 25000.0M, :asset "EURUSD"}
+{:order-type :limit, :date #time/instant "2026-06-23T01:49:11.120Z", :limit 1.126M, :account/id 1000, :type :broker/order-confirmed, :order-id "QyFy2N", :side :buy, :qty 25000M, :asset "EURUSD", :message ""}
+
+{:date #time/instant "2026-06-23T01:50:01.053312502Z", :account/id 1, :type :broker/order-filled, :fill-id "4DoRSV", :order-id "dtb56s", :side :buy, :qty 5000.0M, :price 1.1260M, :asset "EURUSD"}
+
+{:date #time/instant "2026-06-23T01:50:31.054366382Z", :account/id 1, :type :broker/order-filled, :fill-id "jrauOx", :order-id "dtb56s", :side :buy, :qty 5000.0M, :price 1.1260M, :asset "EURUSD"}
+
+{:order-type :limit, :limit 1.1260M, :account/id 1, :type :trader/new-order, :order-id "67Mmol", :label :entry, :campaign "EURUSD-20260621-007", :side :buy, :qty 10000.0M, :asset "EURUSD"}
+{:order-type :limit, :date #time/instant "2026-06-23T15:00:11.370579050Z", :limit 1.1260M, :account/id 1, :type :broker/order-confirmed, :order-id "67Mmol", :label :entry, :campaign "EURUSD-20260621-007", :side :buy, :qty 10000.0M, :asset "EURUSD", :message "paper broker confirmed new order"}
+{:order-type :limit, :limit 1.1260M, :account/id 1000, :type :trader/new-order, :order-id "rDRL3w", :label :entry, :campaign "EURUSD-20260621-007", :side :buy, :qty 25000.0M, :asset "EURUSD"}
+{:order-type :limit, :date #time/instant "2026-06-23T15:00:11.445Z", :limit 1.126M, :account/id 1000, :type :broker/order-confirmed, :order-id "rDRL3w", :side :buy, :qty 25000M, :asset "EURUSD", :message ""}
+
+{:date #time/instant "2026-06-23T15:00:21.373774533Z", :account/id 1, :type :broker/order-filled, :fill-id "N9V159", :order-id "67Mmol", :side :buy, :qty 5000.0M, :price 1.1260M, :asset "EURUSD"}

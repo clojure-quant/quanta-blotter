@@ -22,6 +22,7 @@
 
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
+  :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}
   :backoffice {:exec-fn demo.backoffice/print-trades!}
 
 ;
