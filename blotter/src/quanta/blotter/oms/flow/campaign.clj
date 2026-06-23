@@ -20,13 +20,17 @@
                           (let [campaign-id (:campaign msg)
                                 label (:label msg)]
                             (when (or campaign-id label)
+                              (println "*** adding campaign/label to dict: " order-id " [" campaign-id " " label "]")
+                              (println "*** campain dict: " @dict)
                               (swap! dict assoc order-id [campaign-id label]))
                             msg)
 
                           ; else default                          
                           (if-let [[campaign-id label] (get @dict order-id)]
                             (assoc msg :campaign campaign-id :label label)
-                            msg)
+                            (do 
+                              (println "*** order-id has no compaign: " order-id )
+                              msg))
 
                             ;:broker/order-filled                        
                             ;:broker/order-canceled
