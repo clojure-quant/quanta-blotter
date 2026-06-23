@@ -29,7 +29,7 @@
                           (if-let [[campaign-id label] (get @dict order-id)]
                             (assoc msg :campaign campaign-id :label label)
                             (do 
-                              (println "*** order-id has no compaign: " order-id )
+                              (println "*** order-id has no compaign: " order-id  "type: " (:type msg))
                               msg))
 
                             ;:broker/order-filled                        

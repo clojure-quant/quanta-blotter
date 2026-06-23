@@ -1,8 +1,27 @@
 (ns quanta.blotter.oms.flow.campaign-test
   (:require
+   [clojure.java.io :as io]
+   [clojure.string :as str]
    [clojure.test :refer :all]
+   [ednx.edn :refer [read-edn]]
+   [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [missionary.core :as m]
    [quanta.blotter.oms.flow.campaign :as campaign]))
+
+(add-tick-edn-handlers!)
+
+(def ^:private combined-edn
+  (io/file ".." "demo" "data" "combined.edn"))
+
+(defn- load-combined-edn [path]
+  (->> (slurp path)
+       str/split-lines
+       (remove str/blank?)
+       (mapv read-edn)))
+
+(def combined-events (load-combined-edn combined-edn))
+(def combined-flow (m/seed combined-events))
+(def combined-campaign-id "EURUSD-20260621-007")
 
 (def channel-paper-events
   [;; scalp-1 :open — filled (closed, not in wo-dict)
@@ -71,6 +90,10 @@
   (let [{:keys [working-order-dict-flow]} (campaign-flows channel-flow campaign-id)]
     (last (m/? (m/reduce conj [] working-order-dict-flow)))))
 
+(defn- final-open-position-dict [channel-flow campaign-id]
+  (let [{:keys [open-position-dict-flow]} (campaign-flows channel-flow campaign-id)]
+    (last (m/? (m/reduce conj [] open-position-dict-flow)))))
+
 (defn- campaign-fills [channel-flow campaign-id]
   (let [{:keys [fill-flow]} (campaign-flows channel-flow campaign-id)]
     (m/? (m/reduce conj [] fill-flow))))
@@ -113,6 +136,48 @@
       (if-let [expected (get expected-order-tags (:order-id msg))]
         (assert-tagged-message msg expected)
         (assert-untagged-message msg)))))
+
+(deftest combined-edn-all-messages-have-campaign
+  (let [msgs (tagged-messages combined-flow)]
+    (is (= (count combined-events) (count msgs))
+        "tagged flow emits one message per combined.edn message")
+    (doseq [msg msgs]
+      (is (some? (:campaign msg))
+          (str "message " (:type msg) " order-id " (:order-id msg)
+               " should have :campaign but got " (pr-str msg))))))
+
+(deftest combined-edn-campaign-flows-has-working-orders-and-open-positions
+  (let [wo-dict (final-campaign-dict combined-flow combined-campaign-id)
+        op-dict (final-open-position-dict combined-flow combined-campaign-id)
+        fills (campaign-fills combined-flow combined-campaign-id)
+        orders (vals wo-dict)
+        positions (vals op-dict)]
+    (is (pos? (count orders))
+        "campaign filter must retain working orders")
+    (is (pos? (count positions))
+        "campaign filter must retain open positions")
+    (is (= #{combined-campaign-id}
+           (set (map :order/campaign orders)))
+        "all working orders belong to the campaign")
+    (is (= #{"QyFy2N" "67Mmol" "rDRL3w"} (set (map :order/id orders)))
+        "filled order dtb56s is closed and not in the working-order dict")
+    (is (= 3 (count fills))
+        "campaign filter must retain fills for campaign orders")
+    (is (= #{"dtb56s" "67Mmol"} (set (map :fill/order-id fills))))
+    (let [pos (get op-dict [1 "EURUSD"])]
+      (is (some? pos))
+      (is (true? (:position/open pos)))
+      (is (= 1 (:position/account pos)))
+      (is (= "EURUSD" (:position/asset pos)))
+      (is (== 15000.0M (:position/qty-open pos))))))
+
+(deftest combined-edn-campaign-flows-filters-out-other-campaigns
+  (let [wo-dict (final-campaign-dict combined-flow "other-campaign")
+        op-dict (final-open-position-dict combined-flow "other-campaign")
+        fills (campaign-fills combined-flow "other-campaign")]
+    (is (empty? wo-dict))
+    (is (empty? op-dict))
+    (is (empty? fills))))
 
 (deftest scalp-1-wo-dict-only-contains-scalp-1-working-orders
   (let [dict (final-campaign-dict channel-paper-flow "scalp-1")
