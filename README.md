@@ -1,6 +1,6 @@
-# quanta-blotter [![GitHub Actions status |clojure-quant/quanta-blotter](https://github.com/clojure-quant/quanta-blotter/workflows/CI/badge.svg)](https://github.com/clojure-quant/quanta-blotter/actions?workflow=CI)[![Clojars Project](https://img.shields.io/clojars/v/io.github.clojure-quant/quanta-blotter.svg)](https://clojars.org/io.github.clojure-quant/quanta-blotter)
+# quanta-blotter [GitHub Actions status |clojure-quant/quanta-blotterClojars Project](https://github.com/clojure-quant/quanta-blotter/actions?workflow=CI)
 
-[![Clojars Project](https://img.shields.io/clojars/v/io.github.clojure-quant/quanta-blotter-cli.svg)](https://clojars.org/io.github.clojure-quant/quanta-blotter-cli)
+[Clojars Project](https://clojars.org/io.github.clojure-quant/quanta-blotter-cli)
 
 orders executions positions with account/trader routing
 
@@ -18,25 +18,22 @@ bb send-orders qqq
 
 ```
 
-
 ## MESSAGE TYPES
 
-
-* trader/new-order              place a new order
-* trader/cancel-order           cancel existing order
+- trader/new-order              place a new order
+- trader/cancel-order           cancel existing order
 trader/modify-order           modify existing order
 trader/position-status
-
-* broker/order-rejected         a new order is rejected
-* broker/order-confirmed        a new order is confirmed (so it is working)
+- broker/order-rejected         a new order is rejected
+- broker/order-confirmed        a new order is confirmed (so it is working)
 [broker/order-pending-new]    order received but not working yet. avoid if possible
-* broker/order-canceled         an existing order is canceled (so it is no longer working)
+- broker/order-canceled         an existing order is canceled (so it is no longer working)
 broker/order-cancel-reject    cancel of existing order rejected (see :text for reason)
 broker/order-modified         the order was modified (as per trader request)
-* broker/order-filled           a fill or a partial fill "execution-report"
+- broker/order-filled           a fill or a partial fill "execution-report"
 broker/order-expired          for example good-till-day order or fill-or-kill order 
 broker/order-status           this is the order-status of the broker. avoid if possible. (will not get granular fills)
-* broker/message
+- broker/message
 broker/session-message
 broker/position-status
 broker/balance-status
@@ -77,14 +74,12 @@ public enum UpdateType : short
 NOTES
 
 - to use fill partial/complete for a broker that supports it is ok.
-  however, if a broke does only send fill, then what does this mean?
-  it means the broker-api needs to track if an order is open or not.
-  this adds additional complexity to the broker-api.
-  therefore the OMS needs to accept multiple fillpartial, and needs
-  to gracefully interpret the last fillpartial as fillcomplete.
-
+however, if a broke does only send fill, then what does this mean?
+it means the broker-api needs to track if an order is open or not.
+this adds additional complexity to the broker-api.
+therefore the OMS needs to accept multiple fillpartial, and needs
+to gracefully interpret the last fillpartial as fillcomplete.
 - we might be able to skip cancelacq and only go for cancel.
-
 
 order-status
  :live
@@ -173,54 +168,59 @@ public void onOrderUpdate(OrderUpdate orderUpdate)
 			//	orderUpdate.OrderData = order;
 			//}
 
-			_OrderUpdates.Add(orderUpdate);
-			order.OnOrderUpdateReceived(orderUpdate);
+```
+		_OrderUpdates.Add(orderUpdate);
+		order.OnOrderUpdateReceived(orderUpdate);
 
 
-            public enum UpdateType : short
-		{
-			// Trader Requests
-			TraderOrderSendRequest=1,
-			TraderOrderCancelRequest=2,
-			
-			// Responses to TraderNewOrder,
-			NewOrderAcq=3,
-			Reject=4,
-			
-			// Responses to Cancel
-			CancelAcq=5,
-			OrderCancelReject = 6,
-			Cancel=7,
-			
-			// Events that happen long after a new Order has been Aqnowledged
-			// We need to differenciate between FillPartial and FillComplete, because FIX sends FillComplete after the
-			//order is no longer working.
-			FillPartial=8,
-			FillComplete=9,
-			
-			Expiry=10
-		}
+        public enum UpdateType : short
+	{
+		// Trader Requests
+		TraderOrderSendRequest=1,
+		TraderOrderCancelRequest=2,
+		
+		// Responses to TraderNewOrder,
+		NewOrderAcq=3,
+		Reject=4,
+		
+		// Responses to Cancel
+		CancelAcq=5,
+		OrderCancelReject = 6,
+		Cancel=7,
+		
+		// Events that happen long after a new Order has been Aqnowledged
+		// We need to differenciate between FillPartial and FillComplete, because FIX sends FillComplete after the
+		//order is no longer working.
+		FillPartial=8,
+		FillComplete=9,
+		
+		Expiry=10
+	}
 
 
-		(def order-status
+	(def order-status
+```
+
   #{; create new order
     :order/new
     :order/order-confirm
     :order/reject
 
-    ; cancel order
-    :order/cancel-req
-    :order/cancel-reject
-    :order/cancel-confirm
-    :order/cancelled
+```
+; cancel order
+:order/cancel-req
+:order/cancel-reject
+:order/cancel-confirm
+:order/cancelled
 
-    ; trade
-    :order/fill-partial
-    :order/fill
+; trade
+:order/fill-partial
+:order/fill
 
-    ; expired orders
-    :order/expired})
+; expired orders
+:order/expired})
 
 
-	google antigravity
-	
+google antigravity
+```
+

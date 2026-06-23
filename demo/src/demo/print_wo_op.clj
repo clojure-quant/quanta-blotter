@@ -32,7 +32,7 @@
   "Minimal OMS map with a live combined-flow sender."
   []
   (let [{:keys [flow send]} (flow-sender)]
-    {:consolidator {:combined-flow flow}
+    {:combined-flow flow
      :send send}))
 
 (defn- seed-combined! [{:keys [send]} messages]
@@ -49,7 +49,7 @@
           wait-ms 500}}]
    (let [messages (load-combined-edn combined-edn)
          oms (create-stub-oms)
-         trading-state (trading-state/start-trading-state! oms)
+         trading-state (trading-state/start-trading-state! (:combined-flow oms))
          oms (assoc oms :trading-state trading-state)
          {:keys [dispose]} (start-open-positions-working-order-logger! oms log-file)]
      (try

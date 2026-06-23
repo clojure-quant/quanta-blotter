@@ -11,7 +11,7 @@
   [channel-flow]
   (let [dict (atom {})]
     ;; todo: this implementation will have a memory leak at some time because order-id dict will grow unbounded,
-    ;; because it does not remove closed orders from the dict.
+    ;; because it does not remove closed orders from the dict. 
     (m/ap
      (let [msg (m/?> 1 channel-flow)
            order-id (:order-id msg)
@@ -28,7 +28,7 @@
                           ; else default                          
                           (if-let [[campaign-id label] (get @dict order-id)]
                             (assoc msg :campaign campaign-id :label label)
-                            (do 
+                            (do
                               (println "*** order-id has no compaign: " order-id  "type: " (:type msg))
                               msg))
 
@@ -40,9 +40,6 @@
                             ;state
                           )]
        msg-extended))))
-
-(defn oms-campaign-tagged-combined-flow [oms]
-  (campaign-tagged-combined-flow (get-in oms [:consolidator :combined-flow])))
 
 (defn campaign-flows [combined-tagged-flow campaign]
   (let [filtered-combined-tagged-flow  (m/eduction

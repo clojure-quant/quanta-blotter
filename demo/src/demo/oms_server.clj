@@ -32,7 +32,8 @@
 (defn start-oms-server []
   (let [oms  (create-order-manager {:log-file "log/oms-server-trace.txt"
                                     :transaction-log-file "log/oms-server-transaction.txt"
-                                    :validate? true})
+                                    :validate? true
+                                    :tag? true})
         _ (add-edn-accounts (:account-manager oms) "demo-accounts.edn")
         oms (start-order-manager! oms)
         dispose-wo-op-logger (start-open-positions-working-order-logger! oms "log/oms-server-wo-op.txt")

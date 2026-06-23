@@ -90,7 +90,8 @@
         fill-send-flow (m/ap (let [fill (m/?> fill-flow)]
                                (m/? (push-update settings push fill))))
         fill-task (m/reduce (fn [r v] nil) nil fill-send-flow)]
-    (fill-task #(println "fill-order" (:order-id order) " done" %) #(println "fill-order " (:order-id order) " error" %))))
+    (fill-task #(println "[paper-broker] fill-order" (:order-id order) " done" %)
+               #(println "[paper-broker] fill-order " (:order-id order) " error" %))))
 
 (defn- order-confirmed [action]
   (cond-> {:type :broker/order-confirmed
@@ -100,8 +101,7 @@
            :side (:side action)
            :qty (:qty action)
            :order-type (:order-type action)
-           :date (t/instant)
-           :message "paper broker confirmed new order"}
+           :date (t/instant)}
     (= :limit (:order-type action)) (assoc :limit (:limit action))
     (some? (:campaign action)) (assoc :campaign (:campaign action))
     (some? (:label action)) (assoc :label (:label action))))

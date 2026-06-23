@@ -15,8 +15,6 @@
   :cli-quote-list {:exec-fn demo.cli-quote-list/start-cli}
   
   ;; trade
-  :cli-trade {:exec-fn demo.cli-trade/start-cli}
-
   :cli-server {:main-opts ["-m" "demo.oms-server"]}
   :verify-multi-client {:main-opts ["-m" "demo.verify-multi-client"]}
 

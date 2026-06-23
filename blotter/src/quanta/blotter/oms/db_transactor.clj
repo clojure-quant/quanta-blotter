@@ -13,7 +13,7 @@
 
 (defn- tagged-flows
   "Builds the four tagged flows from shared trading-state flows."
-  [{:keys [consolidator trading-state]}]
+  [{:keys [consolidator trading-state] :as oms}]
   (let [{:keys [order-change-flow fill-flow position-change-flow]} trading-state
         channel-flow (:combined-flow consolidator)]
     [(tag :msg channel-flow)
@@ -35,10 +35,10 @@
 (defn transact-task
   "Missionary task that persists all OMS flows of `this` into `db`.
    Writes are buffered into time blocks and processed together."
-  [this db]
-  (let [_ (assert (:trading-state this) "start-db-transactor needs :trading-state")
+  [oms db]
+  (let [_ (assert (:trading-state oms) "start-db-transactor needs :trading-state")
         state (db/new-state)
-        combined (apply util/mix (tagged-flows this))
+        combined (apply util/mix (tagged-flows oms))
         buffered (logger/time-buffered buffer-ms combined)
         transacting-f (m/ap
                        (loop []
@@ -53,11 +53,11 @@
   "Starts persisting the OMS flows of `this` (from create-order-manager) into
    `db` (a datahike connection from quanta.blotter.oms.db/trade-db-start).
    Returns a map with a :dispose! fn."
-  [this db]
-  (assert this "start-db-transactor needs the order-manager (this)")
+  [oms db]
+  (assert oms "start-db-transactor needs the order-manager (oms)")
   (assert db "start-db-transactor needs a db connection")
   (info "starting db-transactor ..")
-  (let [dispose! ((transact-task this db)
+  (let [dispose! ((transact-task oms db)
                   #(info "db-transactor done" %)
                   #(error "db-transactor error" %))]
     {:dispose! dispose!

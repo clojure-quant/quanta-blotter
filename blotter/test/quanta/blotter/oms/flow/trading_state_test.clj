@@ -16,7 +16,7 @@
 
 (defn- oms-with-flow []
   (let [{:keys [flow send]} (flow-sender)]
-    {:consolidator {:combined-flow flow}
+    {:combined-flow flow
      :send send}))
 
 (defn- seed-orders! [{:keys [send]}]
@@ -32,8 +32,8 @@
   (last emissions))
 
 (deftest shared-dict-flow-multicast-to-concurrent-subscribers
-  (let [{:keys [send] :as oms} (oms-with-flow)
-        trading-state (trading-state/start-trading-state! oms)
+  (let [{:keys [combined-flow send] :as oms} (oms-with-flow)
+        trading-state (trading-state/start-trading-state! combined-flow)
         oms (assoc oms :trading-state trading-state)
         {:keys [working-order-dict-flow dispose!]} trading-state
         acc1 (atom [])
@@ -53,8 +53,8 @@
         (trading-state/stop-trading-state! trading-state)))))
 
 (deftest two-snapshot-flows-see-same-working-orders
-  (let [{:keys [send] :as oms} (oms-with-flow)
-        trading-state (trading-state/start-trading-state! oms)
+  (let [{:keys [combined-flow send] :as oms} (oms-with-flow)
+        trading-state (trading-state/start-trading-state! combined-flow)
         oms (assoc oms :trading-state trading-state)
         acc1 (atom [])
         acc2 (atom [])

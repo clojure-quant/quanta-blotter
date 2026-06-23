@@ -9,8 +9,7 @@
    [clj-service.executor :as exec]
    [flowy.ring-adapter :refer [flowy-handler-ws]]
    [flowy.jetty-config :refer [jetty-configurator]]
-   [demo.fortune-cookie :as cookie]
-   ))
+   [demo.fortune-cookie :as cookie]))
 
 (defn prepare-flowy-request [clj req]
   (-> req session-request (assoc :ctx {:clj clj})))
@@ -47,7 +46,7 @@
                               :ctx :oms :permission nil :mode :sp}
                              {:fun 'quanta.blotter.oms.core/create-order
                               :ctx :oms :permission nil :mode :sp}
-                             {:fun 'quanta.blotter.oms.core/combined-flow 
+                             {:fun 'quanta.blotter.oms.core/combined-flow
                               :ctx :oms :permission nil :mode :ap}
                              {:fun 'quanta.blotter.oms.flow.snapshot/trading-snapshot-fn
                               :ctx :oms :permission nil :mode :ap}
@@ -59,8 +58,7 @@
                              {:fun 'quanta.blotter.oms.db/query-fills
                               :ctx :trade-db :permission nil :mode :clj}
                              {:fun 'quanta.blotter.oms.db/query-positions
-                              :ctx :trade-db :permission nil :mode :clj}
-                             ]})
+                              :ctx :trade-db :permission nil :mode :clj}]})
         h (make-handler clj)]
     (println "demo cookie:"
              (call-fn (get-service clj {:fun 'demo.fortune-cookie/get-cookie}) {}))

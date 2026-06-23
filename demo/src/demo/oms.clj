@@ -16,7 +16,10 @@
   (:import [missionary Cancelled]))
 
 (def oms  (create-order-manager {:log-file "log/oms-trace.txt"
-                                 :transaction-log-file "log/oms-transaction.txt"}))
+                                 :transaction-log-file "log/oms-transaction.txt"
+                                 :validate? true
+                                 :tag? true
+                                 }))
 
 oms
 

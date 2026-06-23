@@ -50,6 +50,5 @@
          index (rand-int size)]
      (get-cookie cookie-db index))))
 
-
 (defn get-cookie-bad []
   (throw (ex-info "bad-fortune" {:msg "just a test!"})))

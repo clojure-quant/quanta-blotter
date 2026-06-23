@@ -38,7 +38,8 @@
         tx-file (temp-file "oms-validation-tx-")
         oms (create-order-manager {:log-file log-file
                                    :transaction-log-file tx-file
-                                   :validate? true})
+                                   :validate? true
+                                   :tag? false})
         combined-events (atom [])]
     (try
       (start-order-manager! oms) ; returns oms with :trading-state
