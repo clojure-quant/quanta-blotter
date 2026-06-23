@@ -66,6 +66,7 @@
     {:log l
      :log-transaction log-transaction
      :validate? validate?
+     :tag? tag?
      :dispose-a (atom nil)
      :order-rdv order-rdv
      :orderupdate-rdv orderupdate-rdv
