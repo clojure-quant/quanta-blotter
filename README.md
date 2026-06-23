@@ -1,4 +1,5 @@
-# quanta-blotter [GitHub Actions status |clojure-quant/quanta-blotterClojars Project](https://github.com/clojure-quant/quanta-blotter/actions?workflow=CI)
+# quanta-blotter [![GitHub Actions status |clojure-quant/quanta-blotter](https://github.com/clojure-quant/quanta-blotter/workflows/CI/badge.svg)](https://github.com/clojure-quant/quanta-blotter/actions?workflow=CI)[![Clojars Project](https://img.shields.io/clojars/v/io.github.clojure-quant/quanta-blotter.svg)](https://clojars.org/io.github.clojure-quant/quanta-blotter)
+
 
 [Clojars Project](https://clojars.org/io.github.clojure-quant/quanta-blotter-cli)
 
