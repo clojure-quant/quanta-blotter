@@ -70,5 +70,4 @@
          (db/trade-db-stop conn))))))
 
 (comment
-  (print-trades!)
-  )
+  (print-trades!))

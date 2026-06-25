@@ -344,3 +344,8 @@
   (m/eduction
    (map vals)
    dict-flow))
+
+(defn closed-position-list-flow [position-change-f]
+  (m/eduction
+   (remove #(:position/open %))
+   position-change-f))

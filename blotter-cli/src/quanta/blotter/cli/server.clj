@@ -48,8 +48,8 @@
                               :ctx :oms :permission nil :mode :sp}
                              {:fun 'quanta.blotter.oms.core/combined-flow
                               :ctx :oms :permission nil :mode :ap}
-                             {:fun 'quanta.blotter.oms.flow.snapshot/trading-snapshot-fn
-                              :ctx :oms :permission nil :mode :ap}
+                             {:fun 'quanta.blotter.oms.server/snapshot-flow
+                              :ctx :oms-server :permission nil :mode :ap}
                              ; trade db
                              {:fun 'quanta.blotter.oms.db/query-messages
                               :ctx :trade-db :permission nil :mode :clj}

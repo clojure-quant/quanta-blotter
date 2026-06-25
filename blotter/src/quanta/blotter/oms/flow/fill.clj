@@ -10,14 +10,17 @@
 (defn ->fill
   "Projects a :broker/order-filled message to a db-shaped fill record."
   [msg]
-  {:fill/id (:fill-id msg)
-   :fill/order-id (:order-id msg)
-   :fill/account-id (:account/id msg)
-   :fill/asset (:asset msg)
-   :fill/side (:side msg)
-   :fill/qty (some-> (:qty msg) bigdec)
-   :fill/price (some-> (:price msg) bigdec)
-   :fill/date (:date msg)})
+  (println "fill orderupdate: " msg)
+  (cond-> {:fill/id (:fill-id msg)
+           :fill/order-id (:order-id msg)
+           :fill/account-id (:account/id msg)
+           :fill/asset (:asset msg)
+           :fill/side (:side msg)
+           :fill/qty (some-> (:qty msg) bigdec)
+           :fill/price (some-> (:price msg) bigdec)
+           :fill/date (:date msg)}
+    (:campaign msg) (assoc :fill/campaign (:campaign msg))
+    (:label msg) (assoc :fill/label (:label msg))))
 
 (defn fill-flow
   "Consumes a mixed channel flow; emits one fill record per :broker/order-filled

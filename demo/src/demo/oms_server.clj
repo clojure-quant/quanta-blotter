@@ -1,13 +1,8 @@
 (ns demo.oms-server
   (:require
    [missionary.core :as m]
-   [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager!
-                                    send-test-order]]
-   [quanta.blotter.account-manager :refer [add-edn-accounts]]
-   [quanta.blotter.oms.flow.print :refer [start-open-positions-working-order-logger!]]
-   ; persistence
-   [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.db-transactor :as db-transactor]
+   [quanta.blotter.oms.core :refer [send-test-order]]
+   [quanta.blotter.oms.server :as oms-server]
    ; side effects
    [quanta.blotter.paper.broker] ; side effect: brings in paper broker implementation
    [fix-engine.blotter.fix-trade] ; side effect: brings in fix-trade broker implementation
@@ -30,39 +25,23 @@
           #(println "test-order poller error" %))))
 
 (defn start-oms-server []
-  (let [oms  (create-order-manager {:log-file "log/oms-server-trace.txt"
-                                    :transaction-log-file "log/oms-server-transaction.txt"
-                                    :validate? true
-                                    :tag? true})
-        _ (add-edn-accounts (:account-manager oms) "demo-accounts.edn")
-        oms (start-order-manager! oms)
-        dispose-wo-op-logger (start-open-positions-working-order-logger! oms "log/oms-server-wo-op.txt")
-        trade-db (db/trade-db-start "trade-db-oms-server")
-        db-transactor (db-transactor/start-db-transactor oms trade-db)
-        oms-server {:oms oms
-                    :dispose-wo-op-logger dispose-wo-op-logger
-                    :trade-db trade-db
-                    :db-transactor db-transactor}
+  (let [oms-server  (oms-server/start-oms-server {:log-file "log/oms-server-trace.txt"
+                                                  :transaction-log-file "log/oms-server-transaction.txt"
+                                                  :validate? true
+                                                  :tag? true
+                                                  :accounts-file "demo-accounts.edn"})
+        {:keys [oms trade-db]} oms-server
         jetty (start-socket-server oms trade-db oms-server)
-        dispose-test-order-poller (start-test-order-poller! oms 3)
-        ]
+        dispose-test-order-poller (start-test-order-poller! oms 3)]
     (assoc oms-server
            :jetty jetty
-           :dispose-test-order-poller dispose-test-order-poller)
-    ))
+           :dispose-test-order-poller dispose-test-order-poller)))
 
-
-(defn stop-oms-server [{:keys [oms dispose-wo-op-logger trade-db db-transactor jetty
-                               dispose-test-order-poller]}]
+(defn stop-oms-server [{:keys [oms dispose-wo-op-logger  jetty
+                               dispose-test-order-poller] :as oms-server}]
   (when dispose-test-order-poller (dispose-test-order-poller))
   (when jetty (.stop jetty))
-  (db-transactor/stop-db-transactor db-transactor)
-  (db/trade-db-stop trade-db)
-  (stop-order-manager! oms)
-  (when dispose-wo-op-logger ((:dispose dispose-wo-op-logger))))
-
-
-
+  (oms-server/stop-oms-server oms-server))
 
 (defn -main [& _args]
   (let [oms-server (start-oms-server)
@@ -73,10 +52,5 @@
     (println "OMS server running on http://localhost:9000 — Ctrl+C to stop")
     (.join jetty)))
 
-
-(comment 
-
-  
-  
-  )
+(comment)
 

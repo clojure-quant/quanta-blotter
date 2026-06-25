@@ -33,9 +33,8 @@
 (defn sample-continuous-on-change
   "Sample `continuous-flows` every `interval-ms` via `combine-fn`,
    emitting only when the combined snapshot changes."
-  [interval-ms combine-fn & continuous-flows]
-  (let [snapshot-cont (apply m/latest combine-fn continuous-flows)]
-    (only-when-changed
-     (m/sample (fn [snap _tick] snap)
-               snapshot-cont
-               (tick-flow interval-ms)))))
+  [f interval-ms]
+  (only-when-changed
+   (m/sample (fn [snap _tick] snap)
+             f
+             (tick-flow interval-ms))))

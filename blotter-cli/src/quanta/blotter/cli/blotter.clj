@@ -26,8 +26,7 @@
    :trades 'quanta.blotter.oms.db/query-fills
    :positions 'quanta.blotter.oms.db/query-positions})
 
-(def snapshot-fn
-  'quanta.blotter.oms.flow.snapshot/trading-snapshot-fn)
+
 
 (def working-statuses #{:working})
 
@@ -248,7 +247,7 @@
 (defn- subscribe-cmd [conn]
   (charm/cmd
    (fn []
-     (let [id (client/subscribe! conn snapshot-fn)]
+     (let [id (client/subscribe! conn 'quanta.blotter.oms.server/snapshot-flow)]
        {:type :subscribed :sub-id id}))))
 
 (defn- snapshot-read-cmd [conn]

@@ -2,8 +2,7 @@
   (:require
    [missionary.core :as m]
    [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts get-account]]
-   [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]
-   ))
+   [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]))
 
 (defn quote-printer [f]
   (m/reduce
@@ -15,11 +14,11 @@
 
 (defn subscription-changer [subscription-a]
   (m/sp
-      
+
    (m/? (m/sleep 7000))
    (println "adding USDJPY subscription")
    (swap! subscription-a conj "USDJPY")
-   
+
    (m/? (m/sleep 7000))
    (println "adding GBPUSD subscription")
    (swap! subscription-a conj "GBPUSD")
@@ -27,7 +26,7 @@
    (m/? (m/sleep 7000))
    (println "adding EURJPY subscription")
    (swap! subscription-a conj "EURJPY")
-   
+
    (m/? (m/sleep 7000))
    (println "removing JPY subscriptions")
    (swap! subscription-a disj "EURJPY" "USDJPY")
@@ -45,7 +44,6 @@
 
    nil))
 
-
 (defn start!
   "Mixed paper + FIX trade accounts via quanta-blotter account manager."
   []
@@ -56,7 +54,7 @@
         _ (add-edn-accounts am "demo-quote-accounts.edn")
 
         {:keys [flow subscription-a]} (get-account am 1)
-        _ (reset! subscription-a #{"EURUSD" })
+        _ (reset! subscription-a #{"EURUSD"})
 
         printer (quote-printer flow)
         dispose-printer (printer #(println "quote-printer done" %)

@@ -5,7 +5,7 @@
         io.github.timokramer/charm.clj {:git/tag "v0.1.64" :git/sha "e5120a9"}
         org.babashka/http-client {:mvn/version "0.4.23"}}
  :aliases
- {:dev {:extra-deps {'io.github.clojure-quant/quanta-blotter {:local/root "../blotter"}}}
+ {:dev {:extra-deps {io.github.clojure-quant/quanta-blotter {:local/root "../blotter"}}}
   :app {:main-opts ["-m" "quanta.blotter.cli.server"]}
   :build {:deps {io.github.clojure/tools.build {:mvn/version "0.10.5"}
                  slipset/deps-deploy {:mvn/version "0.2.2"}}

@@ -68,7 +68,6 @@
           {}
           position-change-flow))))
 
-
 (def dispose!
   (let [pos-change-f (op/position-change-flow (fill/fill-flow channel-flow) {:method :fifo})
         open-pos-list-f (op/open-position-list-flow pos-change-f)
@@ -80,9 +79,7 @@
            open-pos-list-f)]
     (t #(println "success:  " %) #(println "error:  " %))))
 
-
 (dispose!)
-
 
 (comment
   (run-demo! {:method :fifo})

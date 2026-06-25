@@ -15,12 +15,12 @@
   :cli-quote-list {:exec-fn demo.cli-quote-list/start-cli}
   
   ;; trade
+  :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}
   :cli-server {:main-opts ["-m" "demo.oms-server"]}
-  :verify-multi-client {:main-opts ["-m" "demo.verify-multi-client"]}
 
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
-  :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}
+
   :backoffice {:exec-fn demo.backoffice/print-trades!}
 
 ;

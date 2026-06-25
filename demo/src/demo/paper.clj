@@ -12,14 +12,12 @@
    [demo.util.update-printer :refer [create-orderupdate-printer]])
   (:import [missionary Cancelled]))
 
-
 (defn load-demo-accounts
   []
   (-> "demo-accounts.edn" slurp edn/read-string))
 
 (defn account-by-id [accounts id]
   (some #(when (= id (:account/id %)) %) accounts))
-
 
 (defn start!
   "Start paper trade-account 1 fed by simulated orderflow for that account."
@@ -40,22 +38,19 @@
         l-channel (create-logger "log/paper-order-orderupdate.txt" false)
         _ (log l-channel {:type :consolidator/started :date (t/instant)})
         dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
-        
+
         ;; trade account 
         account (account-by-id (load-demo-accounts) 1)
         trade-account (p/create-trade-account account order orderupdate log-fn)
         dispose-account! (trade-account #(println "account done" %) #(println "account error" %))
-        
+
         ;; simulate orders
-        dispose-orderflow-simulated (push-flow-to-rdv order-rdv demo-order-action-flow)
-        ]
+        dispose-orderflow-simulated (push-flow-to-rdv order-rdv demo-order-action-flow)]
     {;:dispose-logger (:dispose! l)
      :dispose-order-puller dispose-orderflow-simulated
      :dispose-account dispose-account!
      :dispose-pull-printer dispose-orderupdate-printer
-     :dispose-flow-logger dispose-flow-logger
-     }))
-
+     :dispose-flow-logger dispose-flow-logger}))
 
 (comment
   (def ta (start!))

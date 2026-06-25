@@ -11,7 +11,6 @@
    [demo.util.update-printer :refer [create-orderupdate-printer]])
   (:import [missionary Cancelled]))
 
-
 (defn start!
   "Start paper trade-account 1 fed by simulated orderflow for that account."
   []
@@ -20,7 +19,7 @@
         _ (log l {:type :paper/started :date (t/instant)})
         log-fn (partial log l)
         ; setup rdvs
-        order-rdv (m/rdv) 
+        order-rdv (m/rdv)
         orderupdate-rdv (m/rdv)
         dispose-orderupdate-printer (create-orderupdate-printer orderupdate-rdv) ; uses original flow.        
         ;; consolidator
@@ -38,14 +37,11 @@
         _ (add-edn-accounts am "demo-accounts.edn")
         dispose! (start-account-manager am)
         ;; simulate orders
-        dispose-orderflow-simulated (push-flow-to-rdv order-rdv demo-order-action-flow)
-        ]
+        dispose-orderflow-simulated (push-flow-to-rdv order-rdv demo-order-action-flow)]
     {:dispose-orderflow-simulated dispose-orderflow-simulated
      :dispose-account dispose!
      :dispose-pull-printer dispose-orderupdate-printer
-     :dispose-flow-logger dispose-flow-logger
-     }))
-
+     :dispose-flow-logger dispose-flow-logger}))
 
 (comment
   (def ta (start!))

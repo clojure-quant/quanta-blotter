@@ -12,7 +12,6 @@
    nil
    f))
 
-
 (defn mix
   "Return a flow which is mixed by flows"
   ; will generate (count flows) processes, 

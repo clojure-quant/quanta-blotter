@@ -9,6 +9,9 @@
   "Order statuses that mean the order is no longer open."
   #{:cancelled :rejected :expired :filled})
 
+(defn order-done? [order]
+  (contains? closed-statuses (:order/status order)))
+
 (defn- initial-state []
   {:history []})
 
@@ -164,3 +167,8 @@
   (m/eduction
    (map (fn [dict] (sort-by :order/id (vals dict))))
    dict-flow))
+
+(defn closed-order-list-flow [order-change-f]
+  (m/eduction
+   (filter order-done?)
+   order-change-f))

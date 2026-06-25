@@ -73,7 +73,8 @@
      :consolidator consolidator
      :validator validator
      :account-manager account-manager
-     :combined-flow combined-flow}))
+     :combined-flow combined-flow
+     :trading-state (trading-state/create-trading-state! combined-flow)}))
 
 (defn consume-orderupdate [r]
   (m/sp
@@ -83,7 +84,7 @@
 
 (defn start-order-manager!
   "Start paper trade-account 1 fed by simulated orderflow for that account."
-  [{:keys [order-rdv orderupdate-rdv consolidator validator log-transaction account-manager combined-flow] :as this}]
+  [{:keys [order-rdv orderupdate-rdv consolidator validator log-transaction account-manager combined-flow trading-state] :as this}]
   (let [dispose-transaction-logger (start-log-flow-to-logger log-transaction combined-flow)
         dispose-orderupdate-consumer!  ((consume-orderupdate orderupdate-rdv)
                                         #(println "orderupdate-consumer done " %)
@@ -91,15 +92,13 @@
         dispose-validation! (when validator
                               (start-validation-channel! validator))
         dispose-consolidator! (start-consolidator! consolidator)
-        dispose-account-manager! (start-account-manager account-manager)
-        trading-state (trading-state/start-trading-state! combined-flow)]
+        dispose-account-manager! (start-account-manager account-manager)]
     (reset! (:dispose-a this)
             {:dispose-transaction-logger dispose-transaction-logger
              :dispose-orderupdate-consumer! dispose-orderupdate-consumer!
              :dispose-validation! dispose-validation!
              :dispose-consolidator! dispose-consolidator!
-             :dispose-account-manager! dispose-account-manager!
-             :dispose-trading-state! #(trading-state/stop-trading-state! trading-state)})
+             :dispose-account-manager! dispose-account-manager!})
     (log log-transaction {:type :oms/started :date (t/instant)})
     (assoc this :trading-state trading-state)))
 
@@ -111,7 +110,7 @@
     (:dispose-consolidator! d)
     (:dispose-orderupdate-consumer! d)
     (:dispose-transaction-logger d)
-    (:dispose-trading-state! d)
+
     (reset! dispose-a nil))
   (dissoc this :trading-state))
 

@@ -6,59 +6,40 @@
     clojure -X:print-wo-op-demo"
   (:require
    [clojure.string :as str]
+   [missionary.core :as m]
    [ednx.edn :refer [read-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
-   [missionary.core :as m]
-   [quanta.blotter.util :refer [flow-sender]]
-   [quanta.blotter.oms.flow.print :refer [start-open-positions-working-order-logger!]]
-   [quanta.blotter.oms.flow.trading-state :as trading-state]))
+   [quanta.blotter.oms.flow.campaign :as campaign]
+   [quanta.blotter.oms.flow.trading-state :as trading-state]
+   [quanta.blotter.oms.flow.print :refer [start-trading-state-logger!]]))
 
 (add-tick-edn-handlers!)
 
-(def default-combined-edn "data/combined.edn")
-(def default-log-file "log/print-demo.log")
-
 (defn load-combined-edn
   "Read all channel messages from a multi-form EDN file."
-  ([]
-   (load-combined-edn default-combined-edn))
-  ([path]
-   (->> (slurp path)
-        str/split-lines
-        (remove str/blank?)
-        (mapv read-edn))))
-
-(defn create-stub-oms
-  "Minimal OMS map with a live combined-flow sender."
   []
-  (let [{:keys [flow send]} (flow-sender)]
-    {:combined-flow flow
-     :send send}))
+  (->> (slurp "data/combined.edn")
+       str/split-lines
+       (remove str/blank?)
+       (mapv read-edn)))
 
-(defn- seed-combined! [{:keys [send]} messages]
-  (doseq [msg messages]
-    (send msg)))
+(defn create-combined-flow  []
+  (let [messages (load-combined-edn)
+        immediate-flow (m/seed messages)
+        tagged-flow (campaign/campaign-tagged-combined-flow immediate-flow)]
+    (m/ap (let [v (m/?> tagged-flow)]
+            (m/? (m/sleep 100 v))))))
 
 (defn run-demo!
   "Read combined.edn, start trading-state + wo/op logger, replay messages."
-  ([]
-   (run-demo! {}))
-  ([{:keys [combined-edn log-file wait-ms]
-     :or {combined-edn default-combined-edn
-          log-file default-log-file
-          wait-ms 500}}]
-   (let [messages (load-combined-edn combined-edn)
-         oms (create-stub-oms)
-         trading-state (trading-state/start-trading-state! (:combined-flow oms))
-         oms (assoc oms :trading-state trading-state)
-         {:keys [dispose]} (start-open-positions-working-order-logger! oms log-file)]
-     (try
-       (seed-combined! oms messages)
-       (m/? (m/sleep wait-ms))
-       (finally
-         (dispose)
-         (trading-state/stop-trading-state! trading-state))))))
+  [& _]
+  (let [channel-flow (create-combined-flow)
+        trading-state (trading-state/create-trading-state! channel-flow)
+        dispose! (start-trading-state-logger! trading-state "log/print-demo.log" 1000 true)]
+    (try
+      (m/? (m/sleep 50000))
+      (finally
+        (dispose!)))))
 
 (comment
-  (run-demo!)
-  )
+  (run-demo!))

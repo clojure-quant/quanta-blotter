@@ -3,55 +3,51 @@
    [missionary.core :as m]
    [quanta.missionary.time-flow :refer [create-time-flow]]))
 
-
 (def demo-order-action-flow
   (create-time-flow
-   [1 {:type :trader/new-order
-       :account/id 1
-       :order-id 1
-       :asset "BTCUSDT"
-       :side :buy
-       :order-type :limit
-       :limit 1000.0M
-       :qty 0.001M
-       :campaign "paper-btc"
-       :label :long}
-    2 {:type :trader/new-order
-       :account/id 2
-       :order-id 2
-       :asset "ETHUSDT"
-       :side :sell
-       :order-type :limit
-       :limit 101.0M
-       :qty 0.001M
-       :campaign "paper-eth"
-       :label :short}
-    3 {:type :trader/cancel-order
-       :account/id 2
-       :order-id 2}
-    5 {:type :trader/new-order
-       :account/id 2
-       :order-id 3
-       :asset "ETHUSDT"
-       :side :sell
-       :order-type :limit
-       :limit 99.3M
-       :qty 0.001M
-       :campaign "paper-eth"
-       :label :short}
-    7 {:type :trader/new-order
-       :account/id 2
-       :order-id 4
-       :asset "ETHUSDT"
-       :side :sell
-       :order-type :limit
-       :limit 98.7M
-       :qty 0.001M
-       :campaign "paper-eth"
-       :label :short}]))
-
-
-
+   [1000 {:type :trader/new-order
+          :account/id 1
+          :order-id 1
+          :asset "BTCUSDT"
+          :side :buy
+          :order-type :limit
+          :limit 1000.0M
+          :qty 0.001M
+          :campaign "paper-btc"
+          :label :long}
+    2000 {:type :trader/new-order
+          :account/id 2
+          :order-id 2
+          :asset "ETHUSDT"
+          :side :sell
+          :order-type :limit
+          :limit 101.0M
+          :qty 0.001M
+          :campaign "paper-eth"
+          :label :short}
+    3000 {:type :trader/cancel-order
+          :account/id 2
+          :order-id 2}
+    5000 {:type :trader/new-order
+          :account/id 2
+          :order-id 3
+          :asset "ETHUSDT"
+          :side :sell
+          :order-type :limit
+          :limit 99.3M
+          :qty 0.001M
+          :campaign "paper-eth"
+          :label :short}
+    7000 {:type :trader/new-order
+          :account/id 2
+          :order-id 4
+          :asset "ETHUSDT"
+          :side :sell
+          :order-type :limit
+          :limit 98.7M
+          :qty 0.001M
+          :campaign "paper-eth"
+          :label :short}]))
 
 (comment
 
@@ -63,9 +59,6 @@
 ; nil {:type :cancel-order, :order-id 2}
 ; nil {:type :new-order, :order-id 3, :asset :ETH, :side :sell, :limit 100.0, :qty 0.001}
 ; nil {:type :new-order, :order-id 4, :asset :ETH, :side :sell, :limit 100.0, :qty 0.001}
-
-
-
 
 ; 
   )

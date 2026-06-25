@@ -24,7 +24,6 @@
         ql (quote-list-dict-flow am (fn [_asset] 1)
                                  ["EURUSD" "USDJPY" "EURNOK"])
 
-
         printer (quote-printer ql)
         dispose-printer (printer #(println "1-quote-printer done " %) #(println "1-quote-printer CRASH " %))]
     {:dispose-printer dispose-printer}))

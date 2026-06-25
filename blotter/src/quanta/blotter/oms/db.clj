@@ -96,6 +96,12 @@
    {:db/ident :fill/date
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
+   {:db/ident :fill/campaign
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :fill/label
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
    ;; position (created once, then updated)
    {:db/ident :position/account
     :db/valueType :db.type/long
@@ -243,6 +249,8 @@
            :fill/side (:fill/side fill)}
     order-ref (assoc :fill/order order-ref)
     (:fill/asset fill) (assoc :fill/asset (:fill/asset fill))
+    (some? (:fill/label fill)) (assoc :fill/label (:fill/label fill))
+    (some? (:fill/campaign fill)) (assoc :fill/campaign (:fill/campaign fill))
     (some? (:fill/qty fill)) (assoc :fill/qty (as-bigdec (:fill/qty fill)))
     (some? (:fill/price fill)) (assoc :fill/price (as-bigdec (:fill/price fill)))
     (:fill/date fill) (assoc :fill/date (as-date (:fill/date fill)))))

@@ -18,21 +18,16 @@
 (def oms  (create-order-manager {:log-file "log/oms-trace.txt"
                                  :transaction-log-file "log/oms-transaction.txt"
                                  :validate? true
-                                 :tag? true
-                                 }))
+                                 :tag? true}))
 
 oms
 
 (add-edn-accounts (:account-manager oms) "demo-accounts.edn")
 
-
-
 (def dispose-wo-op-logger (start-open-positions-working-order-logger! oms "log/oms-wo-op.txt"))
-
 
 ;; persistence: open the datahike trade-db and stream all OMS flows into it.
 (def trade-db (db/trade-db-start "trade-db"))
-
 
 (def db-transactor (db-transactor/start-db-transactor oms trade-db))
 
@@ -41,13 +36,12 @@ oms
 
 (start-order-manager! oms)
 
-
 (m/?
  (create-order oms {:account/id 3
                     :order-type :limit
                     :asset "USDJPY"
                     :side :buy
-                    :limit 110.30M 
+                    :limit 110.30M
                     :qty 10000.0M
                     :campaign "fx-q2"
                     :label :hedge}))
@@ -57,11 +51,10 @@ oms
                     :order-type :limit
                     :asset "USDJPY"
                     :side :sell
-                    :limit 120.51M 
+                    :limit 120.51M
                     :qty 5000.0M
                     :campaign "fx-q2"
                     :label :scalp}))
-
 
 (m/?
  (create-order oms {:account/id 4
