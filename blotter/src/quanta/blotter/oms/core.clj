@@ -7,10 +7,14 @@
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
    [quanta.blotter.oms.flow.campaign :refer [campaign-tagged-combined-flow]]
    [quanta.blotter.oms.validation.channel :refer [create-validation-channel start-validation-channel! stop-validation-channel!]]
+   [quanta.blotter.oms.validation.schema :refer [validate-trader-message human-error-trader-message]]
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
    [quanta.blotter.util-rdv :refer [create-rdv]]
+   [quanta.blotter.oms.flow.trading-state :as trading-state]
+   ;; side effects 
    [quanta.blotter.paper.broker]
-   [quanta.blotter.oms.flow.trading-state :as trading-state]))
+
+   ))
 
 (defn- create-validated-channel-stack
   "Consolidator (public) -> validator -> account manager."
@@ -114,24 +118,45 @@
     (reset! dispose-a nil))
   (dissoc this :trading-state))
 
+(defn send-message
+  "push a message on the OMS order channel. "
+  [this message]
+  (m/sp
+   (assert (map? this) "this (oms) needs to be a map")
+   (assert (:order-rdv this) "this (oms) needs to have an order-rdv")
+   (if (validate-trader-message message)
+     (do 
+       (m/? (m/via m/blk (println "[OMS send-trader-message]: " message)))
+       (m/? ((:order-rdv this) message))
+       (m/? (m/via m/blk (println "[OMS send-trader-message] success: " message)))
+       message)
+     (throw (ex-info (human-error-trader-message message) {:message message})))))
+
 (defn create-order
   "Create an order and push it on the OMS order channel.
    `:order-type` is `:limit` or `:market`; limit orders require `:limit`."
-  [this {:keys [order-type asset side qty limit order-id]
-         :as order-details}]
-  (m/sp
-   (assert (map? order-details) "order-details must be a map")
-   (assert (map? this) "this (oms) needs to be a map")
-   (assert (:order-rdv this) "this (oms) needs to have an order-rdv")
-   (assert (some? order-type) "order-details must include :order-type")
+  [this {:keys [order-id] :as order-details}]
+  (let [order (-> order-details
+                  (assoc :type :trader/new-order)
+                  (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
+    (send-message this order)))
+  
+(defn cancel-order
+  "Create an order and push it on the OMS order channel.
+   `:order-type` is `:limit` or `:market`; limit orders require `:limit`."
+  [this order-details]
+  (let [order (-> order-details
+                  (assoc :type :trader/cancel-order))]
+    (send-message this order)))
 
-   (let [order (-> order-details
-                   (assoc :type :trader/new-order)
-                   (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
-     (m/? (m/via m/blk (println "[OMS] create order: " order)))
-     (m/? ((:order-rdv this) order))
-     (m/? (m/via m/blk (println "[OMS] create order success! order: " order)))
-     order)))
+(defn modify-order
+  "Create an order and push it on the OMS order channel.
+   `:order-type` is `:limit` or `:market`; limit orders require `:limit`."
+  [this order-details]
+  (let [order (-> order-details
+                  (assoc :type :trader/modify-order))]
+    (send-message this order)))
+
 
 (defn combined-flow [this]
   (:combined-flow this))

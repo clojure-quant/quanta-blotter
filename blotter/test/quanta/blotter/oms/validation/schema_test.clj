@@ -155,6 +155,142 @@
         :order-id 7})
       "date/message are optional"))
 
+(deftest validate-trader-message-test
+  (testing "valid new-orders"
+    (doseq [msg [{:type :trader/new-order
+                  :account/id 1
+                  :order-id 1
+                  :asset "BTCUSDT"
+                  :side :buy
+                  :order-type :limit
+                  :qty 0.001M
+                  :limit 100.0M}
+                 {:type :trader/new-order
+                  :account/id 2
+                  :order-id "ord-42"
+                  :asset "ETHUSDT"
+                  :side :sell
+                  :order-type :market
+                  :qty 1.5M}
+                 {:type :trader/new-order
+                  :account/id 3
+                  :order-id 7
+                  :asset "BTCUSDT"
+                  :side :buy
+                  :order-type :stop
+                  :qty 0.01M
+                  :limit 95000.0M
+                  :campaign "fx-q2"
+                  :label :hedge}]]
+      (is (s/validate-trader-message msg) (str "expected valid: " (pr-str msg)))))
+
+  (testing "invalid new-orders"
+    (doseq [msg [{:type :trader/new-order
+                  :account/id 1
+                  :order-id 1
+                  :asset "BTCUSDT"
+                  :side :buy
+                  :order-type :limit
+                  :qty 0.001M}
+                 {:type :trader/new-order
+                  :account/id 1
+                  :order-id 1
+                  :asset "BTCUSDT"
+                  :side :buy
+                  :order-type :market
+                  :qty 0.001M
+                  :limit 100.0M}
+                 {:type :trader/new-order
+                  :account/id 1
+                  :order-id 1
+                  :asset "BTCUSDT"
+                  :side :long
+                  :order-type :limit
+                  :qty 0.001M
+                  :limit 100.0M}
+                 {:type :trader/new-order
+                  :account/id 1
+                  :order-id 1
+                  :asset "BTCUSDT"
+                  :side :buy
+                  :order-type :limit
+                  :qty 0.001
+                  :limit 100.0M}
+                 {:type :trader/new-order
+                  :account/id 1
+                  :order-id 1
+                  :asset "BTCUSDT"
+                  :side :buy
+                  :order-type :limit
+                  :qty -0.001M
+                  :limit 100.0M}]]
+      (is (not (s/validate-trader-message msg)) (str "expected invalid: " (pr-str msg)))))
+
+  (testing "valid cancel-orders"
+    (doseq [msg [{:type :trader/cancel-order
+                  :account/id 1
+                  :order-id 1}
+                 {:type :trader/cancel-order
+                  :account/id 2
+                  :order-id "ord-42"}]]
+      (is (s/validate-trader-message msg) (str "expected valid: " (pr-str msg)))))
+
+  (testing "invalid cancel-orders"
+    (doseq [msg [{:type :trader/cancel-order
+                  :order-id 1}
+                 {:type :trader/cancel-order
+                  :account/id 1}
+                 {:type :trader/cancel-order
+                  :account/id "not-an-int"
+                  :order-id 1}]]
+      (is (not (s/validate-trader-message msg)) (str "expected invalid: " (pr-str msg)))))
+
+  (testing "valid modify-orders"
+    (doseq [msg [{:type :trader/modify-order
+                  :account/id 1
+                  :order-id 1
+                  :qty 0.002M}
+                 {:type :trader/modify-order
+                  :account/id 2
+                  :order-id "ord-42"
+                  :limit 99.5M}
+                 {:type :trader/modify-order
+                  :account/id 3
+                  :order-id 7
+                  :qty 0.5M
+                  :limit 101.0M}]]
+      (is (s/validate-trader-message msg) (str "expected valid: " (pr-str msg)))))
+
+  (testing "invalid modify-orders"
+    (doseq [msg [{:type :trader/modify-order
+                  :order-id 1
+                  :qty 0.002M}
+                 {:type :trader/modify-order
+                  :account/id 1
+                  :order-id 1
+                  :qty 0.0M}
+                 {:type :trader/modify-order
+                  :account/id 1
+                  :order-id 1
+                  :qty "not-a-decimal"}]]
+      (is (not (s/validate-trader-message msg)) (str "expected invalid: " (pr-str msg)))))
+
+  (testing "broker messages are not trader messages"
+    (doseq [msg [{:type :broker/order-filled
+                  :account/id 1
+                  :order-id 1
+                  :fill-id "f-1"
+                  :date (t/instant)
+                  :asset "BTCUSDT"
+                  :qty 0.001M
+                  :side :buy
+                  :price 100.0M}
+                 {:type :broker/order-rejected
+                  :account/id 1
+                  :order-id 1}]]
+      (is (not (s/validate-trader-message msg))
+          "validate-trader-message rejects broker messages"))))
+
 (deftest channel-paper-edn-schema-test
   (is (.exists channel-paper-edn)
       (str "demo fixture missing: " (.getAbsolutePath channel-paper-edn)))

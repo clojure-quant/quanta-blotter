@@ -20,13 +20,15 @@
 
 (def Side [:enum :buy :sell])
 
-(def OrderType [:enum :limit :market])
+(def OrderType [:enum :limit :market :stop])
 
 (defn limit-market-exclusive?
   "Limit orders require :limit; market orders must not include :limit."
   [{:keys [order-type limit]}]
   (case order-type
+    nil true
     :limit (some? limit)
+    :stop (some? limit)
     :market (nil? limit)
     false))
 
@@ -59,6 +61,23 @@
    [:type [:= :trader/cancel-order]]
    [:account/id AccountId]
    [:order-id OrderId]])
+
+(def TraderModifyOrder
+  [:and
+   [:map
+    [:type [:= :trader/modify-order]]
+    [:account/id AccountId]
+    [:order-id OrderId]
+    ; [:asset {:optional true} :string] ; asset may not be modified
+    ; [:side {:optional true} Side] ; side may not be modified
+    [:qty {:optional true} PositiveDecimal]
+    ; [:order-type {:optional true} OrderType] ; order-type may not be modified
+    [:limit {:optional true} PositiveDecimal]
+    ;[:campaign {:optional true} :string] ; campaingn and label may not be modified
+    ;[:label {:optional true} :keyword]
+    ]
+   [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}
+    limit-market-exclusive?]])
 
 (def BrokerOrderFilled
   [:map
@@ -121,8 +140,11 @@
 
 (def Message
   [:multi {:dispatch :type}
+   ; trader
    [:trader/new-order TraderNewOrder]
    [:trader/cancel-order TraderCancelOrder]
+   [:trader/modify-order TraderModifyOrder]
+   ; broker
    [:broker/order-filled BrokerOrderFilled]
    [:broker/order-confirmed BrokerOrderConfirmed]
    [:broker/order-rejected BrokerOrderRejected]
@@ -139,6 +161,25 @@
 (defn human-error-message [message]
   (->> (explain-message message)
        (me/humanize)))
+
+(def TraderMessage
+  [:multi {:dispatch :type}
+   [:trader/new-order TraderNewOrder]
+   [:trader/cancel-order TraderCancelOrder]
+   [:trader/modify-order TraderModifyOrder]
+   ])
+
+(defn validate-trader-message [message]
+  (m/validate TraderMessage message {:registry r}))
+
+(defn explain-trader-message [message]
+  (m/explain TraderMessage message {:registry r}))
+
+(defn human-error-trader-message [message]
+  (->> (explain-trader-message message)
+       (me/humanize)))
+
+
 
 (comment
 
