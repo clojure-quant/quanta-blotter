@@ -9,8 +9,12 @@
    [quanta.blotter.oms.flow.working-orders :as wo]
    [quanta.blotter.oms.print :as print]))
 
-(defn- print-state [{:keys [trade order position working-order open-position] :as _state}]
+(defn- print-state [{:keys [trader trade order position working-order open-position] :as _state}]
   (let [s (str "\r\n trading-state as of " (t/instant) "\r\n")
+
+        s (if (empty? trader)
+            s
+            (str s "\r\ntrader requests:\r\n" (print/trader-requests-table trader)))
 
         s (if (empty? trade)
             s
@@ -35,6 +39,7 @@
 
 (defn- acc-state [state [k v]]
   (case k
+    :trader (update state :trader conj v)
     :trade (update state :trade conj v)
     :order (update state :order conj v)
     :position (update state :position conj v)
@@ -42,7 +47,8 @@
     :open-position (assoc state :open-position v)))
 
 (defn trading-state-print-flow [{:keys [order-change-flow fill-flow position-change-flow
-                                        working-order-dict-flow open-position-dict-flow]
+                                        working-order-dict-flow open-position-dict-flow
+                                        trader-req-flow]
                                  :as trading-state} interval-ms]
   (assert (map? trading-state) "trading-state-print-flow trading-state needs to be a map")
   (let [mixed-f (mix-tagged {:trade fill-flow
@@ -51,13 +57,16 @@
                              ;:position position-change-flow
                              :position (op/closed-position-list-flow position-change-flow)
                              :working-order working-order-dict-flow
-                             :open-position open-position-dict-flow})
+                             :open-position open-position-dict-flow
+                             :trader trader-req-flow
+                             })
         batched-combined-f (m/ap
                             (let [[_ batch] (m/?> (m/group-by {} mixed-f))]
                               (m/? (->> (m/ap (m/amb= (m/?> batch)
                                                       (m/? (m/sleep interval-ms))))
                                         (m/eduction (take-while some?))
-                                        (m/reduce acc-state {:trade [] :order [] :position []
+                                        (m/reduce acc-state {:trader []
+                                                             :trade [] :order [] :position []
                                                              :working-order nil :open-position nil})))))]
     (m/ap
      (print-state (m/?> batched-combined-f)))))

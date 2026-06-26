@@ -125,7 +125,7 @@
    (assert (map? this) "this (oms) needs to be a map")
    (assert (:order-rdv this) "this (oms) needs to have an order-rdv")
    (if (validate-trader-message message)
-     (do 
+     (let [message (assoc message :date (t/instant))] 
        (m/? (m/via m/blk (println "[OMS send-trader-message]: " message)))
        (m/? ((:order-rdv this) message))
        (m/? (m/via m/blk (println "[OMS send-trader-message] success: " message)))
@@ -135,16 +135,18 @@
 (defn create-order
   "Create an order and push it on the OMS order channel.
    `:order-type` is `:limit` or `:market`; limit orders require `:limit`."
-  [this {:keys [order-id] :as order-details}]
+  [this order-details]
+  (assert (map? order-details) "order-details must be a map")
   (let [order (-> order-details
                   (assoc :type :trader/new-order)
-                  (cond-> (not order-id) (assoc :order-id (nano-id 6))))]
+                  (cond-> (not (:order-id order-details)) (assoc :order-id (nano-id 6))))]
     (send-message this order)))
   
 (defn cancel-order
   "Create an order and push it on the OMS order channel.
    `:order-type` is `:limit` or `:market`; limit orders require `:limit`."
   [this order-details]
+  (assert (map? order-details) "order-details must be a map")
   (let [order (-> order-details
                   (assoc :type :trader/cancel-order))]
     (send-message this order)))
@@ -153,6 +155,7 @@
   "Create an order and push it on the OMS order channel.
    `:order-type` is `:limit` or `:market`; limit orders require `:limit`."
   [this order-details]
+  (assert (map? order-details) "order-details must be a map")
   (let [order (-> order-details
                   (assoc :type :trader/modify-order))]
     (send-message this order)))

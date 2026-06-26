@@ -27,6 +27,7 @@
        {:name :side, :align :right :title "side" :key-fn :order/side}
        {:name :qty, :align :right :title "qty" :key-fn :order/qty}
        {:name :type, :align :right :title "type" :key-fn :order/type}
+       {:name :limit, :align :right :title "limit" :key-fn :order/limit}
        {:name :status, :align :right :title "status" :key-fn :order/status}
        {:name :qty-working, :align :right :title "qty-working" :key-fn :order/qty-working}
        {:name :qty-filled, :align :right :title "qty-filled" :key-fn :order/qty-filled}
@@ -75,3 +76,24 @@
 
 (defn timestamped-table [label table-str]
   (str (t/instant) " " label "\r\n" table-str))
+
+(defn trader-requests-table
+  ([trader-requests]
+   (trader-requests-table trader-requests {}))
+  ([trader-requests opts]
+   (with-out-str
+     (crockery/print-table
+      (table-opts opts)
+      [{:name :date, :align :left :title "date" :key-fn :date}
+       {:name :account, :title "account" :align :left :key-fn :account/id}
+       {:name :campaign, :title "campaign" :align :left :key-fn :campaign}
+       {:name :label, :title "label" :align :left :key-fn :label}
+       {:name :order-id, :title "order-id" :align :left :key-fn :order-id}
+       {:name :type, :align :left :title "msg-type" :key-fn :type}
+       {:name :asset, :align :right :title "asset" :key-fn :asset}
+       {:name :side, :align :right :title "side" :key-fn :side}
+       {:name :qty, :align :right :title "qty" :key-fn :qty}
+       {:name :order-type, :align :right :title "order-type" :key-fn :order-type}
+       {:name :limit, :align :right :title "limit" :key-fn :limit}
+       ]
+      trader-requests))))

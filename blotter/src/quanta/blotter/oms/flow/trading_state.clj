@@ -5,7 +5,9 @@
    [missionary.core :as m]
    [quanta.blotter.oms.flow.fill :as fill]
    [quanta.blotter.oms.flow.open-positions :as op]
-   [quanta.blotter.oms.flow.working-orders :as wo]))
+   [quanta.blotter.oms.flow.working-orders :as wo]
+   [quanta.blotter.oms.flow.trader :as trader]
+   ))
 
 (defn create-trading-state!
   "Build shared trading-state flows from `oms` combined-flow and start a
@@ -27,5 +29,6 @@
                 :working-order-dict-flow working-order-dict-flow
                 :open-position-dict-flow open-position-dict-flow
                 :position-method position-method
+                :trader-req-flow (m/stream (trader/trader-req-flow channel-flow))
                 :dispose! (atom nil)}]
      state)))
