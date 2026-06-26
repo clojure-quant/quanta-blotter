@@ -131,3 +131,36 @@
         order (final-for-order (m/? (m/reduce conj [] (wo/order-change-flow flow))) 1)]
     (is (= "fx-q2" (:order/campaign order)))
     (is (= :hedge (:order/label order)))))
+
+(def duplicate-cancel-flow
+  (m/seed
+   [{:type :trader/new-order, :account/id 2000, :order-id "OCCXCB9t", :asset "BTCUSDT.S.BB",
+     :side :buy, :order-type :limit, :limit 58900.0M, :qty 0.001M}
+    {:order-type :limit, :date #inst "2026-06-26T22:43:50.268562705Z", :limit 58900.0M,
+     :account/id 2000, :type :broker/order-confirmed, :order-id "OCCXCB9t", :side :buy,
+     :qty 0.001M, :asset "BTCUSDT.S.BB", :message ""}
+    {:order-type :limit, :date #inst "2026-06-26T22:43:50.112Z", :limit 58900.0M,
+     :account/id 2000, :type :broker/order-confirmed, :order-id "OCCXCB9t", :side :buy,
+     :qty 0.001000M, :asset "BTCUSDT.S.BB", :message ""}
+    {:type :trader/modify-order, :account/id 2000, :order-id "OCCXCB9t",
+     :asset "BTCUSDT.S.BB", :limit 58901.0M}
+    {:order-type :limit, :date #inst "2026-06-26T22:43:58.118Z", :limit 58901.0M,
+     :account/id 2000, :type :broker/order-confirmed, :order-id "OCCXCB9t", :side :buy,
+     :qty 0.001000M, :asset "BTCUSDT.S.BB", :message ""}
+    {:order-id "OCCXCB9t", :asset "BTCUSDT.S.BB", :limit 58901.0M, :account/id 2000,
+     :type :broker/order-modified, :message "modify accepted"}
+    {:type :trader/cancel-order, :account/id 2000, :order-id "OCCXCB9t", :asset "BTCUSDT.S.BB"}
+    {:type :broker/order-canceled, :account/id 2000, :order-id "OCCXCB9t",
+     :date #inst "2026-06-26T22:44:06.114Z"}
+    {:type :broker/cancel-confirmed, :account/id 2000, :order-id "OCCXCB9t",
+     :message "cancel accepted"}]))
+
+(deftest cancel-emits-once-despite-duplicate-confirms-and-cancel-ack
+  (let [emissions (m/? (m/reduce conj [] (wo/order-change-flow duplicate-cancel-flow)))
+        closed (filter wo/order-done? emissions)
+        cancelled (filter #(= :cancelled (:order/status %)) closed)]
+    (is (= 1 (count cancelled))
+        "order-canceled + cancel-confirmed must not emit two finished views")
+    (is (= "OCCXCB9t" (:order/id (first cancelled))))
+    (is (== 58901.0M (:order/limit (first cancelled))))
+    (is (some #(= :broker/order-canceled (:type %)) (:order/history (first cancelled))))))

@@ -100,6 +100,30 @@
       label (assoc :order/label label)
       limit (assoc :order/limit limit))))
 
+(defn- public-order-view [state]
+  (dissoc (to-order-view state) :order/history))
+
+(defn- view-changed? [prev-state state]
+  (not= (public-order-view prev-state)
+        (public-order-view state)))
+
+(defn- emit-changed-views-xform
+  "Skip successive states whose public order view is unchanged (e.g. duplicate
+   :broker/order-confirmed or :broker/cancel-confirmed after terminal state)."
+  []
+  (let [prev (volatile! (initial-state))]
+    (fn [rf]
+      (fn
+        ([] (rf))
+        ([acc state]
+         (let [p @prev
+               emit? (and (ready-to-emit? state)
+                          (or (not (ready-to-emit? p))
+                              (view-changed? p state)))]
+           (vreset! prev state)
+           (if emit? (rf acc state) acc)))
+        ([acc] (rf acc))))))
+
 (defn- process-order-msg [state msg]
   (let [state (-> state (conj-history msg) (stamp-order-date msg))]
     (case (:type msg)
@@ -159,7 +183,7 @@
    once :trader/new-order has been seen."
   [order-flow]
   (m/eduction
-   (filter ready-to-emit?)
+   (emit-changed-views-xform)
    (map to-order-view)
    (m/reductions process-order-msg (initial-state) order-flow)))
 

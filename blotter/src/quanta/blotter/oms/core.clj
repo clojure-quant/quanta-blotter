@@ -160,6 +160,18 @@
                   (assoc :type :trader/modify-order))]
     (send-message this order)))
 
+;; flow sender
+
+(defn send-flow-messages
+  "Sends messages from a missionary flow to broker(s).
+   useful for testing."
+  [this flow]
+  (let [process-flow (m/ap (let [v (m/?> flow)]
+                             (m/? (send-message this v))))
+        process-t (m/reduce (fn [r v] nil) nil process-flow)
+        dispose!  (process-t #(println "process done" %) #(println "process error " %))]
+    dispose!))
+
 
 (defn combined-flow [this]
   (:combined-flow this))
