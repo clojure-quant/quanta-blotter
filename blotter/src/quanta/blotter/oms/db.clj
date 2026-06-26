@@ -53,6 +53,9 @@
    {:db/ident :order/avg-price
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
+   {:db/ident :order/limit
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
    {:db/ident :order/date
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
@@ -235,6 +238,7 @@
     (some? (:order/qty-filled order)) (assoc :order/qty-filled (as-bigdec (:order/qty-filled order)))
     (some? (:order/qty-working order)) (assoc :order/qty-working (as-bigdec (:order/qty-working order)))
     (some? (:order/avg-price order)) (assoc :order/avg-price (as-bigdec (:order/avg-price order)))
+    (some? (:order/limit order)) (assoc :order/limit (as-bigdec (:order/limit order)))
     (:order/date order) (assoc :order/date (as-date (:order/date order)))
     (:order/text order) (assoc :order/text (:order/text order))
     (:order/campaign order) (assoc :order/campaign (:order/campaign order))

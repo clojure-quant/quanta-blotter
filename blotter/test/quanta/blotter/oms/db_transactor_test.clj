@@ -35,11 +35,15 @@
     (testing "messages persisted"
       (is (= (count channel-events) (count (db/query-messages conn)))))
     (testing "orders persisted (one per order-id)"
-      (let [orders (db/query-orders conn)]
+      (let [orders (db/query-orders conn)
+            limit-order (first (filter #(= "1" (:order/id %)) orders))
+            market-order (first (filter #(= "2" (:order/id %)) orders))]
         (is (= 2 (count orders)))
         (is (= #{"1" "2"} (set (map :order/id orders))))
-        (is (= :limit (:order/type (first (filter #(= "1" (:order/id %)) orders)))))
-        (is (= :market (:order/type (first (filter #(= "2" (:order/id %)) orders)))))))
+        (is (= :limit (:order/type limit-order)))
+        (is (= :market (:order/type market-order)))
+        (is (== 100.0M (:order/limit limit-order)))
+        (is (nil? (:order/limit market-order)))))
     (testing "fills persisted once with order ref"
       (let [fills (db/query-fills conn)]
         (is (= 2 (count fills)))

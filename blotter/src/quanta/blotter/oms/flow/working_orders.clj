@@ -56,6 +56,7 @@
          :asset (:asset msg)
          :side (:side msg)
          :qty (some-> (:qty msg) bigdec)
+         :limit (some-> (:limit msg) bigdec)
          :order-type (:order-type msg)
          :fill-qty 0M
          :fill-notional 0M
@@ -75,7 +76,7 @@
 
 (defn to-order-view
   "Projects internal accumulator state to the public order map."
-  [{:keys [order-id account asset side qty order-type fill-qty fill-notional
+  [{:keys [order-id account asset side qty limit order-type fill-qty fill-notional
            price-scale history terminal? terminal-status reject-text order-date
            campaign label]}]
   (let [qty-filled (or fill-qty 0M)
@@ -96,7 +97,8 @@
       (and done? (= :rejected terminal-status) reject-text)
       (assoc :order/text (str reject-text))
       campaign (assoc :order/campaign campaign)
-      label (assoc :order/label label))))
+      label (assoc :order/label label)
+      limit (assoc :order/limit limit))))
 
 (defn- process-order-msg [state msg]
   (let [state (-> state (conj-history msg) (stamp-order-date msg))]

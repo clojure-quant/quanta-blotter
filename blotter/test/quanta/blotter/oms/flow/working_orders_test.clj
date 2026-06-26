@@ -72,7 +72,27 @@
     (is (= :filled (:order/status last-4)))
     (is (== 0.001 (:order/qty-filled last-4)))
     (is (== 0.0 (:order/qty-working last-4)))
-    (is (== 100.0 (:order/avg-price last-4)))))
+    (is (== 100.0 (:order/avg-price last-4)))
+    (is (== 100.0 (:order/limit last-4)))))
+
+(deftest limit-order-has-limit-in-view
+  (let [emissions (all-emissions)
+        last-1 (final-for-order emissions 1)
+        last-2 (final-for-order emissions 2)]
+    (is (== 100.0 (:order/limit last-1)))
+    (is (== 100.0 (:order/limit last-2)))))
+
+(deftest market-order-has-no-limit-in-view
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy :order-type :market :qty 1.0}])
+        order (final-for-order (m/? (m/reduce conj [] (wo/order-change-flow flow))) 1)]
+    (is (nil? (:order/limit order)))))
+
+(deftest modify-updates-limit-in-view
+  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy
+                       :order-type :limit :qty 1.0M :limit 100M}
+                      {:type :broker/order-modified :account/id 1 :order-id 1 :limit 110M}])
+        order (final-for-order (m/? (m/reduce conj [] (wo/order-change-flow flow))) 1)]
+    (is (== 110M (:order/limit order)))))
 
 (deftest avg-price-nil-before-fill
   (let [emissions (all-emissions)
