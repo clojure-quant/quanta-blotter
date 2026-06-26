@@ -161,6 +161,38 @@
         :order-id 7})
       "date/message are optional"))
 
+(deftest broker-cancel-rejected-test
+  (is (s/validate-message
+       {:type :broker/cancel-rejected
+        :account/id 2
+        :order-id 2
+        :message "unknown order"}))
+  (is (s/validate-message
+       {:type :broker/cancel-rejected
+        :account/id 2
+        :order-id 2})
+      "message is optional")
+  (is (not (s/validate-message
+            {:type :broker/cancel-rejected
+             :account/id 2
+             :message "missing order-id"}))))
+
+(deftest broker-modify-rejected-test
+  (is (s/validate-message
+       {:type :broker/modify-rejected
+        :account/id 2
+        :order-id 2
+        :message "order not modifiable"}))
+  (is (s/validate-message
+       {:type :broker/modify-rejected
+        :account/id 2
+        :order-id 2})
+      "message is optional")
+  (is (not (s/validate-message
+            {:type :broker/modify-rejected
+             :account/id 2
+             :message "missing order-id"}))))
+
 (deftest validate-trader-message-test
   (testing "valid new-orders"
     (doseq [msg [{:type :trader/new-order

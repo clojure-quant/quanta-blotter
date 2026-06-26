@@ -132,6 +132,13 @@
    [:order-id OrderId]
    [:message {:optional true} :string]])
 
+(def BrokerModifyRejected
+  [:map
+   [:type [:= :broker/modify-rejected]]
+   [:account/id AccountId]
+   [:order-id OrderId]
+   [:message {:optional true} :string]])
+
 (def BrokerOrderCanceled
   [:map
    [:type [:= :broker/order-canceled]]
@@ -151,6 +158,7 @@
    [:broker/order-rejected BrokerOrderRejected]
    [:broker/cancel-confirmed BrokerCancelConfirmed]
    [:broker/cancel-rejected BrokerCancelRejected]
+   [:broker/modify-rejected BrokerModifyRejected]
    [:broker/order-canceled BrokerOrderCanceled]])
 
 (defn validate-message [message]
