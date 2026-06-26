@@ -43,6 +43,12 @@
                    :price-scale price-scale)
       filled? (assoc :terminal? true :terminal-status :filled))))
 
+(defn- apply-modify [state {:keys [qty limit]}]
+  (cond-> state
+    qty (assoc :qty qty)
+    limit (assoc :limit limit)))
+
+
 (defn- init-from-new-order [state msg]
   (assoc state
          :order-id (:order-id msg)
@@ -100,6 +106,9 @@
         state
         (init-from-new-order state msg))
 
+      :broker/order-modified
+      (apply-modify state msg)
+
       :broker/order-filled
       (if (:qty state)
         (apply-fill state msg)
@@ -120,7 +129,27 @@
         (mark-terminal state :expired)
         state)
 
-      ;; :broker/order-confirmed, :broker/cancel-confirmed, :trader/cancel-order, default
+      ;; no effect on order-state:
+      
+      :broker/order-confirmed
+      state 
+
+      :broker/cancel-confirmed
+      state
+
+      :trader/cancel-order 
+      state 
+
+      :broker/cancel-rejected
+      state
+
+      :trader/modify-order
+      state
+      
+      :broker/modify-rejected
+      state
+
+      ; default
       state)))
 
 (defn- per-order-view-flow
