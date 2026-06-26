@@ -74,8 +74,7 @@
 ; (vf/bad-message-with-explaination combined-flow)
 
 (defn start-trading-state-logger! [trading-state log-file interval-ms console?]
-  (assert trading-state "start-trading-state-logger! needs :trading-state")
-  (println "trading-state keys:" (keys trading-state))
+  (assert trading-state "start-trading-state-logger! needs :trading-state") 
   (let [l (logger/create-logger log-file console?)
         log-f (trading-state-print-flow trading-state interval-ms)
         dispose! (logger/start-log-flow-to-logger l log-f)]
