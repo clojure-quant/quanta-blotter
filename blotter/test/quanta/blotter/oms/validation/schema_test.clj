@@ -177,6 +177,32 @@
              :account/id 2
              :message "missing order-id"}))))
 
+(deftest broker-order-modified-test
+  (is (s/validate-message
+       {:type :broker/order-modified
+        :account/id 2000
+        :order-id "LB0xoBQe"
+        :asset "BTCUSDT.S.BB"
+        :limit 58901.0M
+        :message "modify accepted"}))
+  (is (s/validate-message
+       {:type :broker/order-modified
+        :account/id 1
+        :order-id 1
+        :asset "BTCUSDT"
+        :limit 110M}))
+  (is (s/validate-message
+       {:type :broker/order-modified
+        :account/id 1
+        :order-id 1
+        :asset "BTCUSDT"
+        :qty 0.5M}))
+  (is (not (s/validate-message
+            {:type :broker/order-modified
+             :account/id 1
+             :order-id 1
+             :message "missing asset and modify fields"}))))
+
 (deftest broker-modify-rejected-test
   (is (s/validate-message
        {:type :broker/modify-rejected

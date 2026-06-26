@@ -3,8 +3,7 @@
    [missionary.core :as m]
    [tick.core :as t]
    [quanta.missionary :refer [mix-tagged mix]]
-   [quanta.missionary.logger :as logger]
-   [quanta.blotter.oms.validation.flow :as vf]
+   [quanta.missionary.logger :as logger] 
    [quanta.blotter.oms.flow.open-positions :as op]
    [quanta.blotter.oms.flow.working-orders :as wo]
    [quanta.blotter.oms.print :as print]))
@@ -71,7 +70,6 @@
     (m/ap
      (print-state (m/?> batched-combined-f)))))
 
-; (vf/bad-message-with-explaination combined-flow)
 
 (defn start-trading-state-logger! [trading-state log-file interval-ms console?]
   (assert trading-state "start-trading-state-logger! needs :trading-state") 

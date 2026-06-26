@@ -132,6 +132,16 @@
    [:order-id OrderId]
    [:message {:optional true} :string]])
 
+(def BrokerOrderModified
+  [:map
+   [:type [:= :broker/order-modified]]
+   [:account/id AccountId]
+   [:order-id OrderId]
+   [:asset :string]
+   [:qty {:optional true} PositiveDecimal]
+   [:limit {:optional true} PositiveDecimal]
+   [:message {:optional true} :string]])
+
 (def BrokerModifyRejected
   [:map
    [:type [:= :broker/modify-rejected]]
@@ -158,6 +168,7 @@
    [:broker/order-rejected BrokerOrderRejected]
    [:broker/cancel-confirmed BrokerCancelConfirmed]
    [:broker/cancel-rejected BrokerCancelRejected]
+   [:broker/order-modified BrokerOrderModified]
    [:broker/modify-rejected BrokerModifyRejected]
    [:broker/order-canceled BrokerOrderCanceled]])
 

@@ -5,12 +5,15 @@
    [quanta.blotter.account-manager :refer [add-edn-accounts]]
    [quanta.blotter.oms.flow.print :refer [start-trading-state-logger!]]
    [quanta.blotter.oms.trading-state-consumer :as tsc]
+   ;[quanta.blotter.oms.validation.flow :as vf]
    ; persistence
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.db-transactor :as db-transactor]
    ; side effects
    [quanta.blotter.paper.broker] ; side effect: brings in paper broker implementation
    ))
+
+; (vf/bad-message-with-explaination combined-flow)
 
 (defn start-oms-server [{:keys [log-file transaction-log-file validate? tag?
                                 accounts-file trade-db-dir
