@@ -27,7 +27,8 @@
           :label :short}
     3000 {:type :trader/cancel-order
           :account/id 2
-          :order-id 2}
+          :order-id 2
+          :asset "ETHUSDT"}
     5000 {:type :trader/new-order
           :account/id 2
           :order-id 3

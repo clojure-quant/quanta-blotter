@@ -60,7 +60,8 @@
   [:map
    [:type [:= :trader/cancel-order]]
    [:account/id AccountId]
-   [:order-id OrderId]])
+   [:order-id OrderId]
+   [:asset :string]])
 
 (def TraderModifyOrder
   [:and
@@ -68,7 +69,7 @@
     [:type [:= :trader/modify-order]]
     [:account/id AccountId]
     [:order-id OrderId]
-    ; [:asset {:optional true} :string] ; asset may not be modified
+    [:asset :string]
     ; [:side {:optional true} Side] ; side may not be modified
     [:qty {:optional true} PositiveDecimal]
     ; [:order-type {:optional true} OrderType] ; order-type may not be modified

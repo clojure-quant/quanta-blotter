@@ -43,7 +43,7 @@
     :order-type :limit, :limit 50.0, :qty 1.0, :campaign "scalp-1", :label :open}
    {:date #inst "2026-06-01T20:10:11.740Z", :order-type :limit, :limit 50.0, :account/id 1
     :type :broker/order-confirmed, :order-id 103, :side :buy, :qty 1.0, :asset "SOLUSDT"}
-   {:type :trader/cancel-order, :account/id 1, :order-id 103}
+   {:type :trader/cancel-order, :account/id 1, :order-id 103, :asset "SOLUSDT"}
    {:type :broker/cancel-confirmed, :account/id 1, :order-id 103}
    {:order-id 103, :date #inst "2026-06-01T20:10:12.740Z", :type :broker/order-canceled}
 

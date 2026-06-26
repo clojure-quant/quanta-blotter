@@ -128,7 +128,13 @@
   (is (s/validate-message
        {:type :trader/cancel-order
         :account/id 2
-        :order-id 2})))
+        :order-id 2
+        :asset "ETHUSDT"}))
+  (is (not (s/validate-message
+            {:type :trader/cancel-order
+             :account/id 2
+             :order-id 2}))
+      "cancel-order without :asset is invalid"))
 
 (deftest broker-order-filled-test
   (is (s/validate-message
@@ -229,34 +235,45 @@
   (testing "valid cancel-orders"
     (doseq [msg [{:type :trader/cancel-order
                   :account/id 1
-                  :order-id 1}
+                  :order-id 1
+                  :asset "BTCUSDT"}
                  {:type :trader/cancel-order
                   :account/id 2
-                  :order-id "ord-42"}]]
+                  :order-id "ord-42"
+                  :asset "ETHUSDT"}]]
       (is (s/validate-trader-message msg) (str "expected valid: " (pr-str msg)))))
 
   (testing "invalid cancel-orders"
     (doseq [msg [{:type :trader/cancel-order
+                  :order-id 1
+                  :asset "BTCUSDT"}
+                 {:type :trader/cancel-order
+                  :account/id 1
+                  :asset "BTCUSDT"}
+                 {:type :trader/cancel-order
+                  :account/id 1
                   :order-id 1}
                  {:type :trader/cancel-order
-                  :account/id 1}
-                 {:type :trader/cancel-order
                   :account/id "not-an-int"
-                  :order-id 1}]]
+                  :order-id 1
+                  :asset "BTCUSDT"}]]
       (is (not (s/validate-trader-message msg)) (str "expected invalid: " (pr-str msg)))))
 
   (testing "valid modify-orders"
     (doseq [msg [{:type :trader/modify-order
                   :account/id 1
                   :order-id 1
+                  :asset "BTCUSDT"
                   :qty 0.002M}
                  {:type :trader/modify-order
                   :account/id 2
                   :order-id "ord-42"
+                  :asset "ETHUSDT"
                   :limit 99.5M}
                  {:type :trader/modify-order
                   :account/id 3
                   :order-id 7
+                  :asset "BTCUSDT"
                   :qty 0.5M
                   :limit 101.0M}]]
       (is (s/validate-trader-message msg) (str "expected valid: " (pr-str msg)))))
@@ -264,14 +281,21 @@
   (testing "invalid modify-orders"
     (doseq [msg [{:type :trader/modify-order
                   :order-id 1
+                  :asset "BTCUSDT"
                   :qty 0.002M}
                  {:type :trader/modify-order
                   :account/id 1
                   :order-id 1
+                  :qty 0.002M}
+                 {:type :trader/modify-order
+                  :account/id 1
+                  :order-id 1
+                  :asset "BTCUSDT"
                   :qty 0.0M}
                  {:type :trader/modify-order
                   :account/id 1
                   :order-id 1
+                  :asset "BTCUSDT"
                   :qty "not-a-decimal"}]]
       (is (not (s/validate-trader-message msg)) (str "expected invalid: " (pr-str msg)))))
 

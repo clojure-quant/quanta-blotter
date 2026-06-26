@@ -10,7 +10,7 @@
     {:date #inst "2026-06-01T20:10:07.740265349Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
     {:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
     {:date #inst "2026-06-01T20:10:09.740517009Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
-    {:type :trader/cancel-order, :account/id 2, :order-id 2}
+    {:type :trader/cancel-order, :account/id 2, :order-id 2, :asset "ETHUSDT"}
     {:type :broker/cancel-confirmed, :account/id 2, :order-id 2}
     {:order-id 2, :date #inst "2026-06-01T20:10:12.740853585Z", :type :broker/order-canceled}
     {:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
