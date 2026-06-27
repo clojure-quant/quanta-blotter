@@ -1,0 +1,11 @@
+{:oms-server {:accounts-file "demo-accounts.edn"
+              :log-file "log/oms-server-trace.txt"
+              :transaction-log-file "log/oms-server-transaction.txt"
+              :validate? true
+              :tag? true
+              :trade-db-dir "trade-db-oms-server"
+              :trading-state-log-file "log/oms-server-trading-state.txt"
+              :trading-state-print-interval-ms 15000}
+
+ :test-order {:account-id 3
+              :interval-sec 30}}

@@ -16,7 +16,12 @@
   
   ;; trade
   :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}
-  :cli-server {:main-opts ["-m" "demo.oms-server"]}
+  :cli-server {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
+               :exec-fn modular.system/start!
+               :exec-args {:config ["config.edn"]
+                           :services "services.edn"
+                           :profile "default"
+                           :version "prod1"}}
 
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}

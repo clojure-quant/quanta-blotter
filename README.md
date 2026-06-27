@@ -9,7 +9,7 @@ orders executions positions with account/trader routing
 
 ```
 cd demo
-clj -M:cli-server
+clj -X:cli-server
 
 in other terminal
 bb tasks                (to find out which tasks are available)
