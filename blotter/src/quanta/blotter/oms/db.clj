@@ -146,15 +146,17 @@
   [path]
   (java.util.UUID/nameUUIDFromBytes (.getBytes (str path) "UTF-8")))
 
-(defn- file-cfg [path]
+(defn- file-cfg
+  [path uuid]
   {:store {:backend :file ; backends: in-memory, file-based, LevelDB, PostgreSQL
            :path path
-           :id (path->id path)}
+           :id uuid}
    :keep-history? false
    :schema-flexibility :write  ;default - strict value types need to be defined in advance. 
-   ;:schema-flexibility :read ; transact any  kind of data into the database you can set :schema-flexibility to read
+     ;:schema-flexibility :read ; transact any  kind of data into the database you can set :schema-flexibility to read
    :initial-tx schema ; commit a schema
    })
+
 (defn- mem-cfg [id]
   {:store {:backend :memory
            :id id}
@@ -169,12 +171,16 @@
   (d/create-database cfg)
   (d/connect cfg))
 
-(defn trade-db-start [db-path]
-  (let [cfg (file-cfg db-path)]
-    (info "trade-db starting at path: " db-path)
-    (if (d/database-exists? cfg)
-      (d/connect cfg)
-      (create! cfg))))
+(defn trade-db-start
+  ([db-path]
+   (let [uuid (path->id db-path)]
+     (trade-db-start db-path uuid)))
+  ([db-path uuid]
+   (let [cfg (file-cfg db-path uuid)]
+     (info "trade-db starting at path: " db-path)
+     (if (d/database-exists? cfg)
+       (d/connect cfg)
+       (create! cfg)))))
 
 (defn trade-db-start-mem
   "Starts an in-memory datahike db. Useful for tests / repl.
