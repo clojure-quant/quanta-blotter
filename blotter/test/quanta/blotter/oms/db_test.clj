@@ -3,10 +3,11 @@
    [clojure.test :refer [deftest is testing]]
    [datahike.api :as d]
    [tick.core :as t]
-   [quanta.blotter.oms.db :as db]))
+   [quanta.blotter.oms.db :as db]
+   [quanta.util.datahike :as datahike]))
 
 (defn- fresh-db []
-  (db/trade-db-start-mem))
+  (datahike/db-start-mem db/schema))
 
 (def demo-msg
   {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
@@ -63,7 +64,7 @@
         (is (= 1 (count positions)))
         (is (= :short (:position/side (first positions))))
         (is (true? (:position/open (first positions))))))
-    (db/trade-db-stop conn)))
+    (datahike/db-stop conn)))
 
 (deftest order-update-reuses-db-id
   (let [conn (fresh-db)
@@ -75,7 +76,7 @@
         (is (= eid-after-create (get-in @state [:order-id->eid "4"])))
         (is (= 1 (count (db/query-orders conn))) "no duplicate order entity")
         (is (= :filled (:order/status (first (db/query-orders conn)))))))
-    (db/trade-db-stop conn)))
+    (datahike/db-stop conn)))
 
 (deftest instant-date-coerced-to-date
   (testing "a java.time.Instant :date is coerced to java.util.Date and persisted"
@@ -85,7 +86,7 @@
       (db/process conn state [:msg msg])
       (let [stored (:message/date (first (db/query-messages conn)))]
         (is (instance? java.util.Date stored)))
-      (db/trade-db-stop conn))))
+      (datahike/db-stop conn))))
 
 (deftest fill-stored-only-once
   (let [conn (fresh-db)
@@ -93,7 +94,7 @@
     (db/process conn state [:fill demo-fill])
     (db/process conn state [:fill demo-fill])
     (is (= 1 (count (db/query-fills conn))) "duplicate fill ignored")
-    (db/trade-db-stop conn)))
+    (datahike/db-stop conn)))
 
 (deftest order-history-stored-as-string
   (let [conn (fresh-db)
@@ -103,7 +104,7 @@
     (let [stored (:order/history (first (db/query-orders conn)))]
       (is (string? stored))
       (is (vector? (read-string stored))))
-    (db/trade-db-stop conn)))
+    (datahike/db-stop conn)))
 
 (deftest order-campaign-and-label-stored
   (let [conn (fresh-db)
@@ -113,4 +114,4 @@
     (let [stored (first (db/query-orders conn))]
       (is (= "fx-q2" (:order/campaign stored)))
       (is (= :hedge (:order/label stored))))
-    (db/trade-db-stop conn)))
+    (datahike/db-stop conn)))

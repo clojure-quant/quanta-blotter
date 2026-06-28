@@ -51,7 +51,7 @@
 
 (defn start-db-transactor
   "Starts persisting the OMS flows of `this` (from create-order-manager) into
-   `db` (a datahike connection from quanta.blotter.oms.db/trade-db-start).
+   `db` (a datahike connection from quanta.util.datahike/db-start).
    Returns a map with a :dispose! fn."
   [oms db]
   (assert oms "start-db-transactor needs the order-manager (oms)")

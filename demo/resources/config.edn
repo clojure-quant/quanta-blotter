@@ -1,9 +1,12 @@
-{:oms-server {:accounts-file "demo-accounts.edn"
+{:db {:dir "trade-db-oms-server"}
+ 
+ :db-seed {:accounts-file "demo-accounts.edn"}
+
+ :oms-server {:ns-require [fix-engine.blotter.fix-trade]
               :log-file "log/oms-server-trace.txt"
               :transaction-log-file "log/oms-server-transaction.txt"
               :validate? true
               :tag? true
-              :trade-db-dir "trade-db-oms-server"
               :trading-state-log-file "log/oms-server-trading-state.txt"
               :trading-state-print-interval-ms 15000}
 

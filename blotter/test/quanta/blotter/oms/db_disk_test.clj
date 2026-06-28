@@ -5,7 +5,8 @@
    [clojure.test :refer [deftest is testing use-fixtures]]
    [clojure.java.io :as io]
    [tick.core :as t]
-   [quanta.blotter.oms.db :as db]))
+   [quanta.blotter.oms.db :as db]
+   [quanta.util.datahike :as datahike]))
 
 (def db-path "test/test-db")
 
@@ -46,7 +47,7 @@
    :position/average-entry-price 100.0 :position/realized-pl 0.0})
 
 (deftest creates-db-on-disk-and-persists
-  (let [conn (db/trade-db-start db-path)
+  (let [conn (datahike/db-start {:schema db/schema :db-path db-path})
         state (db/new-state)]
     (testing "the db directory is created on disk"
       (is (.exists (io/file db-path))))
@@ -59,15 +60,15 @@
       (is (= 1 (count (db/query-orders conn))))
       (is (= 1 (count (db/query-fills conn))))
       (is (= 1 (count (db/query-positions conn)))))
-    (db/trade-db-stop conn)))
+    (datahike/db-stop conn)))
 
 (deftest data-survives-reconnect
-  (let [conn (db/trade-db-start db-path)
+  (let [conn (datahike/db-start {:schema db/schema :db-path db-path})
         state (db/new-state)]
     (db/process conn state [:order demo-order])
-    (db/trade-db-stop conn)
+    (datahike/db-stop conn)
     (testing "reconnecting to the existing on-disk db sees the data"
-      (let [conn2 (db/trade-db-start db-path)]
-        (is (= 1 (count (db/query-orders conn2))))
-        (is (= "4" (:order/id (first (db/query-orders conn2)))))
-        (db/trade-db-stop conn2)))))
+      (let [conn (datahike/db-start {:schema db/schema :db-path db-path})]
+        (is (= 1 (count (db/query-orders conn))))
+        (is (= "4" (:order/id (first (db/query-orders conn)))))
+        (datahike/db-stop conn)))))

@@ -3,7 +3,8 @@
    table formatting from quanta.blotter.oms.print."
   (:require
    [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.print :as print]))
+   [quanta.blotter.oms.print :as print]
+   [quanta.util.datahike :as datahike]))
 
 (def db-path "trade-db")
 
@@ -29,7 +30,7 @@
 
 (comment
   ;; open the trade-db and print what the OMS has persisted
-  (def trade-db (db/trade-db-start db-path))
+  (def trade-db (datahike/db-start {:schema db/schema :db-path db-path}))
 
   (print-orders! trade-db)
 
@@ -38,7 +39,7 @@
   (print-positions! trade-db)
   (print-all! trade-db)
 
-  (db/trade-db-stop trade-db)
+  (datahike/db-stop trade-db)
 
   ;; or reuse the connection already opened by demo.oms:
   ;; (require 'demo.oms)

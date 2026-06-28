@@ -6,7 +6,8 @@
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.flow.fill :as fill]
    [quanta.blotter.oms.flow.open-positions :as op]
-   [quanta.blotter.oms.flow.working-orders :as wo]))
+   [quanta.blotter.oms.flow.working-orders :as wo]
+   [quanta.util.datahike :as datahike]))
 
 (def channel-events
   "A small channel flow (orders + broker messages) similar to channel-paper.edn."
@@ -29,7 +30,7 @@
     (into [] (mapcat (fn [m] (first (seq m))) block))))
 
 (deftest transactor-persists-channel-flow
-  (let [conn (db/trade-db-start-mem)
+  (let [conn (datahike/db-start-mem db/schema)
         state (db/new-state)]
     (db/process conn state (seed->tx-vector channel-events))
     (testing "messages persisted"
@@ -50,4 +51,4 @@
         (is (every? :fill/order fills) "every fill references its order")))
     (testing "positions persisted"
       (is (seq (db/query-positions conn))))
-    (db/trade-db-stop conn)))
+    (datahike/db-stop conn)))

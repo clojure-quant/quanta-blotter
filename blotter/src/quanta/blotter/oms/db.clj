@@ -1,9 +1,10 @@
 (ns quanta.blotter.oms.db
   (:require
-   [taoensso.timbre :as timbre :refer [info warn]]
+   [clojure.edn :as edn]
    [tick.core :as t]
    [datahike.api :as d]
-   [crockery.core :as crockery]))
+   [crockery.core :as crockery]
+   [quanta.util.datahike :as datahike]))
 
 (def schema
   [;; message (append only)
@@ -138,63 +139,91 @@
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/date-close
     :db/valueType :db.type/instant
+    :db/cardinality :db.cardinality/one}
+   ;; account (created once, then updated)
+   {:db/ident :account/id
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity}
+   {:db/ident :account/trader
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/api
+    :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/name
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/notes
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/enabled
+    :db/valueType :db.type/boolean
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/balance
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/settings
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}])
 
-(defn- path->id
-  "Deterministic store id derived from the path, so connect/create agree for a
-   given path while different paths get distinct ids. (datahike requires a store :id)"
-  [path]
-  (java.util.UUID/nameUUIDFromBytes (.getBytes (str path) "UTF-8")))
 
-(defn- file-cfg
-  [path uuid]
-  {:store {:backend :file ; backends: in-memory, file-based, LevelDB, PostgreSQL
-           :path path
-           :id uuid}
-   :keep-history? false
-   :schema-flexibility :write  ;default - strict value types need to be defined in advance. 
-     ;:schema-flexibility :read ; transact any  kind of data into the database you can set :schema-flexibility to read
-   :initial-tx schema ; commit a schema
-   })
 
-(defn- mem-cfg [id]
-  {:store {:backend :memory
-           :id id}
-   :keep-history? false
-   :schema-flexibility :write
-   :initial-tx schema})
 
-(defn- create! [cfg]
-  (warn "creating datahike db..")
-  (when (d/database-exists? cfg)
-    (d/delete-database cfg))
-  (d/create-database cfg)
-  (d/connect cfg))
+;; ---------------------------------------------------------------------------
+;; accounts
 
-(defn trade-db-start
-  ([db-path]
-   (let [uuid (path->id db-path)]
-     (trade-db-start db-path uuid)))
-  ([db-path uuid]
-   (let [cfg (file-cfg db-path uuid)]
-     (info "trade-db starting at path: " db-path)
-     (if (d/database-exists? cfg)
-       (d/connect cfg)
-       (create! cfg)))))
+(defn- next-account-id [conn]
+  (inc (or (ffirst (d/q '[:find (max ?id) :where [_ :account/id ?id]] @conn)) 0)))
 
-(defn trade-db-start-mem
-  "Starts an in-memory datahike db. Useful for tests / repl.
-   The optional id must be a UUID; a random one is generated otherwise."
-  ([] (trade-db-start-mem (java.util.UUID/randomUUID)))
-  ([id]
-   (let [id (if (uuid? id) id (java.util.UUID/randomUUID))]
-     (info "trade-db (mem) starting with id: " id)
-     (create! (mem-cfg id)))))
+(defn- parse-settings [account]
+  (update account :account/settings #(when % (edn/read-string %))))
 
-(defn trade-db-stop [conn]
-  (when conn
-    (info "trade-db stopping ..")
-    (d/release conn)))
+(defn- account-by-id [conn id]
+  (ffirst (d/q '[:find (pull ?e [*]) :in $ ?id :where [?e :account/id ?id]] @conn id)))
+
+(defn create-account
+  [conn account-map]
+  (let [id (or (:account/id account-map) (next-account-id conn))
+        entity {:account/id id
+                :account/trader (:account/trader account-map)
+                :account/api (:account/api account-map)
+                :account/enabled false
+                :account/balance 0M
+                :account/name "new-account"}]
+    (d/transact conn [entity])
+    id))
+
+(defn enable-account
+  [conn account-id enabled]
+  (when-let [account (account-by-id conn account-id)]
+    (d/transact conn [{:db/id (:db/id account) :account/enabled enabled}])))
+
+(defn update-account
+  [conn account-map]
+  (when-let [account (account-by-id conn (:account/id account-map))]
+    (let [updates (cond-> {:db/id (:db/id account)}
+                    (:account/notes account-map) (assoc :account/notes (:account/notes account-map))
+                    (:account/name account-map) (assoc :account/name (:account/name account-map))
+                    (:account/settings account-map) (assoc :account/settings (pr-str (:account/settings account-map))))]
+      (when (> (count updates) 1)
+        (d/transact conn [updates])))))
+
+(defn- query-accounts [conn query & args]
+  (->> (apply d/q query @conn args)
+       (map parse-settings)))
+
+(defn all-enabled-accounts [conn]
+  (query-accounts conn
+                  '[:find [(pull ?e [*]) ...]
+                    :where [?e :account/enabled true]]))
+
+(defn trader-account-list [conn trader]
+  (query-accounts conn
+                  '[:find [(pull ?e [*]) ...]
+                    :in $ ?trader
+                    :where [?e :account/trader ?trader]]
+                  trader))
 
 ;; ---------------------------------------------------------------------------
 ;; transactor state

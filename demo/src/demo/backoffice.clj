@@ -7,6 +7,7 @@
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.flow.open-positions :as op]
    [quanta.blotter.oms.print :as print]
+   [quanta.util.datahike :as datahike]
    [tick.core :as t]))
 
 (def default-db-path "trade-db-oms-server")
@@ -54,7 +55,7 @@
           account-id default-account-id
           asset default-asset
           position-opts {}}}]
-   (let [conn (db/trade-db-start db-path)]
+   (let [conn (datahike/db-start {:schema db/schema :db-path db-path})]
      (try
        (let [trades (->> (query-fills conn {:since since
                                             :account-id account-id
@@ -67,7 +68,7 @@
            (print/trades-table trades)))
          (print-open-positions! trades position-opts))
        (finally
-         (db/trade-db-stop conn))))))
+         (datahike/db-stop conn))))))
 
 (comment
   (print-trades!))

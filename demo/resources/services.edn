@@ -2,19 +2,25 @@
  :components
  {:config {:start (deref (modular.config/load-config! (:config #ref [:modular])))}
 
-  :brokers {:start (demo.brokers/start)}
+  :db {:start (quanta.util.datahike/db-start
+               {:schema (deref quanta.blotter.oms.db/schema)
+                :db-path (get-in (clip/ref :config) [:db :dir])
+                :seed-fn (quanta.blotter.account-manager/seed-edn-accounts
+                           (get-in (clip/ref :config) [:db-seed :accounts-file]))})
+       :stop (quanta.util.datahike/db-stop this)}
 
   :oms-server {:start (quanta.blotter.oms.server/start-oms-server
-                       (:oms-server (clip/ref :config)))
+                       (:oms-server (clip/ref :config))
+                       (clip/ref :db))
                :stop (quanta.blotter.oms.server/stop-oms-server this)}
 
   :test-order-poller {:start (demo.test-order-sender/start-order-poller
-                               (:oms (clip/ref :oms-server))
-                               (:test-order (clip/ref :config)))
-                       :stop (demo.test-order-sender/stop-order-poller this)}
+                              (:oms (clip/ref :oms-server))
+                              (:test-order (clip/ref :config)))
+                      :stop (demo.test-order-sender/stop-order-poller this)}
 
   :socket-server {:start (quanta.blotter.cli.server/start-socket-server
                           (:oms (clip/ref :oms-server))
-                          (:trade-db (clip/ref :oms-server))
+                          (clip/ref :db)
                           (clip/ref :oms-server))
                   :stop (.stop this)}}}

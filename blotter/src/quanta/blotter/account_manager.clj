@@ -4,7 +4,9 @@
    [missionary.core :as m]
    [quanta.blotter.protocol :as p]
    [quanta.blotter.util-rdv :refer [create-rdv]]
-   [quanta.blotter.paper.broker]))
+   [quanta.blotter.paper.broker]
+   [quanta.blotter.oms.db :as db]
+   ))
 
 (defn add-account [state account]
   (let [account-id (:account/id account)
@@ -103,3 +105,19 @@
     (doall
      (map #(add-account state %) accounts))))
 
+(defn add-enabled-db-accounts [state conn]
+  (doall
+   (map #(add-account state %)
+        (db/all-enabled-accounts conn))))
+
+(defn seed-edn-accounts [edn-filename]
+  (fn [conn]
+    (let [accounts (load-edn-accounts edn-filename)]
+      (doseq [account accounts]
+        (println "seeding account" (:account/id account))
+        (db/create-account conn (select-keys account [:account/id :account/trader :account/api]))
+        (db/update-account conn (select-keys account [:account/id :account/notes
+                                                     :account/settings :account/name]))
+        (db/enable-account conn (:account/id account) true)))))
+  
+  

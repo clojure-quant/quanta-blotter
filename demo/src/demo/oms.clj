@@ -10,6 +10,7 @@
    ; persistence
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.db-transactor :as db-transactor]
+   [quanta.util.datahike :as datahike]
    ; side effects
    [quanta.blotter.paper.broker] ; side effect: brings in paper broker implementation
    )
@@ -27,7 +28,7 @@ oms
 (def dispose-wo-op-logger (start-open-positions-working-order-logger! oms "log/oms-wo-op.txt"))
 
 ;; persistence: open the datahike trade-db and stream all OMS flows into it.
-(def trade-db (db/trade-db-start "trade-db"))
+(def trade-db (datahike/db-start {:schema db/schema :db-path "trade-db"}))
 
 (def db-transactor (db-transactor/start-db-transactor oms trade-db))
 
@@ -75,6 +76,6 @@ oms
 
   ;; stop persistence + close the db
   (db-transactor/stop-db-transactor db-transactor)
-  (db/trade-db-stop trade-db)
+  (datahike/db-stop trade-db)
   ;
   )
