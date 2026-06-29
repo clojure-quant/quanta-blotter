@@ -10,6 +10,7 @@
         org.pinkgorilla/edn-x {:mvn/version "0.1.4"}
         org.pinkgorilla/modular {:mvn/version "0.5.81"} ; ns-require
         io.github.clojure-quant/quanta-missionary {:mvn/version "0.1.17"}
+        io.github.clojure-quant/quanta-util {:mvn/version "0.1.1"}
         }
  :aliases
  {:test {:extra-paths ["test"]
