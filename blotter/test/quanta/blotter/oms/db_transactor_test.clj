@@ -1,6 +1,7 @@
 (ns quanta.blotter.oms.db-transactor-test
   (:require
    [clojure.test :refer [deftest is testing]]
+   [datahike.api :as d]
    [missionary.core :as m]
    [quanta.blotter.util :as util]
    [quanta.blotter.oms.db :as db]
@@ -29,6 +30,9 @@
         block (m/? (m/reduce conj [] combined))]
     (into [] (mapcat (fn [m] (first (seq m))) block))))
 
+(defn- ref-eid [v]
+  (if (map? v) (:db/id v) v))
+
 (deftest transactor-persists-channel-flow
   (let [conn (datahike/db-start-mem db/schema)
         state (db/new-state)]
@@ -52,3 +56,31 @@
     (testing "positions persisted"
       (is (seq (db/query-positions conn))))
     (datahike/db-stop conn)))
+
+(deftest transactor-links-account-db-refs
+  (let [conn (datahike/db-start-mem db/schema)
+        state (db/new-state)]
+    (db/create-account conn {:account/id 1 :account/trader "a" :account/api :paper})
+    (db/create-account conn {:account/id 2 :account/trader "b" :account/api :paper})
+    (db/process conn state (seed->tx-vector channel-events))
+    (let [account-1-eid (:db/id (db/account-by-id conn 1))
+          account-2-eid (:db/id (db/account-by-id conn 2))
+          order-by-id (fn [id] (first (filter #(= id (:order/id %)) (db/query-orders conn))))
+          fill-by-id (fn [id] (first (filter #(= id (:fill/id %)) (db/query-fills conn))))
+          position-for (fn [account asset]
+                         (first (filter #(and (= account (:position/account %))
+                                             (= asset (:position/asset %)))
+                                       (db/query-positions conn))))]
+      (testing "orders reference account entities"
+        (is (= account-1-eid (ref-eid (:order/account-db (order-by-id "1")))))
+        (is (= account-2-eid (ref-eid (:order/account-db (order-by-id "2"))))))
+      (testing "fills reference account entities"
+        (is (= account-2-eid (ref-eid (:fill/account-db (fill-by-id "f-1")))))
+        (is (= account-1-eid (ref-eid (:fill/account-db (fill-by-id "f-2"))))))
+      (testing "positions reference account entities"
+        (is (= account-2-eid (ref-eid (:position/account-db (position-for 2 "ETHUSDT")))))
+        (is (= account-1-eid (ref-eid (:position/account-db (position-for 1 "BTCUSDT"))))))
+      (testing "account-db refs resolve to correct :account/id"
+        (doseq [eid [account-1-eid account-2-eid]]
+          (is (some? (d/entity @conn eid)))))
+    (datahike/db-stop conn))))

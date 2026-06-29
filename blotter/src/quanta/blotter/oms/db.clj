@@ -30,6 +30,9 @@
    {:db/ident :order/account-id
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
+   {:db/ident :order/account-db
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
    {:db/ident :order/asset
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
@@ -85,6 +88,9 @@
    {:db/ident :fill/account-id
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
+   {:db/ident :fill/account-db
+    :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
    {:db/ident :fill/asset
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
@@ -109,6 +115,9 @@
    ;; position (created once, then updated)
    {:db/ident :position/account
     :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :position/account-db
+    :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/asset
     :db/valueType :db.type/string
@@ -235,7 +244,8 @@
 (defn new-state []
   (atom {:order-id->eid {}
          :pos-key->eid {}
-         :seen-fills #{}}))
+         :seen-fills #{}
+         :account-id->eid {}}))
 
 (defn- as-str [v]
   (when (some? v) (str v)))
@@ -261,9 +271,16 @@
            :message/data (pr-str msg)}
     (:asset msg) (assoc :message/asset (:asset msg))))
 
-(defn order->entity [eid order]
+(defn- account-eid
+  [conn snapshot account-id]
+  (when account-id
+    (or (get-in snapshot [:account-id->eid account-id])
+        (some-> (account-by-id conn account-id) :db/id))))
+
+(defn order->entity [eid order account-ref]
   (cond-> {:db/id eid
            :order/id (as-str (:order/id order))}
+    account-ref (assoc :order/account-db account-ref)
     (:order/account-id order) (assoc :order/account-id (:order/account-id order))
     (:order/asset order) (assoc :order/asset (:order/asset order))
     (:order/side order) (assoc :order/side (:order/side order))
@@ -280,12 +297,13 @@
     (:order/label order) (assoc :order/label (:order/label order))
     (:order/history order) (assoc :order/history (pr-str (:order/history order)))))
 
-(defn fill->entity [eid order-ref fill]
+(defn fill->entity [eid order-ref fill account-ref]
   (cond-> {:db/id eid
            :fill/id (as-str (:fill/id fill))
            :fill/order-id (as-str (:fill/order-id fill))
            :fill/account-id (:fill/account-id fill)
            :fill/side (:fill/side fill)}
+    account-ref (assoc :fill/account-db account-ref)
     order-ref (assoc :fill/order order-ref)
     (:fill/asset fill) (assoc :fill/asset (:fill/asset fill))
     (some? (:fill/label fill)) (assoc :fill/label (:fill/label fill))
@@ -294,13 +312,14 @@
     (some? (:fill/price fill)) (assoc :fill/price (as-bigdec (:fill/price fill)))
     (:fill/date fill) (assoc :fill/date (as-date (:fill/date fill)))))
 
-(defn position->entity [eid position]
+(defn position->entity [eid position account-ref]
   (cond-> {:db/id eid
            :position/account (:position/account position)
            :position/asset (:position/asset position)
            :position/side (:position/side position)
            :position/open (:position/open position)
            :position/realized-pl (as-bigdec (or (:position/realized-pl position) 0M))}
+    account-ref (assoc :position/account-db account-ref)
     (some? (:position/qty position)) (assoc :position/qty (as-bigdec (:position/qty position)))
     (some? (:position/qty-open position)) (assoc :position/qty-open (as-bigdec (:position/qty-open position)))
     (some? (:position/average-entry-price position))
@@ -344,13 +363,13 @@
     tmp))
 
 (defn build-tx
-  "Builds {:tx tx-data :block-tempids m} for a block.
+  "Builds {:tx tx-data :block-tempids m :account-id->eid m} for a block.
    block is a flat vector like [:msg m :order o :fill f :position p ...].
 
    Orders/positions appearing multiple times in one block are merged into a
    single entity (last value per attribute wins). Orders are emitted before
    fills so that a fill can reference its order's (temp) id."
-  [snapshot block]
+  [conn snapshot block]
   (let [pairs (partition 2 block)
         of-kind (fn [k] (->> pairs (filter #(= k (first %))) (map second)))
         ;; merge orders by order-id preserving insertion order
@@ -362,11 +381,20 @@
         msgs (of-kind :msg)
         fills (of-kind :fill)
         block-tempids (atom {})
+        account-refs (atom {})
+        resolve-account! (fn [account-id]
+                           (when account-id
+                             (when-not (contains? @account-refs account-id)
+                               (when-let [eid (account-eid conn snapshot account-id)]
+                                 (swap! account-refs assoc account-id eid)))
+                             (get @account-refs account-id)))
         order-tx (mapv (fn [[oid o]]
-                         (order->entity (order-eid snapshot block-tempids oid) o))
+                         (order->entity (order-eid snapshot block-tempids oid) o
+                                        (resolve-account! (:order/account-id o))))
                        orders)
         position-tx (mapv (fn [[k p]]
-                            (position->entity (pos-eid snapshot block-tempids k) p))
+                            (position->entity (pos-eid snapshot block-tempids k) p
+                                              (resolve-account! (:position/account p))))
                           positions)
         msg-tx (mapv (fn [m] (message->entity (msg-eid block-tempids) m)) msgs)
         fill-tx (reduce
@@ -379,11 +407,13 @@
                              order-ref (or (get (:order-id->eid snapshot) oid)
                                            (get @block-tempids [:order oid]))
                              eid (fill-eid block-tempids fid)]
-                         (conj tx (fill->entity eid order-ref f))))))
+                         (conj tx (fill->entity eid order-ref f
+                                                (resolve-account! (:fill/account-id f))))))))
                  []
                  fills)]
     {:tx (vec (concat order-tx position-tx msg-tx fill-tx))
-     :block-tempids @block-tempids}))
+     :block-tempids @block-tempids
+     :account-id->eid @account-refs}))
 
 (defn- resolve-eid
   "Maps a (possibly tempid) eid to the resolved entity id using the tx-report tempids."
@@ -402,7 +432,7 @@
    updates target the same order/position entity."
   [conn state block]
   (let [snapshot @state
-        {:keys [tx block-tempids]} (build-tx snapshot block)]
+        {:keys [tx block-tempids account-id->eid]} (build-tx conn snapshot block)]
     (if (empty? tx)
       nil
       (let [report (d/transact conn tx)
@@ -417,7 +447,7 @@
                         :position (assoc-in s [:pos-key->eid k] eid)
                         :fill (update s :seen-fills conj k)
                         s)))
-                  s
+                  (update s :account-id->eid merge account-id->eid)
                   block-tempids)))
         report))))
 
