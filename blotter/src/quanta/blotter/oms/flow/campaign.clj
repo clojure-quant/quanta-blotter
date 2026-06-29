@@ -20,8 +20,8 @@
                           (let [campaign-id (:campaign msg)
                                 label (:label msg)]
                             (when (or campaign-id label)
-                              (println "*** adding campaign/label to dict: " order-id " [" campaign-id " " label "]")
-                              (println "*** campain dict: " @dict)
+                              ;(println "*** adding campaign/label to dict: " order-id " [" campaign-id " " label "]")
+                              ;(println "*** campain dict: " @dict)
                               (swap! dict assoc order-id [campaign-id label]))
                             msg)
 
