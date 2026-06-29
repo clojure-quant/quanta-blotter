@@ -179,7 +179,7 @@
 (defn- parse-settings [account]
   (update account :account/settings #(when % (edn/read-string %))))
 
-(defn- account-by-id [conn id]
+(defn account-by-id [conn id]
   (ffirst (d/q '[:find (pull ?e [*]) :in $ ?id :where [?e :account/id ?id]] @conn id)))
 
 (defn create-account
