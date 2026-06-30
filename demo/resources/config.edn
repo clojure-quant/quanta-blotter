@@ -1,6 +1,8 @@
 {:db {:dir "trade-db-oms-server"}
  
- :db-seed {:accounts-file "demo-accounts.edn"}
+ :db-seed {:accounts-file "demo-accounts.edn"
+           :assets-file "demo-assets.edn"
+           :lists-dir "demo-lists"}
 
  :oms-server {:ns-require [fix-engine.blotter.fix-trade]
               :log-file "log/oms-server-trace.txt"

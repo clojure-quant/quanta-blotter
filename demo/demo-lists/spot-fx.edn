@@ -1,0 +1,3 @@
+{:lists/name "spot-fx"
+ :lists/asset ["EURUSD" "GBPUSD" "USDJPY" "USDCHF" "AUDUSD" "USDCAD" "NZDUSD"
+               "EURGBP" "EURJPY" "GBPJPY" "AUDJPY" "EURCHF" "EURAUD" "CADJPY" "USDCNH"]}

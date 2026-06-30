@@ -4,9 +4,18 @@
    [tick.core :as t]
    [datahike.api :as d]
    [crockery.core :as crockery]
+   [quanta.asset.schema :as asset-schema]
    [quanta.util.datahike :as datahike]))
 
-(def schema
+(def extra-asset-attrs
+  [{:db/ident :asset/margin
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :asset/default-quote-account
+    :db/valueType :db.type/long
+    :db/cardinality :db.cardinality/one}])
+
+(def oms-schema
   [;; message (append only)
    {:db/ident :message/type
     :db/valueType :db.type/keyword
@@ -176,6 +185,8 @@
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}])
 
+(def schema
+  (vec (concat oms-schema asset-schema/schema extra-asset-attrs)))
 
 
 

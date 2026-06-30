@@ -1,0 +1,151 @@
+[{:asset/symbol "EURUSD"
+  :asset/name "Euro / US Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "GBPUSD"
+  :asset/name "British Pound / US Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "USDJPY"
+  :asset/name "US Dollar / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "USDCHF"
+  :asset/name "US Dollar / Swiss Franc"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "AUDUSD"
+  :asset/name "Australian Dollar / US Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "USDCAD"
+  :asset/name "US Dollar / Canadian Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "NZDUSD"
+  :asset/name "New Zealand Dollar / US Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "EURGBP"
+  :asset/name "Euro / British Pound"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "EURJPY"
+  :asset/name "Euro / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "GBPJPY"
+  :asset/name "British Pound / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "AUDJPY"
+  :asset/name "Australian Dollar / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "EURCHF"
+  :asset/name "Euro / Swiss Franc"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "EURAUD"
+  :asset/name "Euro / Australian Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "CADJPY"
+  :asset/name "Canadian Dollar / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "USDCNH"
+  :asset/name "US Dollar / Chinese Yuan (offshore)"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1}
+ {:asset/symbol "BTCUSDT.S.BB"
+  :asset/name "Bitcoin / Tether (Bybit spot)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 3
+  :asset/bybit [:spot "BTCUSDT"]}
+ {:asset/symbol "ETHUSDT.S.BB"
+  :asset/name "Ethereum / Tether (Bybit spot)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 3
+  :asset/bybit [:spot "ETHUSDT"]}
+ {:asset/symbol "BTCUSDT.LF.BB"
+  :asset/name "Bitcoin / Tether (Bybit linear perpetual)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 2
+  :asset/bybit [:linear "BTCUSDT"]}
+ {:asset/symbol "ETHUSDT.LF.BB"
+  :asset/name "Ethereum / Tether (Bybit linear perpetual)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 2
+  :asset/bybit [:linear "ETHUSDT"]}
+ {:asset/symbol "__TEST"
+  :asset/name "Test symbol"
+  :asset/exchange "TEST"
+  :asset/category :fx
+  :asset/market :fx
+  :asset/margin 10
+  :asset/default-quote-account 4}
+ {:asset/symbol "__TEST2"
+  :asset/name "Test symbol 2"
+  :asset/exchange "TEST"
+  :asset/category :fx
+  :asset/market :fx
+  :asset/margin 10
+  :asset/default-quote-account 4}]

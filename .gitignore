@@ -7,6 +7,7 @@ demo/log/*.txt
 demo/log/*.log
 blotter/target
 blotter/test/test-db
+blotter/test/asset-db
 demo/trade-db
 demo/trade-db-oms-server
 .gorilla
@@ -14,3 +15,4 @@ demo/trade-db-oms-server
 blotter-cli/target
 blotter/.clj-kondo/.cache
 demo/msg.log
+demo/asset-db

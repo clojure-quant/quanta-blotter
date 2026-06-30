@@ -1,5 +1,37 @@
-[{:account/id 1
+[;; fix ctrader fxpro
+ {:account/id 1
+  :account/name "ctrader-pepperstone-florian-quote"
+  :account/api :fix-quote
+  :account/settings {:spec "fix-specs/ctrader.edn"
+                     :header {:begin-string "FIX.4.4"
+                              :target-comp-id "CSERVER"
+                              :sender-comp-id "demo.pepperstone.5292473"
+                              :target-sub-id "QUOTE"
+                              :sender-sub-id "QUOTE"}
+                     :tcp {:host "live-uk-eqx-01.p.c-trader.com"
+                           :port 5201
+                           :ssl false}
+                     :login {:username "5292473"
+                             :password "Regenschirm13!"}}}
+ ;; bybit
+ ;; note: bybit quotes do not need a login.
+ {:account/id 2
+  :account/api :bybit-quote
+  :account/notes "bybit quotes linear"
+  :account/settings {:connection {:mode :test
+                                  :category :linear}}}
+
+ {:account/id 3
+  :account/api :bybit-quote
+  :account/notes "bybit quotes spot"
+  :account/settings {:connection {:mode :test
+                                  :category :spot}}}
+ ;; random
+ {:account/id 4
+  :account/name "random-quote"
   :account/api :random
   :account/notes "just random quotes"
   :account/settings {}}
+
+ ;
  ]

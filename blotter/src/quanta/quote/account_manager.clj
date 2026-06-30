@@ -42,7 +42,9 @@
                                                  :subscription-a subscription-a}))))
 
 (defn quotes-impl [this account-id asset]
-  (let [feed (get @(:accounts this) account-id)
+  (let [_ (assert account-id (str "account-id is required for asset:" asset))
+        feed (get @(:accounts this) account-id)
+        _ (assert feed (str "feed not found for account-id:" account-id))
         quote-flow (m/eduction
                     (filter #(= (:asset %) asset))
                     (:flow feed))]

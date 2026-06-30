@@ -1,0 +1,4 @@
+{:lists/name "default"
+ :lists/asset ["EURUSD" "USDJPY" "GBPUSD"
+               "BTCUSDT.LF.BB" "ETHUSDT.LF.BB"
+               "__TEST" "__TEST2"]}
