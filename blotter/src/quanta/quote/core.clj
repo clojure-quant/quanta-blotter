@@ -5,7 +5,9 @@
    [modular.require :refer [require-namespaces]]
    [quanta.missionary.logger :refer [create-logger log]]
    [quanta.asset.datahike :refer [get-list]]
-   [quanta.quote.account-manager :as am]))
+   [quanta.quote.account-manager :as am])
+   (:import missionary.Cancelled)
+  )
 
 (defn- require-config-namespaces! [ns-require]
   (when (seq ns-require)
@@ -52,9 +54,10 @@
    (let [asset-list-name (m/?< asset-list-f)
          _ (println "asset-list-flow-dict-flow: asset-list-name: " asset-list-name)
          dict-flow (asset-list-dic-flow this asset-list-name)
-         q (m/?> dict-flow)
-         ]
-     (println "asset-list-flow-dict-flow: q: " q)
+         q (try (m/?> dict-flow)
+                (catch Cancelled _
+                  (m/amb)))]
+     ;(println "asset-list-flow-dict-flow: q: " q)
      q
      )))
 
@@ -65,7 +68,7 @@
         quote-dict-flow (asset-list-flow-dict-flow this asset-list-f)
         quote-processor   (m/reduce
                            (fn [_ v]
-                             (println "QUOTELIST: " v)
+                             ;(println "QUOTELIST: " v)
                              (reset! quotelist-a v)
                              nil)
                            nil quote-dict-flow)

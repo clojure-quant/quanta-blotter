@@ -1,13 +1,16 @@
 (ns demo.cli-quote-api
   (:require
    [missionary.core :as m]
+   [clojure.pprint :refer [print-table]]
    [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts get-account quotes]]
    [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]))
 
 (defn quote-printer [f]
   (m/reduce
    (fn [s v]
-     (println "QUOTE " v)
+     ;(println "QUOTE " v)
+     (when (map? v)
+       (print-table (vals v)))
      nil)
    nil
    f))

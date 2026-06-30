@@ -1,5 +1,6 @@
 (ns demo.cli-asset-list-print
   (:require
+   [clojure.pprint :refer [print-table]]
    [missionary.core :as m]
    [quanta.util.datahike]
    [quanta.asset.schema]
@@ -8,10 +9,17 @@
    [quanta.quote.core :refer [create-quote-manager create-quotelist-consumer]]
    ))
 
-(defn quote-printer [f]
+(defn quote-printer [mode subscription-a f]
   (m/reduce
    (fn [s v]
-     (println "QUOTE" v)
+     (when (map? v)
+       (print "\u001b[2J\u001b[H")
+       (println "mode: " mode " subscription: " @subscription-a)
+       ; fix-engine has this columns:
+       ;  :bid  :ask  :asset  :price  :volume  :spread  :account  :ts
+       (print-table [:account :asset :bid :ask :ts] (vals v))
+       (flush)
+       )
      nil)
    nil
    f))
@@ -36,7 +44,9 @@
 
    nil))
 
-(defn start! []
+(defn start!
+  ([] (start! {}))
+  ([{:keys [list]}]
   (let [db (quanta.util.datahike/db-start
             {:schema (concat
                       quanta.blotter.oms.db/schema
@@ -44,27 +54,31 @@
              :db-path "asset-db"
              :seed-fn [(quanta.asset.seed/seed-edn-assets-fn "demo-assets.edn")
                        (quanta.asset.seed/seed-edn-lists-fn "demo-lists")]})
-        qm (create-quote-manager {:db db 
+        qm (create-quote-manager {:db db
                                   :quote-accounts-file "demo-quote-accounts.edn"
                                   :log-file "log/quotes.txt"
                                   :ns-require ['fix-engine.quote.account
-                                               'quanta.bybit.quote.account]
-                                  })
-        subscription-a (atom "test")
-        {:keys [quotelist-a dispose!]} (create-quotelist-consumer qm subscription-a)
-        printer (quote-printer (m/watch quotelist-a))
+                                               'quanta.bybit.quote.account]})
+        subscription-a (atom (or list "test"))
+        mode (if list (str "list-mode" list) "switching-mode")
+        _ (println "asset-list-print: subscribing to list " @subscription-a)
+        {:keys [quotelist dispose!]} (create-quotelist-consumer qm subscription-a)
+        printer (quote-printer mode subscription-a (m/watch quotelist))
         dispose-printer (printer #(println "quote-printer done" %)
                                  #(println "quote-printer CRASH" %))
-
-        sub-changer (subscription-changer subscription-a)
-        ;dispose-sub-changer (sub-changer #(println "sub-changer done: " %) #(println "sub-changer CRASH: " %))
-        ]
+        sub-changer (when-not list (subscription-changer subscription-a))
+        dispose-sub-changer (when sub-changer
+                              (sub-changer #(println "sub-changer done: " %)
+                                           #(println "sub-changer CRASH: " %)))]
     {:dispose-printer dispose-printer
-     ;:dispose-sub-changer dispose-sub-changer
-     :dispose-consumer dispose!
-     }))
+     :dispose-sub-changer dispose-sub-changer
+     :dispose-consumer dispose!})))
 
-(defn start-cli [_]
-  (start!)
+(defn start-cli
+  "Usage:
+     cd demo && clojure -X:cli-asset-list-print
+     cd demo && clojure -X:cli-asset-list-print :list '\"crypto\"'"
+  [opts]
+  (start! opts)
   @(promise))
 

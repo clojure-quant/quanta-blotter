@@ -5,7 +5,7 @@
 
 orders executions positions with account/trader routing
 
-## DEMO
+## DEMO OMS
 
 ```
 cd demo
@@ -18,6 +18,25 @@ bb send-orders fx1
 bb send-orders qqq
 
 ```
+
+## DEMO QUOTES
+
+*asset-list-printer* will print a table of quotes to the terminal.
+the :list parameter comes from asset-lists from the database.
+default list has assets from bybit/ctrader-fix/random.
+if no list is specified, then the asset-lists are changed every 7 seconds.
+```
+cd demo
+clj -X:cli-server
+clojure -X:cli-asset-list-print :list '"crypto"'
+clojure -X:cli-asset-list-print :list '"spot-fx"'
+clojure -X:cli-asset-list-print :list '"test"'
+clojure -X:cli-asset-list-print :list '"default"'
+clojure -X:cli-asset-list-print
+
+```
+
+
 
 ## MESSAGE TYPES
 

@@ -15,8 +15,11 @@
 (defn random-return-multiplyer []
   (+ 1.0 (random-return-value)))
 
+(defn- round-2 [n]
+  (/ (Math/round (* n 100.0)) 100.0))
+
 (defn next-price [p]
-  (* p (random-return-multiplyer)))
+  (round-2 (* p (random-return-multiplyer))))
 
 (defn price-seq [start-price]
   (iterate next-price start-price))
@@ -44,10 +47,12 @@
 
 (defn message-loop [account price-a log send-quote]
   (let [symbol->quote (fn [[asset price]]
-                        {:account (:account/id account)
-                         :asset asset
-                         :bid price
-                         :ask (+ price 0.01)})]
+                        (let [bid (round-2 price)
+                              ask (round-2 (+ bid 0.01))]
+                          {:account (:account/id account)
+                           :asset asset
+                           :bid bid
+                           :ask ask}))]
     (m/sp
      (loop []
        (swap! price-a update-prices)

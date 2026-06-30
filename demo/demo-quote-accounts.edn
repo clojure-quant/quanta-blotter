@@ -8,11 +8,12 @@
                               :sender-comp-id "demo.pepperstone.5292473"
                               :target-sub-id "QUOTE"
                               :sender-sub-id "QUOTE"}
-                     :tcp {:host "live-uk-eqx-01.p.c-trader.com"
+                     :tcp {:host "demo-us-eqx-01.p.c-trader.com"
                            :port 5201
                            :ssl false}
                      :login {:username "5292473"
                              :password "Regenschirm13!"}}}
+
  ;; bybit
  ;; note: bybit quotes do not need a login.
  {:account/id 2

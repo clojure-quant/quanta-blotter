@@ -30,7 +30,10 @@
 (defn add-account [state account]
   (let [account-id (:account/id account)
         subscription-a (atom #{})
-        {:keys [flow send]} (flow-sender)]
+        {:keys [flow send]} (flow-sender)
+        flow (m/ap (let [data (m/?> flow)]
+                     (when data
+                       (assoc data :account account-id))))]
     (assert account-id "account must have an :account/id")
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
     (let [quote-account (p/create-quote-account account subscription-a send (:log state))
