@@ -31,8 +31,11 @@
         b-f (changing-flow [300 700 100 600] [:b1 :b2 :b3 :b4 :b5])
         a-cont (util/cont a-f)
         b-cont (util/cont b-f)
-        snap-f (sample/sample-continuous-on-change
-                250 (fn [a b] {:a a :b b}) a-cont b-cont)
+        snap-f (sample/only-when-changed
+                (m/sample (fn [a b _tick] {:a a :b b})
+                          a-cont
+                          b-cont
+                          (sample/tick-flow 250)))
         limited (m/eduction (take 6) snap-f)]
     (m/? (m/reduce (fn [_ v]
                      (println (t/instant) "emit:" (pr-str v))

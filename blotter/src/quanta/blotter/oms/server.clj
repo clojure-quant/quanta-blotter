@@ -25,13 +25,15 @@
   ([config trade-db]
    (let [{:keys [log-file transaction-log-file validate? tag?
                  ns-require
-                 trading-state-log-file trading-state-print-interval-ms]
+                 trading-state-log-file trading-state-print-interval-ms
+                 ui-recent-ms]
           :or {log-file "log/oms-server-trace.txt"
                transaction-log-file "log/oms-server-transaction.txt"
                validate? true
                tag? true
                trading-state-log-file "log/oms-server-trading-state.txt"
-               trading-state-print-interval-ms 15000}} config]
+               trading-state-print-interval-ms 15000
+               ui-recent-ms 60000}} config]
      (assert trade-db "trade-db connection is required")
      (require-config-namespaces! ns-require)
      (let [_ (.mkdirs (io/file "log"))
@@ -40,7 +42,7 @@
                                       :validate? validate?
                                       :tag? tag?})
            _ (add-enabled-db-accounts (:account-manager oms) trade-db)
-           {:keys [trading-state-a snapshot-flow] :as tsc} (tsc/create-trading-state-consumer! (:trading-state oms))
+           {:keys [trading-state-a snapshot-flow] :as tsc} (tsc/create-trading-state-consumer! (:trading-state oms) ui-recent-ms)
            _ (tsc/start! tsc)
            {:keys [trading-state-trader] :as trader-tagger} (trader/start-trader-tagger trade-db trading-state-a)
            oms (start-order-manager! oms)

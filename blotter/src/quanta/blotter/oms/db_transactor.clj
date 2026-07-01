@@ -2,8 +2,8 @@
   (:require
    [missionary.core :as m]
    [taoensso.timbre :refer [info error]]
-   [quanta.blotter.util :as util]
    [quanta.missionary.logger :as logger]
+   [quanta.blotter.util :as util]
    [quanta.blotter.oms.db :as db]))
 
 (def ^:private buffer-ms 500)

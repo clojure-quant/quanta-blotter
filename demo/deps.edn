@@ -30,5 +30,8 @@
 
   :backoffice {:exec-fn demo.backoffice/print-trades!}
 
+  :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.05.25"}}
+         :main-opts ["-m" "clj-kondo.main" "--lint" "src" "deps.edn" "--fail-level" "error"]}
+
 ;
   }}

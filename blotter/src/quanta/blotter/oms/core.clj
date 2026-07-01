@@ -78,7 +78,9 @@
      :validator validator
      :account-manager account-manager
      :combined-flow combined-flow
-     :trading-state (trading-state/create-trading-state! combined-flow)}))
+     :trading-state (trading-state/create-trading-state! combined-flow)
+     ;; todo: move this to oms. 1. oms has db, so we can init from db state 2. om (order multiplexer) does no care about this functionality.
+     }))
 
 (defn consume-orderupdate [r]
   (m/sp
@@ -88,7 +90,7 @@
 
 (defn start-order-manager!
   "Start paper trade-account 1 fed by simulated orderflow for that account."
-  [{:keys [order-rdv orderupdate-rdv consolidator validator log-transaction account-manager combined-flow trading-state] :as this}]
+  [{:keys [_order-rdv orderupdate-rdv consolidator validator log-transaction account-manager combined-flow _trading-state] :as this}]
   (let [dispose-transaction-logger (start-log-flow-to-logger log-transaction combined-flow)
         dispose-orderupdate-consumer!  ((consume-orderupdate orderupdate-rdv)
                                         #(println "orderupdate-consumer done " %)
@@ -104,7 +106,7 @@
              :dispose-consolidator! dispose-consolidator!
              :dispose-account-manager! dispose-account-manager!})
     (log log-transaction {:type :oms/started :date (t/instant)})
-    (assoc this :trading-state trading-state)))
+    this))
 
 (defn stop-order-manager! [{:keys [dispose-a validator] :as this}]
   (when-let [d @dispose-a]

@@ -7,6 +7,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint-demo:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: demo
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "21"
+
+      - name: Install Clojure CLI
+        uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          cli: latest
+
+      - name: Lint
+        run: clojure -M:lint
+
   publish-blotter:
     runs-on: ubuntu-latest
     defaults:

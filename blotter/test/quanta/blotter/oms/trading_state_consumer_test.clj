@@ -24,6 +24,23 @@
     1 {:type :broker/order-filled, :account/id 2, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742482333Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
     1 {:type :broker/order-filled, :account/id 1, :order-id 1, :fill-id "KKEY9v", :date #inst "2026-06-01T20:10:52.742779027Z", :asset "BTCUSDT", :qty 0.001, :side :buy, :price 10000.0}]))
 
+(def recent-reject-order-time-flow
+  (create-time-flow
+   [1 {:type :trader/new-order :account/id 1 :order-id 1 :asset "BTCUSDT"
+       :side :buy :order-type :limit :limit 100.0 :qty 0.001}
+    1 {:type :broker/order-rejected :account/id 1 :order-id 1 :message "immediate"}]))
+
+(def recent-close-position-time-flow
+  (create-time-flow
+   [1 {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f1"
+       :asset "BTCUSDT" :side :buy :qty 100.0 :price 10.0}
+    1 {:type :broker/order-filled :account/id 1 :order-id 2 :fill-id "f2"
+       :asset "BTCUSDT" :side :sell :qty 100.0 :price 11.0}]))
+
+(def ^:private event-settle-ms 50)
+(def ^:private visible-after-ms 1000)
+(def ^:private gone-after-ms 4000)
+
 (defn- start-collecting! [flow acc]
   ((m/reduce (fn [_ v] (swap! acc conj v) nil) nil flow)
    (fn [_] nil)
@@ -37,10 +54,30 @@
 (defn- last-snapshot [acc]
   (last (remove nil? @acc)))
 
+(defn- find-order [orders order-id]
+  (some #(when (= order-id (:order/id %)) %) orders))
+
+(defn- find-position [positions account asset]
+  (some #(when (and (= account (:position/account %))
+                    (= asset (:position/asset %)))
+           %)
+        positions))
+
+(defn- with-recent-consumer! [time-flow recent-ms f]
+  (let [channel-flow (m/stream time-flow)
+        ts (trading-state/create-trading-state! channel-flow)
+        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! ts recent-ms)
+        acc (atom [])
+        dispose (start-collecting! snapshot-flow acc)]
+    (try
+      (f trading-state-a)
+      (finally
+        (stop-collecting! dispose)))))
+
 (deftest two-snapshot-consumers-see-same-trading-state
   (let [channel-flow (m/stream channel-paper-time-flow)
         ts (trading-state/create-trading-state! channel-flow)
-        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! ts)
+        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! ts 0)
         acc1 (atom [])
         acc2 (atom [])
         dispose1 (start-collecting! snapshot-flow acc1)
@@ -68,3 +105,25 @@
       (finally
         (stop-collecting! dispose1)
         (stop-collecting! dispose2)))))
+
+(deftest recent-ms-keeps-rejected-order-visible
+  (with-recent-consumer! recent-reject-order-time-flow 2000
+    (fn [trading-state-a]
+      (m/? (m/sleep (+ event-settle-ms visible-after-ms)))
+      (let [order (find-order (:working-orders @trading-state-a) 1)]
+        (is (some? order) "rejected order should still appear in working-orders")
+        (is (= :rejected (:order/status order))))
+      (m/? (m/sleep (- gone-after-ms visible-after-ms)))
+      (is (nil? (find-order (:working-orders @trading-state-a) 1))
+          "rejected order should be gone after recent-ms window"))))
+
+(deftest recent-ms-keeps-closed-position-visible
+  (with-recent-consumer! recent-close-position-time-flow 2000
+    (fn [trading-state-a]
+      (m/? (m/sleep (+ event-settle-ms visible-after-ms)))
+      (let [position (find-position (:open-positions @trading-state-a) 1 "BTCUSDT")]
+        (is (some? position) "closed position should still appear in open-positions")
+        (is (false? (:position/open position))))
+      (m/? (m/sleep (- gone-after-ms visible-after-ms)))
+      (is (nil? (find-position (:open-positions @trading-state-a) 1 "BTCUSDT"))
+          "closed position should be gone after recent-ms window"))))
