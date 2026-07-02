@@ -3,13 +3,12 @@
    [missionary.core :as m]
    [tick.core :as t]
    [quanta.blotter.paper.broker] ;; side effect: brings in paper broker implementation
-   [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
-   [quanta.blotter.consolidator :refer [create-consolidator start-consolidator! stop-consolidator!]]
-   [quanta.missionary.logger :refer [create-logger log stop-logger start-log-flow-to-logger]]
+   [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-accounts]]
+   [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
+   [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]
    [quanta.blotter.util :refer [push-flow-to-rdv]]
    [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
-   [demo.util.update-printer :refer [create-orderupdate-printer]])
-  (:import [missionary Cancelled]))
+   [demo.util.update-printer :refer [create-orderupdate-printer]]))
 
 (defn start!
   "Start paper trade-account 1 fed by simulated orderflow for that account."
@@ -31,7 +30,7 @@
         _ (log l-channel {:type :consolidator/started :date (t/instant)})
         dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
         ;; account-manager
-        am (create-account-manager order orderupdate log-fn)
+        am (create-account-manager order orderupdate {:log log-fn})
         ;_ (add-edn-account am "demo-accounts.edn" 1)
         ;_ (add-edn-account am "demo-accounts.edn" 2)
         _ (add-edn-accounts am "demo-accounts.edn")

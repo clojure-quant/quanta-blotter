@@ -23,12 +23,13 @@
 (defn start-oms-server
   ([config] (start-oms-server config nil))
   ([config trade-db]
-   (let [{:keys [log-file transaction-log-file validate? tag?
+   (let [{:keys [log-file transaction-log-file account-log-dir validate? tag?
                  ns-require
                  trading-state-log-file trading-state-print-interval-ms
                  ui-recent-ms]
           :or {log-file "log/oms-server-trace.txt"
                transaction-log-file "log/oms-server-transaction.txt"
+               account-log-dir "log/oms-account"
                validate? true
                tag? true
                trading-state-log-file "log/oms-server-trading-state.txt"
@@ -37,8 +38,10 @@
      (assert trade-db "trade-db connection is required")
      (require-config-namespaces! ns-require)
      (let [_ (.mkdirs (io/file "log"))
+           _ (.mkdirs (io/file account-log-dir))
            oms (create-order-manager {:log-file log-file
                                       :transaction-log-file transaction-log-file
+                                      :account-log-dir account-log-dir
                                       :validate? validate?
                                       :tag? tag?})
            _ (add-enabled-db-accounts (:account-manager oms) trade-db)

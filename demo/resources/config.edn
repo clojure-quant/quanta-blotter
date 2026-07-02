@@ -8,6 +8,7 @@
                            quanta.bybit.blotter.account]
               :log-file "log/oms-server-trace.txt"
               :transaction-log-file "log/oms-server-transaction.txt"
+              :account-log-dir "log/oms-account"
               :validate? true
               :tag? true
               :trading-state-log-file "log/oms-server-trading-state.txt"

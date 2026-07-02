@@ -2,11 +2,11 @@
   (:require
    [missionary.core :as m]
    [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts get-account]]
-   [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]))
+   [quanta.missionary.logger :refer [create-logger log]]))
 
 (defn quote-printer [f]
   (m/reduce
-   (fn [s v]
+   (fn [_s v]
      (println "QUOTE" v)
      nil)
    nil

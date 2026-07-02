@@ -1,20 +1,19 @@
 (ns demo.oms
   (:require
    [missionary.core :as m]
-   [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager! create-order]]
+   [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! create-order]]
    [quanta.blotter.account-manager :refer [add-edn-accounts]]
    ; demo order flow
    [quanta.blotter.util :refer [push-flow-to-rdv]]
    [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
-   [quanta.blotter.oms.flow.print :refer [start-open-positions-working-order-logger!]]
+   [quanta.blotter.oms.flow.print :refer [start-trading-state-logger!]]
    ; persistence
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.db-transactor :as db-transactor]
    [quanta.util.datahike :as datahike]
    ; side effects
    [quanta.blotter.paper.broker] ; side effect: brings in paper broker implementation
-   )
-  (:import [missionary Cancelled]))
+   ))
 
 (def oms  (create-order-manager {:log-file "log/oms-trace.txt"
                                  :transaction-log-file "log/oms-transaction.txt"
@@ -25,7 +24,7 @@ oms
 
 (add-edn-accounts (:account-manager oms) "demo-accounts.edn")
 
-(def dispose-wo-op-logger (start-open-positions-working-order-logger! oms "log/oms-wo-op.txt"))
+(def dispose-wo-op-logger (start-trading-state-logger! (:trading-state oms) "log/oms-wo-op.txt" 15000 false))
 
 ;; persistence: open the datahike trade-db and stream all OMS flows into it.
 (def trade-db (datahike/db-start {:schema db/schema :db-path "trade-db"}))

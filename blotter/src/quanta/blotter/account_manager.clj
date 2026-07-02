@@ -2,11 +2,20 @@
   (:require
    [clojure.edn :as edn]
    [missionary.core :as m]
+   [quanta.missionary.logger :refer [create-logger log stop-logger]]
    [quanta.blotter.protocol :as p]
    [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.paper.broker]
    [quanta.blotter.oms.db :as db]
    ))
+
+(defn- account-log [state account-id]
+  (if-let [dir (:account-log-dir state)]
+    (let [logger (create-logger (str dir "/" account-id ".log") false)]
+      {:log-fn (partial log logger)
+       :logger logger})
+    {:log-fn (:log state)
+     :logger nil}))
 
 (defn add-account [state account]
   (let [account-id (:account/id account)
@@ -14,21 +23,26 @@
         account-orderupdate-rdf (create-rdv (str "account/" account-id "/orderupdate"))]
     (assert account-id "account must have an :account/id")
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
-    (let [trade-account (p/create-trade-account account account-order-rdf account-orderupdate-rdf (:log state))
+    (let [{:keys [log-fn logger]} (account-log state account-id)
+          trade-account (p/create-trade-account account account-order-rdf account-orderupdate-rdf log-fn)
           dispose-account! (trade-account #(println "account done" %) #(println "account error" %))]
       (swap! (:accounts state) assoc account-id {:account/id account-id
                                                  :dispose-account dispose-account!
                                                  :account-order-rdf account-order-rdf
-                                                 :account-orderupdate-rdf account-orderupdate-rdf}))))
+                                                 :account-orderupdate-rdf account-orderupdate-rdf
+                                                 :logger logger}))))
 (defn remove-account [state account-id]
   (let [account (get @(:accounts state) account-id)]
     (when account
       (:dispose-account account)
+      (when-let [logger (:logger account)]
+        (stop-logger logger))
       (swap! (:accounts state) dissoc account-id))))
 
-(defn create-account-manager [orderflow-rdv orderupdate-rdv log]
+(defn create-account-manager [orderflow-rdv orderupdate-rdv {:keys [log account-log-dir]}]
   (let [accounts-a (atom {})]
     {:log log
+     :account-log-dir account-log-dir
      :orderflow-rdv orderflow-rdv
      :orderupdate-rdv orderupdate-rdv
      :accounts accounts-a

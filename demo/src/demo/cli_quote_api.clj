@@ -2,12 +2,12 @@
   (:require
    [missionary.core :as m]
    [clojure.pprint :refer [print-table]]
-   [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts get-account quotes]]
-   [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]))
+   [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts quotes]]
+   [quanta.missionary.logger :refer [create-logger log]]))
 
 (defn quote-printer [f]
   (m/reduce
-   (fn [s v]
+   (fn [_s v]
      ;(println "QUOTE " v)
      (when (map? v)
        (print-table (vals v)))

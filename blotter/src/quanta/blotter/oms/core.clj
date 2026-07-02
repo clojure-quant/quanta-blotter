@@ -16,9 +16,14 @@
 
    ))
 
+(defn- account-manager-log-config [account-log-dir log-fn]
+  (if account-log-dir
+    {:account-log-dir account-log-dir}
+    {:log log-fn}))
+
 (defn- create-validated-channel-stack
   "Consolidator (public) -> validator -> account manager."
-  [log-fn order-rdv orderupdate-rdv]
+  [log-fn order-rdv orderupdate-rdv account-log-dir]
   (let [consolidator (create-consolidator {:order order-rdv
                                            :orderupdate orderupdate-rdv
                                            :log log-fn})
@@ -32,14 +37,14 @@
                                               :orderupdate orderupdate})
         account-manager (create-account-manager account-order-rdv
                                                 account-orderupdate-rdv
-                                                log-fn)]
+                                                (account-manager-log-config account-log-dir log-fn))]
     {:order-rdv order-rdv
      :orderupdate-rdv orderupdate-rdv
      :consolidator consolidator
      :validator validator
      :account-manager account-manager}))
 
-(defn create-order-manager [{:keys [log-file transaction-log-file validate? tag?]
+(defn create-order-manager [{:keys [log-file transaction-log-file account-log-dir validate? tag?]
                              :or {validate? true
                                   tag? true}}]
   (let [l (create-logger log-file false)
@@ -51,7 +56,7 @@
         (if validate?
           (let [order-rdv (create-rdv "oms/order")
                 orderupdate-rdv (create-rdv "oms/orderupdate")]
-            (create-validated-channel-stack log-fn order-rdv orderupdate-rdv))
+            (create-validated-channel-stack log-fn order-rdv orderupdate-rdv account-log-dir))
           (let [order-rdv (create-rdv "oms/order")
                 orderupdate-rdv (create-rdv "oms/orderupdate")
                 consolidator (create-consolidator {:order order-rdv
@@ -62,7 +67,8 @@
              :orderupdate-rdv orderupdate-rdv
              :consolidator consolidator
              :validator nil
-             :account-manager (create-account-manager order orderupdate log-fn)}))
+             :account-manager (create-account-manager order orderupdate
+                                                      (account-manager-log-config account-log-dir log-fn))}))
         {:keys [combined-flow]} consolidator
         combined-flow (if tag?
                         (m/stream (campaign-tagged-combined-flow combined-flow))
