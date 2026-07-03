@@ -3,6 +3,7 @@
    [clojure.edn :as edn]
    [tick.core :as t]
    [missionary.core :as m]
+   [quanta.missionary :refer [mix]]
    [quanta.quote.protocol :as p]
    [quanta.quote.random] ; side effects
    )
@@ -68,12 +69,7 @@
 
 (def quotes (memoize quotes-impl))
 
-(defn mix
-  "Return a flow which is mixed by flows"
-  ; will generate (count flows) processes, 
-  ; so each mixed flow has its own process
-  [& flows]
-  (m/ap (m/?> (m/?> (count flows) (m/seed flows)))))
+
 
 (defn quote-list-flow [this calc-id assets]
   (let [flows (map (fn [asset]

@@ -1,7 +1,7 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.11.1"}
         missionary/missionary {:mvn/version "b.47"}
-        org.pinkgorilla/clj-service-flowy {:mvn/version "0.2.51"}
+        org.pinkgorilla/clj-service-flowy {:mvn/version "0.2.52"}
         io.github.timokramer/charm.clj {:git/tag "v0.1.64" :git/sha "e5120a9"}
         org.babashka/http-client {:mvn/version "0.4.23"}}
  :aliases

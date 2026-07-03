@@ -77,3 +77,27 @@
     {:dispose! dispose!
      :quotelist quotelist-a}))
 
+;; quote task
+
+(defn take-first-non-nil [f]
+  ; flows dont implement deref
+  (m/eduction
+   (remove nil?)
+   (take 1)
+   f))
+
+(defn current-v
+  "gets the first non-nil value from the flow"
+  [f]
+  (m/reduce (fn [_r v]
+              ;(println "current-v: " v)
+              v) nil
+            (take-first-non-nil f)))
+
+(defn quote-snapshot [this timeout-ms asset]
+  (let [feed-id (calc-id this asset)
+        quote-f (am/quotes (:am this) feed-id asset)
+        quote-v (current-v quote-f)]
+    (m/race quote-v (m/sleep timeout-ms nil))
+    ))
+

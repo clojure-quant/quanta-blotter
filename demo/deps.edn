@@ -2,8 +2,8 @@
  :deps {org.clojure/clojure    {:mvn/version "1.11.1"} 
         io.github.clojure-quant/blotter {:local/root "../blotter" :deps/manifest :deps}
         io.github.clojure-quant/blotter-cli {:local/root "../blotter-cli" :deps/manifest :deps}
-        io.github.clojure-quant/fix-engine {:mvn/version "0.1.71"}
-        io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.9"}
+        io.github.clojure-quant/fix-engine {:mvn/version "0.1.74"}
+        io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.10"}
         }
  :aliases
  {:nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
@@ -15,6 +15,7 @@
   :cli-quote-api {:exec-fn demo.cli-quote-api/start-cli}
   :cli-quote-list {:exec-fn demo.cli-quote-list/start-cli}
   :cli-asset-list-print {:exec-fn demo.cli-asset-list-print/start-cli}
+  :cli-quote-snapshot {:exec-fn demo.cli-quote-snapshot/start-cli}
   
   ;; trade
   :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}

@@ -1,8 +1,7 @@
 (ns quanta.util.certificate
   (:require
    [clojure.string :as str]
-   [clojure.java.io :as io]
-   [quanta.util.logger :refer [log]])
+   [clojure.java.io :as io])
   (:import
    (io.netty.handler.ssl SslContextBuilder)))
 
@@ -39,7 +38,7 @@
   []
   (if-let [ca-path (ca-cert-file)]
     (let [ca-file (io/file ca-path)]
-      (log "TLS-CA" (.getAbsolutePath ca-file))
+      (println "ssl certificate manage using TLS-CA path:" (.getAbsolutePath ca-file))
       (.. (SslContextBuilder/forClient)
           (trustManager ca-file)
           (build)))
