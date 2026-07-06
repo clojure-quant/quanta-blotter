@@ -1,6 +1,7 @@
 (ns quanta.blotter.account-manager
   (:require
    [clojure.edn :as edn]
+   [datahike.api :as d]
    [missionary.core :as m]
    [quanta.missionary.logger :refer [create-logger log stop-logger]]
    [quanta.blotter.protocol :as p]
@@ -124,14 +125,25 @@
    (map #(add-account state %)
         (db/all-enabled-accounts conn))))
 
+(defn- asset-list-id [conn list-name]
+  (d/q '[:find ?id .
+         :in $ ?list-name
+         :where [?id :lists/name ?list-name]]
+       @conn list-name))
+
+(defn- resolve-asset-list! [conn list-name]
+  (or (asset-list-id conn list-name)
+      (throw (ex-info (str "asset-list " list-name " not found") {:list-name list-name}))))
+
 (defn seed-edn-accounts [edn-filename]
   (fn [conn]
     (let [accounts (load-edn-accounts edn-filename)]
       (doseq [account accounts]
-        (println "seeding account" (:account/id account))
-        (db/create-account conn (select-keys account [:account/id :account/trader :account/api]))
-        (db/update-account conn (select-keys account [:account/id :account/notes
-                                                     :account/settings :account/name]))
-        (db/enable-account conn (:account/id account) true)))))
-  
-  
+        (let [list-name (:account/asset-list account)
+              asset-list-ref (resolve-asset-list! conn list-name)]
+          (println "seeding account" (:account/id account))
+          (db/create-account conn (select-keys account [:account/id :account/trader :account/api]))
+          (db/update-account conn (merge (select-keys account [:account/id :account/notes
+                                                               :account/settings :account/name])
+                                         {:account/asset-list asset-list-ref}))
+          (db/enable-account conn (:account/id account) true))))))

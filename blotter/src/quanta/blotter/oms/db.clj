@@ -183,6 +183,9 @@
     :db/cardinality :db.cardinality/one}
    {:db/ident :account/settings
     :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/asset-list
+    :db/valueType :db.type/ref
     :db/cardinality :db.cardinality/one}])
 
 (def schema
@@ -225,7 +228,8 @@
     (let [updates (cond-> {:db/id (:db/id account)}
                     (:account/notes account-map) (assoc :account/notes (:account/notes account-map))
                     (:account/name account-map) (assoc :account/name (:account/name account-map))
-                    (:account/settings account-map) (assoc :account/settings (pr-str (:account/settings account-map))))]
+                    (:account/settings account-map) (assoc :account/settings (pr-str (:account/settings account-map)))
+                    (:account/asset-list account-map) (assoc :account/asset-list (:account/asset-list account-map)))]
       (when (> (count updates) 1)
         (d/transact conn [updates])))))
 

@@ -7,12 +7,13 @@
                          (deref quanta.blotter.oms.db/schema)
                          (deref quanta.asset.schema/asset))
                 :db-path (get-in (clip/ref :config) [:db :dir])
-                :seed-fn [(quanta.blotter.account-manager/seed-edn-accounts
-                           (get-in (clip/ref :config) [:db-seed :accounts-file]))
-                          (quanta.asset.seed/seed-edn-assets-fn
+                ;; Seed assets and asset-lists before accounts; accounts reference lists by name.
+                :seed-fn [(quanta.asset.seed/seed-edn-assets-fn
                            (get-in (clip/ref :config) [:db-seed :assets-file]))
                           (quanta.asset.seed/seed-edn-lists-fn
-                           (get-in (clip/ref :config) [:db-seed :lists-dir]))]})
+                           (get-in (clip/ref :config) [:db-seed :lists-dir]))
+                          (quanta.blotter.account-manager/seed-edn-accounts
+                           (get-in (clip/ref :config) [:db-seed :accounts-file]))]})
        :stop (quanta.util.datahike/db-stop this)}
 
   :oms-server {:start (quanta.blotter.oms.server/start-oms-server

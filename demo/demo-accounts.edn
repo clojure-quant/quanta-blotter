@@ -2,6 +2,7 @@
   :account/trader "florian"
   :account/name "fpaper-2fills"
   :account/notes "always fills order with 2 fills; timing is random"
+  :account/asset-list "test"
   :account/api :paper 
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
@@ -12,6 +13,7 @@
   :account/trader "arne"
   :account/name "apaper-1fill"
   :account/notes "always fills 100% of the order; timing is random"
+  :account/asset-list "test"
   :account/api :paper 
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
@@ -22,6 +24,7 @@
   :account/trader "arne"
   :account/name "apaper-1fill-1s"
   :account/notes "always fills 100% of the order after 1 second"
+  :account/asset-list "test"
   :account/api :paper
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
@@ -32,6 +35,7 @@
   :account/trader "florian"
   :account/name "fpaper-reject"
   :account/notes "all orders will be rejected"
+  :account/asset-list "test"
   :account/api :paper
   :account/settings {:reject-probability 100
                      :bad-orderupdate-probability 0
@@ -42,6 +46,7 @@
   :account/trader "florian"
   :account/name "fpaper fast/bad"
   :account/notes "a real world account with an unreliable but fast broker."
+  :account/asset-list "test"
   :account/api :paper 
   :account/settings {:reject-probability 20
                      :bad-orderupdate-probability 10
@@ -53,6 +58,7 @@
   :account/trader "florian"
   :account/name "fpaper corrupt"     
   :account/notes "every message will be corrupted"
+  :account/asset-list "test"
   :account/api :paper 
   :account/settings {:reject-probability 1
                      :bad-orderupdate-probability 100
@@ -64,6 +70,7 @@
   :account/trader "ant"
   :account/name "apaper never" 
   :account/notes "will never fill an order."
+  :account/asset-list "test"
   :account/api :paper 
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
@@ -75,6 +82,7 @@
   :account/trader "florian"
   :account/name "pepperstone demo1" 
   :account/notes "Pepperstone demo SSL"
+  :account/asset-list "spot-fx"
   :account/api :fix-trade 
   :account/settings {:spec "fix-specs/ctrader.edn"
                      :header {:begin-string "FIX.4.4"
