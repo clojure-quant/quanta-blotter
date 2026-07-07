@@ -240,7 +240,9 @@
                     (:account/notes account-map) (assoc :account/notes (:account/notes account-map))
                     (:account/name account-map) (assoc :account/name (:account/name account-map))
                     (:account/settings account-map) (assoc :account/settings (pr-str (:account/settings account-map)))
-                    (:account/asset-list account-map) (assoc :account/asset-list (:account/asset-list account-map)))]
+                    (:account/asset-list account-map) (assoc :account/asset-list (:account/asset-list account-map))
+                    (some? (:account/balance account-map)) (assoc :account/balance (:account/balance account-map))
+                    (contains? account-map :account/enabled) (assoc :account/enabled (:account/enabled account-map)))]
       (when (> (count updates) 1)
         (d/transact conn [updates])))))
 
