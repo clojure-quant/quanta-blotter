@@ -1,3 +1,11 @@
 {:lists/name "spot-fx"
- :lists/asset ["EURUSD" "GBPUSD" "USDJPY" "USDCHF" "AUDUSD" "USDCAD" "NZDUSD"
-               "EURGBP" "EURJPY" "GBPJPY" "AUDJPY" "EURCHF" "EURAUD" "CADJPY" "USDCNH"]}
+ :lists/asset [
+               "AUDJPY" "AUDNZD" "AUDUSD" "CADJPY" "EURAUD" 
+               "EURCAD" "EURCHF" "EURCZK" "EURDKK" "EURGBP" 
+               "EURHKD" "EURHUF" "EURILS" "EURJPY" "EURNOK" 
+               "EURPLN" "EURSEK" "EURSGD" "EURTRY" "EURTWD" 
+               "EURUSD" "EURZAR" "GBPCHF" "GBPJPY" "GBPSEK" 
+               "GBPUSD" "NZDJPY" "NZDUSD" "USDCAD" "USDCHF" 
+               "USDCNH" "USDCZK" "USDDKK" "USDHKD" "USDHUF" 
+               "USDILS" "USDJPY" "USDMXN" "USDNOK" "USDPLN" 
+               "USDSEK" "USDSGD" "USDTRY" "USDTWD" "USDZAR"]}

@@ -1,108 +1,476 @@
-[{:asset/symbol "EURUSD"
-  :asset/name "Euro / US Dollar"
+ ;; spot-fx
+[{:asset/symbol "AUDJPY"
+  :asset/name "Australian Dollar / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
   :asset/market :forex
   :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "GBPUSD"
-  :asset/name "British Pound / US Dollar"
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "AUDNZD"
+  :asset/name "Australian Dollar / New Zealand Dollar"
   :asset/exchange "FX"
   :asset/category :fx
   :asset/market :forex
   :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "USDJPY"
-  :asset/name "US Dollar / Japanese Yen"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "USDCHF"
-  :asset/name "US Dollar / Swiss Franc"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
  {:asset/symbol "AUDUSD"
   :asset/name "Australian Dollar / US Dollar"
   :asset/exchange "FX"
   :asset/category :fx
   :asset/market :forex
   :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "USDCAD"
-  :asset/name "US Dollar / Canadian Dollar"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "NZDUSD"
-  :asset/name "New Zealand Dollar / US Dollar"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "EURGBP"
-  :asset/name "Euro / British Pound"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "EURJPY"
-  :asset/name "Euro / Japanese Yen"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "GBPJPY"
-  :asset/name "British Pound / Japanese Yen"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "AUDJPY"
-  :asset/name "Australian Dollar / Japanese Yen"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "EURCHF"
-  :asset/name "Euro / Swiss Franc"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
- {:asset/symbol "EURAUD"
-  :asset/name "Euro / Australian Dollar"
-  :asset/exchange "FX"
-  :asset/category :fx
-  :asset/market :forex
-  :asset/margin 5
-  :asset/default-quote-account 1}
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
  {:asset/symbol "CADJPY"
   :asset/name "Canadian Dollar / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
   :asset/market :forex
   :asset/margin 5
-  :asset/default-quote-account 1}
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURAUD"
+  :asset/name "Euro / Australian Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURCAD"
+  :asset/name "Euro / Canadian Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURCHF"
+  :asset/name "Euro / Swiss Franc"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURCZK"
+  :asset/name "Euro / Czech Koruna"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURDKK"
+  :asset/name "Euro / Danish Krone"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURGBP"
+  :asset/name "Euro / British Pound"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURHKD"
+  :asset/name "Euro / Hong Kong Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURHUF"
+  :asset/name "Euro / Hungarian Forint"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURILS"
+  :asset/name "Euro / Israeli Shekel"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURJPY"
+  :asset/name "Euro / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURNOK"
+  :asset/name "Euro / Norwegian Krone"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURPLN"
+  :asset/name "Euro / Polish Zloty"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURSEK"
+  :asset/name "Euro / Swedish Krona"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURSGD"
+  :asset/name "Euro / Singapore Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURTRY"
+  :asset/name "Euro / Turkish Lira"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURTWD"
+  :asset/name "Euro / Taiwan Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURUSD"
+  :asset/name "Euro / US Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "EURZAR"
+  :asset/name "Euro / South African Rand"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "GBPCHF"
+  :asset/name "British Pound / Swiss Franc"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "GBPJPY"
+  :asset/name "British Pound / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "GBPSEK"
+  :asset/name "British Pound / Swedish Krona"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "GBPUSD"
+  :asset/name "British Pound / US Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "NZDJPY"
+  :asset/name "New Zealand Dollar / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "NZDUSD"
+  :asset/name "New Zealand Dollar / US Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDCAD"
+  :asset/name "US Dollar / Canadian Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDCHF"
+  :asset/name "US Dollar / Swiss Franc"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
  {:asset/symbol "USDCNH"
   :asset/name "US Dollar / Chinese Yuan (offshore)"
   :asset/exchange "FX"
   :asset/category :fx
   :asset/market :forex
   :asset/margin 5
-  :asset/default-quote-account 1}
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDCZK"
+  :asset/name "US Dollar / Czech Koruna"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDDKK"
+  :asset/name "US Dollar / Danish Krone"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDHKD"
+  :asset/name "US Dollar / Hong Kong Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDHUF"
+  :asset/name "US Dollar / Hungarian Forint"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDILS"
+  :asset/name "US Dollar / Israeli Shekel"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDJPY"
+  :asset/name "US Dollar / Japanese Yen"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDMXN"
+  :asset/name "US Dollar / Mexican Peso"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDNOK"
+  :asset/name "US Dollar / Norwegian Krone"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDPLN"
+  :asset/name "US Dollar / Polish Zloty"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDSEK"
+  :asset/name "US Dollar / Swedish Krona"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDSGD"
+  :asset/name "US Dollar / Singapore Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDTRY"
+  :asset/name "US Dollar / Turkish Lira"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDTWD"
+  :asset/name "US Dollar / Taiwan Dollar"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.001M
+  :asset/quantity-step 1000M
+ }
+ {:asset/symbol "USDZAR"
+  :asset/name "US Dollar / South African Rand"
+  :asset/exchange "FX"
+  :asset/category :fx
+  :asset/market :forex
+  :asset/margin 5
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1000M
+ }
+ ;; test-assets
+ {:asset/symbol "__TEST"
+  :asset/name "Test symbol"
+  :asset/exchange "TEST"
+  :asset/category :fx
+  :asset/market :fx
+  :asset/margin 10
+  :asset/default-quote-account 4
+  :asset/price-point 0.01M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "__TEST2"
+  :asset/name "Test symbol 2"
+  :asset/exchange "TEST"
+  :asset/category :fx
+  :asset/market :fx
+  :asset/margin 10
+  :asset/default-quote-account 4
+  :asset/price-point 0.01M
+  :asset/quantity-step 1M
+ }
+ ;; crypto-assets
  {:asset/symbol "BTCUSDT.S.BB"
   :asset/name "Bitcoin / Tether (Bybit spot)"
   :asset/exchange "BYBIT"
@@ -110,7 +478,10 @@
   :asset/market :crypto
   :asset/margin 20
   :asset/default-quote-account 3
-  :asset/bybit [:spot "BTCUSDT"]}
+  :asset/price-point 0.1M
+  :asset/quantity-step 0.000001M
+  :asset/bybit [:spot "BTCUSDT"]
+ }
  {:asset/symbol "ETHUSDT.S.BB"
   :asset/name "Ethereum / Tether (Bybit spot)"
   :asset/exchange "BYBIT"
@@ -118,7 +489,10 @@
   :asset/market :crypto
   :asset/margin 20
   :asset/default-quote-account 3
-  :asset/bybit [:spot "ETHUSDT"]}
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.00001M
+  :asset/bybit [:spot "ETHUSDT"]
+ }
  {:asset/symbol "BTCUSDT.LF.BB"
   :asset/name "Bitcoin / Tether (Bybit linear perpetual)"
   :asset/exchange "BYBIT"
@@ -126,7 +500,10 @@
   :asset/market :crypto
   :asset/margin 20
   :asset/default-quote-account 2
-  :asset/bybit [:linear "BTCUSDT"]}
+  :asset/price-point 0.1M
+  :asset/quantity-step 0.001M
+  :asset/bybit [:linear "BTCUSDT"]
+ }
  {:asset/symbol "ETHUSDT.LF.BB"
   :asset/name "Ethereum / Tether (Bybit linear perpetual)"
   :asset/exchange "BYBIT"
@@ -134,18 +511,88 @@
   :asset/market :crypto
   :asset/margin 20
   :asset/default-quote-account 2
-  :asset/bybit [:linear "ETHUSDT"]}
- {:asset/symbol "__TEST"
-  :asset/name "Test symbol"
-  :asset/exchange "TEST"
-  :asset/category :fx
-  :asset/market :fx
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.01M
+  :asset/bybit [:linear "ETHUSDT"]
+ }
+ ;; futures
+ {:asset/symbol "6B_USD"
+  :asset/name "British Pound"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
   :asset/margin 10
-  :asset/default-quote-account 4}
- {:asset/symbol "__TEST2"
-  :asset/name "Test symbol 2"
-  :asset/exchange "TEST"
-  :asset/category :fx
-  :asset/market :fx
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "6E_USD"
+  :asset/name "Euro FX"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
   :asset/margin 10
-  :asset/default-quote-account 4}]
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "CL_USD"
+  :asset/name "Crude Oil"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
+  :asset/margin 10
+  :asset/default-quote-account 1
+  :asset/price-point 0.01M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "E7_USD"
+  :asset/name "E-mini Euro FX"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
+  :asset/margin 10
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "ES_USD"
+  :asset/name "E-mini S&P 500"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
+  :asset/margin 10
+  :asset/default-quote-account 1
+  :asset/price-point 0.25M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "J7_USD"
+  :asset/name "E-mini Japanese Yen"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
+  :asset/margin 10
+  :asset/default-quote-account 1
+  :asset/price-point 0.000001M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "NG_USD"
+  :asset/name "Natural Gas"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
+  :asset/margin 10
+  :asset/default-quote-account 1
+  :asset/price-point 0.001M
+  :asset/quantity-step 1M
+ }
+ {:asset/symbol "RP_USD"
+  :asset/name "Euro FX / British Pound"
+  :asset/exchange "CME"
+  :asset/category :future
+  :asset/market :us
+  :asset/margin 10
+  :asset/default-quote-account 1
+  :asset/price-point 0.0001M
+  :asset/quantity-step 1M
+ }]
