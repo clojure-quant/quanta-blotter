@@ -4,16 +4,23 @@
    [tick.core :as t]
    [datahike.api :as d]
    [crockery.core :as crockery]
-   [quanta.asset.schema :as asset-schema]
-   [quanta.util.datahike :as datahike]))
+   [quanta.asset.schema :as asset-schema]))
 
 (def extra-asset-attrs
-  [{:db/ident :asset/margin
+  [;; asset 
+   {:db/ident :asset/margin
     :db/valueType :db.type/long
     :db/cardinality :db.cardinality/one}
    {:db/ident :asset/default-quote-account
     :db/valueType :db.type/long
-    :db/cardinality :db.cardinality/one}])
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :asset/price-point
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :asset/quantity-step
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+   ])
 
 (def oms-schema
   [;; message (append only)
@@ -32,6 +39,7 @@
    {:db/ident :message/data
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
+   
    ;; order (created once, then updated)
    {:db/ident :order/id
     :db/valueType :db.type/string
@@ -84,6 +92,7 @@
    {:db/ident :order/history
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
+   
    ;; fill (stored once)
    {:db/ident :fill/id
     :db/valueType :db.type/string
@@ -121,6 +130,7 @@
    {:db/ident :fill/label
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
+   
    ;; position (created once, then updated)
    {:db/ident :position/account
     :db/valueType :db.type/long
@@ -158,6 +168,7 @@
    {:db/ident :position/date-close
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
+   
    ;; account (created once, then updated)
    {:db/ident :account/id
     :db/valueType :db.type/long
