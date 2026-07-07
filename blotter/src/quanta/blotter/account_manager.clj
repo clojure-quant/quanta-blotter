@@ -144,6 +144,9 @@
           (println "seeding account" (:account/id account))
           (db/create-account conn (select-keys account [:account/id :account/trader :account/api]))
           (db/update-account conn (merge (select-keys account [:account/id :account/notes
-                                                               :account/settings :account/name])
+                                                               :account/settings :account/name
+                                                               :account/balance :account/enabled
+                                                               ])
                                          {:account/asset-list asset-list-ref}))
-          (db/enable-account conn (:account/id account) true))))))
+          ;(db/enable-account conn (:account/id account) true)
+          )))))
