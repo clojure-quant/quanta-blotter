@@ -30,7 +30,8 @@
         _ (log l-channel {:type :consolidator/started :date (t/instant)})
         dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
         ;; account-manager
-        am (create-account-manager order orderupdate {:log log-fn})
+        am (create-account-manager {:quote-manager ::test-quote-manager}
+                                   order orderupdate {:log log-fn})
         ;_ (add-edn-account am "demo-accounts.edn" 1)
         ;_ (add-edn-account am "demo-accounts.edn" 2)
         _ (add-edn-accounts am "demo-accounts.edn")

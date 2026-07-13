@@ -18,7 +18,8 @@
 (def oms  (create-order-manager {:log-file "log/oms-trace.txt"
                                  :transaction-log-file "log/oms-transaction.txt"
                                  :validate? true
-                                 :tag? true}))
+                                 :tag? true
+                                 :ctx {:quote-manager ::test-quote-manager}}))
 
 oms
 

@@ -26,7 +26,8 @@
    (let [{:keys [log-file transaction-log-file account-log-dir validate? tag?
                  ns-require
                  trading-state-log-file trading-state-print-interval-ms
-                 ui-recent-ms]
+                 ui-recent-ms
+                 ctx]
           :or {log-file "log/oms-server-trace.txt"
                transaction-log-file "log/oms-server-transaction.txt"
                account-log-dir "log/oms-account"
@@ -43,7 +44,8 @@
                                       :transaction-log-file transaction-log-file
                                       :account-log-dir account-log-dir
                                       :validate? validate?
-                                      :tag? tag?})
+                                      :tag? tag?
+                                      :ctx ctx})
            _ (add-enabled-db-accounts (:account-manager oms) trade-db)
            {:keys [trading-state-a snapshot-flow] :as tsc} (tsc/create-trading-state-consumer! (:trading-state oms) ui-recent-ms)
            _ (tsc/start! tsc)

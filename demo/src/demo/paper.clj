@@ -40,7 +40,8 @@
 
         ;; trade account 
         account (account-by-id (load-demo-accounts) 1)
-        trade-account (p/create-trade-account account order orderupdate log-fn)
+        trade-account (p/create-trade-account {:quote-manager ::test-quote-manager}
+                                              account order orderupdate log-fn)
         dispose-account! (trade-account #(println "account done" %) #(println "account error" %))
 
         ;; simulate orders

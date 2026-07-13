@@ -134,7 +134,8 @@
                                       :fill-qty-prct [100]
                                       :wait-seconds 0
                                       :bad-orderupdate-probability 100}}
-          broker-task (p/create-trade-account account order-in orderupdate-in log-fn)
+          broker-task (p/create-trade-account {:quote-manager ::test-quote-manager}
+                                              account order-in orderupdate-in log-fn)
           broker-dispose (broker-task (fn [_]) (fn [_]))
           _ (vc/start-validation-channel! validator)]
       (try

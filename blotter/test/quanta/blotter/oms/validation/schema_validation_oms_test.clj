@@ -39,7 +39,8 @@
         oms (create-order-manager {:log-file log-file
                                    :transaction-log-file tx-file
                                    :validate? true
-                                   :tag? false})
+                                   :tag? false
+                                   :ctx {:quote-manager ::test-quote-manager}})
         combined-events (atom [])]
     (try
       (start-order-manager! oms) ; returns oms with :trading-state

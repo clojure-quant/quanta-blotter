@@ -20,7 +20,8 @@
   (let [log-dir (temp-dir "oms-account-log-")
         order-rdv (create-rdv "test/order")
         orderupdate-rdv (create-rdv "test/orderupdate")
-        am (create-account-manager order-rdv orderupdate-rdv {:account-log-dir (.getPath log-dir)})]
+        am (create-account-manager {:quote-manager ::test-quote-manager}
+                                   order-rdv orderupdate-rdv {:account-log-dir (.getPath log-dir)})]
     (try
       (add-account am {:account/id 1 :account/api :paper :account/settings paper-settings})
       (add-account am {:account/id 2 :account/api :paper :account/settings paper-settings})

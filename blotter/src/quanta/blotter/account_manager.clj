@@ -25,7 +25,7 @@
     (assert account-id "account must have an :account/id")
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
     (let [{:keys [log-fn logger]} (account-log state account-id)
-          trade-account (p/create-trade-account account account-order-rdf account-orderupdate-rdf log-fn)
+          trade-account (p/create-trade-account (:ctx state) account account-order-rdf account-orderupdate-rdf log-fn)
           dispose-account! (trade-account #(println "account done" %) #(println "account error" %))]
       (swap! (:accounts state) assoc account-id {:account/id account-id
                                                  :dispose-account dispose-account!
@@ -40,9 +40,10 @@
         (stop-logger logger))
       (swap! (:accounts state) dissoc account-id))))
 
-(defn create-account-manager [orderflow-rdv orderupdate-rdv {:keys [log account-log-dir]}]
+(defn create-account-manager [ctx orderflow-rdv orderupdate-rdv {:keys [log account-log-dir]}]
   (let [accounts-a (atom {})]
-    {:log log
+    {:ctx ctx
+     :log log
      :account-log-dir account-log-dir
      :orderflow-rdv orderflow-rdv
      :orderupdate-rdv orderupdate-rdv

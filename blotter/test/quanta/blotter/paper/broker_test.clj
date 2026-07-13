@@ -52,7 +52,8 @@
   (let [to-broker (m/rdv)
         from-broker (m/rdv)
         account {:account/id 3 :account/api :paper :account/settings settings}
-        task (p/create-trade-account account to-broker from-broker (fn [_]))
+        task (p/create-trade-account {:quote-manager ::test-quote-manager}
+                                     account to-broker from-broker (fn [_]))
         dispose (task (fn [_]) (fn [_]))
         program (m/sp
                  (m/? (to-broker order))

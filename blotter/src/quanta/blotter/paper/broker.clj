@@ -141,5 +141,6 @@
          (recur))))))
 
 (defmethod p/create-trade-account :paper
-  [{:keys [account/id account/settings]} pull push log]
+  [ctx {:keys [account/id account/settings]} pull push log]
+  (assert (:quote-manager ctx) "paper broker requires :quote-manager in ctx")
   (paper-broker-task settings pull push log))

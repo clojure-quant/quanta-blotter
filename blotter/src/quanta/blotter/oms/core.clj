@@ -23,7 +23,7 @@
 
 (defn- create-validated-channel-stack
   "Consolidator (public) -> validator -> account manager."
-  [log-fn order-rdv orderupdate-rdv account-log-dir]
+  [ctx log-fn order-rdv orderupdate-rdv account-log-dir]
   (let [consolidator (create-consolidator {:order order-rdv
                                            :orderupdate orderupdate-rdv
                                            :log log-fn})
@@ -35,7 +35,8 @@
                                               :log log-fn}
                                              {:order order
                                               :orderupdate orderupdate})
-        account-manager (create-account-manager account-order-rdv
+        account-manager (create-account-manager ctx
+                                                account-order-rdv
                                                 account-orderupdate-rdv
                                                 (account-manager-log-config account-log-dir log-fn))]
     {:order-rdv order-rdv
@@ -44,7 +45,7 @@
      :validator validator
      :account-manager account-manager}))
 
-(defn create-order-manager [{:keys [log-file transaction-log-file account-log-dir validate? tag?]
+(defn create-order-manager [{:keys [log-file transaction-log-file account-log-dir validate? tag? ctx]
                              :or {validate? true
                                   tag? true}}]
   (let [l (create-logger log-file false)
@@ -56,7 +57,7 @@
         (if validate?
           (let [order-rdv (create-rdv "oms/order")
                 orderupdate-rdv (create-rdv "oms/orderupdate")]
-            (create-validated-channel-stack log-fn order-rdv orderupdate-rdv account-log-dir))
+            (create-validated-channel-stack ctx log-fn order-rdv orderupdate-rdv account-log-dir))
           (let [order-rdv (create-rdv "oms/order")
                 orderupdate-rdv (create-rdv "oms/orderupdate")
                 consolidator (create-consolidator {:order order-rdv
@@ -67,7 +68,7 @@
              :orderupdate-rdv orderupdate-rdv
              :consolidator consolidator
              :validator nil
-             :account-manager (create-account-manager order orderupdate
+             :account-manager (create-account-manager ctx order orderupdate
                                                       (account-manager-log-config account-log-dir log-fn))}))
         {:keys [combined-flow]} consolidator
         combined-flow (if tag?
@@ -77,6 +78,7 @@
      :log-transaction log-transaction
      :validate? validate?
      :tag? tag?
+     :ctx ctx
      :dispose-a (atom nil)
      :order-rdv order-rdv
      :orderupdate-rdv orderupdate-rdv
