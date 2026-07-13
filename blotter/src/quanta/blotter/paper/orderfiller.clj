@@ -66,14 +66,14 @@
    log-fn
    {:keys [order-id qty] :as order}]
   (let [log (fn [& data]
-              (log-fn (str "random-fill order-id [" order-id "] :" (vec data))))
+              (log-fn {:order/fill order-id :data (vec data)}))
         slices (fill-slices fill-qty-prct qty)]
-    (m/ap (log "order created. fill slices: " slices)
+    (m/ap (log {:message (str "order created. fill slices: " slices)})
           (loop [remaining slices]
             (if (empty? remaining)
               (m/amb)
               (let [cancelled? (try
-                                 (log "waiting " wait-seconds " seconds for next fill")
+                                 (log {:message (str "waiting " wait-seconds " seconds for next fill")})
                                  (m/? (m/sleep (* 1000 wait-seconds) false))
                                  (catch Cancelled _ true))]
                 (if cancelled?

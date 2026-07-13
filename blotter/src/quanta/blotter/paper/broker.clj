@@ -108,11 +108,11 @@
 
 (defn- paper-broker-task [settings pull push log]
   (m/sp
-   (log (str "paper broker started " settings))
+   (log {:paper/started settings})
    (let [orders (atom {})]
      (loop []
        (let [{:keys [type order-id] :as action} (m/? pull)]
-         (log (str "paper-broker in: " action))
+         (log {:paper/action-in action})
          (case type
            :trader/new-order
            (if-let [reason (reject-reason (:reject-probability settings))]
@@ -124,15 +124,14 @@
            :trader/cancel-order
            (if-let [dispose-fill (get @orders order-id)]
              (do (m/? (push-update settings push (assoc action
-                                                        :type :broker/cancel-confirmed
-                                                        :message "paper broker confirmed order canceled received.")))
+                                                        :type :broker/cancel-confirmed)))
                  (dispose-fill)
                  (swap! orders dissoc order-id))
              (do
-               (log (str "cancel ignored, unknown order-id " order-id))
+               (log {:paper/cancel-reject (str "cancel-rejected, unknown order-id " order-id)})
                (m/? (push-update settings push (assoc action
                                                       :type :broker/cancel-rejected
-                                                      :message "paper broker cannot cancel unknown order")))))
+                                                      :message "unknown order")))))
 
            ; else
            (m/? (push-update settings push {:type :broker/message
