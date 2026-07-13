@@ -14,7 +14,18 @@
     (doseq [n [0.0 1.23 99.99 100.0 1234.56]]
       (is (two-decimal-places? (#'random/round-2 n))))))
 
-(deftest next-price-produces-two-decimal-places
-  (testing "iterated prices stay at 2dp"
-    (let [prices (take 50 (iterate random/next-price 100.0))]
-      (is (every? two-decimal-places? prices)))))
+(deftest clamp-bounds-value
+  (is (= -0.004 (random/clamp -1.0 -0.004 0.004)))
+  (is (= 0.004 (random/clamp 1.0 -0.004 0.004)))
+  (is (= 0.001 (random/clamp 0.001 -0.004 0.004))))
+
+(deftest next-state-produces-two-decimal-places-and-clamped-trend
+  (testing "iterated prices stay at 2dp and trend stays within clamp"
+    (let [settings random/default-settings
+          clamp (:trend-clamp settings)
+          states (take 50 (random/state-seq settings {:price 100.0 :trend 0.0}))]
+      (is (every? #(two-decimal-places? (:price %)) states))
+      (is (every? #(<= (- clamp) (:trend %) clamp) states)))))
+
+(deftest initial-state-starts-with-zero-trend
+  (is (= {:price 100.0 :trend 0.0} (random/initial-state 100.0))))

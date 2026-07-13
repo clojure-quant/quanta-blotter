@@ -32,7 +32,11 @@
   :account/name "random-quote"
   :account/api :random
   :account/notes "just random quotes"
-  :account/settings {}}
+  :account/settings {:initial-price 100.0
+                     :random-change 0.0002
+                     :trend-change 0.0002
+                     :trend-clamp 0.004
+                     :quote-tick-interval-ms 250}}
 
  ;
  ]

@@ -1,52 +1,58 @@
-
 (ns quanta.quote.random
   (:require
    [missionary.core :as m]
    [quanta.quote.protocol :as p]
    [quanta.quote.interactor :refer [subscription-watcher]]))
 
-(defn zero-mean-random-value []
-  (* (- (rand 0.005) 0.0025) 10.0))
+(def default-settings
+  {:initial-price 100.0
+   :random-change 0.0002
+   :trend-change 0.0002
+   :trend-clamp 0.004
+   :quote-tick-interval-ms 250})
 
-(defn random-return-value []
-  ;; mimicing a normal distribution
-  (apply + (repeatedly 10 zero-mean-random-value)))
-
-(defn random-return-multiplyer []
-  (+ 1.0 (random-return-value)))
+(defn random-return-value [change]
+  (* (- (rand change) (/ change 2.0)) 10.0))
 
 (defn- round-2 [n]
   (/ (Math/round (* n 100.0)) 100.0))
 
-(defn next-price [p]
-  (round-2 (* p (random-return-multiplyer))))
+(defn clamp [x lo hi]
+  (min hi (max lo x)))
 
-(defn price-seq [start-price]
-  (iterate next-price start-price))
+(defn next-state [{:keys [trend-change trend-clamp random-change]} {:keys [price trend]}]
+  (let [trend (-> (+ trend (random-return-value trend-change))
+                  (clamp (- trend-clamp) trend-clamp))
+        price (round-2 (* price (+ 1.0 trend (random-return-value random-change))))]
+    {:price price :trend trend}))
 
-(defn update-prices [d]
+(defn state-seq [settings start-state]
+  (iterate #(next-state settings %) start-state))
+
+(defn update-states [settings d]
   (->> d
        (map (fn [[k v]]
-              [k (next-price v)]))
+              [k (next-state settings v)]))
        (into {})))
 
 (comment
-  (zero-mean-random-value)
-  (random-return-multiplyer)
-  (take 10 (price-seq 100.0))
-  (->> {:a 100.0 :b 104.0}
-       (update-prices)
-       (update-prices)
-       (update-prices)
-       (update-prices))
+  (random-return-value 0.0002)
+  (take 10 (state-seq default-settings {:price 100.0 :trend 0.0}))
+  (->> {"A" {:price 100.0 :trend 0.0}
+        "B" {:price 104.0 :trend 0.0}}
+       (update-states default-settings)
+       (update-states default-settings)
+       (update-states default-settings)
+       (update-states default-settings))
 
-;  
+;
   )
 
-;; update prices and send quotes
+;; update states and send quotes
 
-(defn message-loop [account price-a log send-quote]
-  (let [symbol->quote (fn [[asset price]]
+(defn message-loop [account state-a subscription-a settings log send-quote]
+  (let [{:keys [quote-tick-interval-ms]} settings
+        symbol->quote (fn [[asset price]]
                         (let [bid (round-2 price)
                               ask (round-2 (+ bid 0.01))]
                           {:account (:account/id account)
@@ -55,27 +61,32 @@
                            :ask ask}))]
     (m/sp
      (loop []
-       (swap! price-a update-prices)
-       (doseq [[asset price] @price-a]
-         (send-quote (symbol->quote [asset price])))
-       (m/? (m/sleep 250))
+       (let [assets @subscription-a]
+         (swap! state-a (fn [d] (merge d (update-states settings (select-keys d assets)))))
+         (doseq [asset assets]
+           (when-let [price (:price (get @state-a asset))]
+             (send-quote (symbol->quote [asset price])))))
+       (m/? (m/sleep quote-tick-interval-ms))
        (recur)))))
 
 ;; process subscription changes
 
-(defn repeat-nr [n]
-  (vec (repeatedly n (constantly 100.0))))
+(defn initial-state [initial-price]
+  {:price initial-price :trend 0.0})
 
-(defrecord random-msg-processor [account log price-a]
+(defn repeat-nr [initial-price n]
+  (vec (repeatedly n #(initial-state initial-price))))
+
+(defrecord random-msg-processor [account log state-a initial-price]
   p/quote-messaging
   (subscribe-msg [_ sub]
-    (let [inital-prices (repeat-nr (count sub))
-          new-subs (zipmap sub inital-prices)]
-      (swap! price-a merge new-subs)
-      (log {:account (:account/id account) :type :subscribe :assets (keys @price-a) :added sub})))
+    (swap! state-a (fn [d]
+                     (let [new-assets (filter #(not (contains? d %)) sub)]
+                       (merge d (zipmap new-assets (repeat-nr initial-price (count new-assets)))))))
+    (log {:account (:account/id account) :type :subscribe :assets sub}))
   (unsubscribe-msg [_ unsub]
-    (swap! price-a (fn [d ks] (apply dissoc d ks)) unsub)
-    (log {:account (:account/id account) :type :unsubscribe :assets (keys @price-a) :removed unsub}))
+    ;; keep last simulated state in state-a for later re-subscribe
+    (log {:account (:account/id account) :type :unsubscribe :assets unsub}))
   (read-quote [_ fix-vec-in]
     nil))
 
@@ -89,13 +100,13 @@
 
 (defmethod p/create-quote-account :random
   [account subscription-a send-quote log]
-  (let [push (m/rdv)
-        price-a (atom {})
-        rmp (random-msg-processor. account log price-a)]
+  (let [settings (merge default-settings (:account/settings account))
+        push (m/rdv)
+        state-a (atom {})
+        rmp (random-msg-processor. account log state-a (:initial-price settings))]
     (m/sp
-     (log {:type :random-quote-start :account (:account/id account)})
+     (log {:type :random-quote-start :account (:account/id account) :settings settings})
      (m/? (m/join vector
                   (subscription-watcher account rmp subscription-a push log)
-                  (message-loop account price-a log send-quote)
+                  (message-loop account state-a subscription-a settings log send-quote)
                   (dump-rdv push))))))
-
