@@ -32,8 +32,8 @@
               log-2 (java.io.File. log-dir "2.log")]
           (is (.exists log-1))
           (is (.exists log-2))
-          (is (re-find #"paper broker started" (slurp log-1)))
-          (is (re-find #"paper broker started" (slurp log-2))
+          (is (re-find #":paper/started" (slurp log-1)))
+          (is (re-find #":paper/started" (slurp log-2))
               "account 2 log is independent of account 1")))
       (finally
         (remove-account am 1)

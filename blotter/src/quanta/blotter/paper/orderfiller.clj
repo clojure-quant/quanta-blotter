@@ -2,7 +2,8 @@
   (:require
    [missionary.core :as m]
    [nano-id.core :refer [nano-id]]
-   [tick.core :as t])
+   [tick.core :as t]
+   [quanta.quote.core :refer [asset-quote-flow]])
   (:import [missionary Cancelled]))
 
 (defn fill-slices
@@ -21,32 +22,48 @@
                       (- qty filled))]
           (recur more (+ filled slice) (conj slices slice)))))))
 
-(def ^:private market-price-min 50.0M)
-(def ^:private market-price-max 100.0M)
+(defn quote-price
+  "Current price used for fill decisions and fill price — always :bid."
+  [quote]
+  (:bid quote))
 
-(defn random-market-price
-  "Returns a random BigDecimal fill price in [50.0M, 100.0M]."
-  []
-  (let [span (- market-price-max market-price-min)]
-    (+ market-price-min (* span (bigdec (rand))))))
+(defn wait-elapsed?
+  "True when this is the first fill (last-fill-date nil), or when quote-ts is
+   at least wait-seconds after last-fill-date."
+  [last-fill-date quote-ts wait-seconds]
+  (or (nil? last-fill-date)
+      (let [elapsed (t/seconds (t/between last-fill-date quote-ts))]
+        (>= elapsed wait-seconds))))
 
-(defn- fill-price [{:keys [order-type limit]}]
+(defn stop-triggered?
+  "Buy stop triggers when bid is above limit; sell stop when bid is below limit."
+  [side limit bid]
+  (case side
+    :buy (> bid limit)
+    :sell (< bid limit)))
+
+(defn order-executable?
+  "Whether the order can fill at the given bid for the (possibly converted) order-type."
+  [order-type side limit bid]
   (case order-type
-    :market (random-market-price)
-    :limit limit))
+    :market true
+    :limit (case side
+             :buy (>= limit bid)
+             :sell (<= limit bid))
+    :stop false))
 
 (defn ->fill
-  "Builds a :broker/order-filled message for the given slice quantity."
-  [{:keys [order-id side asset order-type] :as order} slice-qty]
+  "Builds a :broker/order-filled message for the given slice quantity at `price`."
+  [{:keys [order-id side asset] :as order} slice-qty price date]
   {:type :broker/order-filled
    :account/id (:account/id order)
    :order-id order-id
    :fill-id (nano-id 6)
-   :date (t/instant)
+   :date (or date (t/instant))
    :asset asset
    :qty slice-qty
    :side side
-   :price (fill-price order)})
+   :price price})
 
 (defn fill?
   "Probabilistic decision whether a fill happens this cycle.
@@ -54,72 +71,63 @@
   [fill-probability]
   (< (rand-int 100) fill-probability))
 
-(defn random-fill-flow
-  "Returns a flow of fills.
-   Each cycle first waits `wait-seconds`, then probabilistically (fill-probability)
-   emits the next fill slice (sized via fill-qty-prct). When all slices have been
-   emitted the flow stops. If cancelled while waiting, a :broker/order-canceled is
-   emitted instead."
-  [{:keys [fill-probability
+(defn simulated-fill-flow
+  "Returns a flow of fills driven by asset quotes from the quote-manager in `ctx`.
+
+   On each quote:
+   - waits until quote :ts is nil-last-fill or >= wait-seconds after last fill
+   - stop orders convert to market when triggered (buy: bid > limit; sell: bid < limit)
+     and may fill on the same quote
+   - market fills at :bid; limit fills when limit is on the market side of :bid
+   - fill-probability is an extra gate after price conditions pass
+   - only the next slice is filled per successful cycle
+
+   State is kept in atoms (m/?> must not be mixed with loop/recur).
+   Quote consumption stops via (m/?> (m/eduction (take-while remaining?) quote-f))
+   once remaining-slices is empty.
+
+   If cancelled while slices remain, emits :broker/order-canceled."
+  [ctx
+   {:keys [fill-probability
            wait-seconds
            fill-qty-prct]}
    log-fn
-   {:keys [order-id qty] :as order}]
+   {:keys [order-id asset qty side limit order-type] :as order}]
   (let [log (fn [& data]
               (log-fn {:order/fill order-id :data (vec data)}))
-        slices (fill-slices fill-qty-prct qty)]
-    (m/ap (log {:message (str "order created. fill slices: " slices)})
-          (loop [remaining slices]
-            (if (empty? remaining)
-              (m/amb)
-              (let [cancelled? (try
-                                 (log {:message (str "waiting " wait-seconds " seconds for next fill")})
-                                 (m/? (m/sleep (* 1000 wait-seconds) false))
-                                 (catch Cancelled _ true))]
-                (if cancelled?
-                  (do (log "cancelled")
-                      (m/amb {:type :broker/order-canceled
-                              :order-id order-id
-                              :date (t/instant)}))
-                  (if (fill? fill-probability)
-                    (let [fill (->fill order (first remaining))]
-                      (log "filled: " fill)
-                      (m/amb fill (recur (rest remaining))))
-                    (m/amb (recur remaining))))))))))
-
-(comment
-  (def order {:order-id 2
-              :account/id 3
-              :asset "BTCUSDT"
-              :side :buy
-              :limit 100.0
-              :qty 0.001})
-
-  (defn log-fn [s] (println "log orderfiller: " s))
-
-  (fill-slices [50 25 25] 0.001)
-  ;; => (5.0E-4 2.5E-4 2.5E-4)
-
-  (def fill-flow (random-fill-flow {:reject-probability 0
-                                    :fill-probability 100
-                                    :fill-qty-prct [50 25 25]
-                                    :wait-seconds 1}
-                                   log-fn
-                                   order))
-
-  (defn log-progress [r order-update]
-    (println "order-update: " order-update)
-    (conj r order-update))
-
-  (def print-progress-task
-    (m/reduce log-progress [] fill-flow))
-
-  (def dispose!
-    (print-progress-task
-     #(println "order history: " %)
-     #(prn ::crash %)))
-
-  (dispose!)
-
-; 
-  )
+        remaining-slices (atom (fill-slices fill-qty-prct qty))
+        last-fill-date (atom nil)
+        current-type (atom order-type)
+        quote-f (asset-quote-flow (:quote-manager ctx) asset)]
+    (log {:message (str "order created. fill slices: " @remaining-slices)})
+    (m/eduction
+     (remove nil?)
+     (m/ap
+      (try
+        (let [quote (m/?> (m/eduction
+                           (take-while (fn [_] (seq @remaining-slices)))
+                           quote-f))
+              bid (quote-price quote)
+              quote-ts (or (:ts quote) (t/instant))
+              order-type* (if (and (= :stop @current-type)
+                                   (stop-triggered? side limit bid))
+                            (do (log {:message "stop triggered → market"
+                                      :bid bid :limit limit})
+                                (reset! current-type :market)
+                                :market)
+                            @current-type)]
+          (when (and (wait-elapsed? @last-fill-date quote-ts wait-seconds)
+                     (order-executable? order-type* side limit bid)
+                     (fill? fill-probability))
+            (let [slice (first @remaining-slices)
+                  fill (->fill order slice bid quote-ts)]
+              (swap! remaining-slices rest)
+              (reset! last-fill-date quote-ts)
+              (log "filled: " fill)
+              fill)))
+        (catch Cancelled _
+          (log "cancelled")
+          (when (seq @remaining-slices)
+            {:type :broker/order-canceled
+             :order-id order-id
+             :date (t/instant)})))))))

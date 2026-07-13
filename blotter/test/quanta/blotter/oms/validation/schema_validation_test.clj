@@ -7,6 +7,7 @@
    [quanta.blotter.oms.validation.channel :as vc]
    [quanta.blotter.oms.validation.schema :as s]
    [quanta.blotter.paper.broker :as broker]
+   [quanta.quote.core :as qc]
    [tick.core :as t]))
 
 (def account-id 3)
@@ -119,38 +120,45 @@
             "valid orderupdates still pass through"))))
 
   (testing "paper broker with bad-orderupdate-probability logs failed orderupdates"
-    (let [logs (atom [])
-          log-fn #(swap! logs conj %)
-          order-in (create-rdv "test/order-in")
-          orderupdate-in (create-rdv "test/orderupdate-in")
-          validator (vc/create-validation-channel {:order order-in
-                                                   :orderupdate orderupdate-in
-                                                   :log log-fn})
-          {:keys [order orderupdate]} (:channel validator)
-          account {:account/id account-id
-                   :account/api :paper
-                   :account/settings {:reject-probability 0
-                                      :fill-probability 100
-                                      :fill-qty-prct [100]
-                                      :wait-seconds 0
-                                      :bad-orderupdate-probability 100}}
-          broker-task (p/create-trade-account {:quote-manager ::test-quote-manager}
-                                              account order-in orderupdate-in log-fn)
-          broker-dispose (broker-task (fn [_]) (fn [_]))
-          _ (vc/start-validation-channel! validator)]
-      (try
-        (m/? (m/sp
-              (m/? (order valid-new-order))
-              (m/? (m/sleep 100))))
-        (let [errors (schema-error-logs logs)]
-          (is (pos? (count errors))
-              "corrupted broker orderupdates produce schema/error log entries")
-          (is (every? #(and (string? (:schema/error %))
-                            (contains? % :original-msg))
-                      errors)))
-        (finally
-          (vc/stop-validation-channel! validator)
-          (broker-dispose))))))
+    (with-redefs [qc/asset-quote-flow
+                  (fn [_ _]
+                    (m/seed (repeatedly 20 (fn []
+                                             {:asset "BTCUSDT"
+                                              :bid 100.0M
+                                              :ask 100.01M
+                                              :ts (t/instant)}))))]
+      (let [logs (atom [])
+            log-fn #(swap! logs conj %)
+            order-in (create-rdv "test/order-in")
+            orderupdate-in (create-rdv "test/orderupdate-in")
+            validator (vc/create-validation-channel {:order order-in
+                                                     :orderupdate orderupdate-in
+                                                     :log log-fn})
+            {:keys [order orderupdate]} (:channel validator)
+            account {:account/id account-id
+                     :account/api :paper
+                     :account/settings {:reject-probability 0
+                                        :fill-probability 100
+                                        :fill-qty-prct [100]
+                                        :wait-seconds 0
+                                        :bad-orderupdate-probability 100}}
+            broker-task (p/create-trade-account {:quote-manager ::test-quote-manager}
+                                                account order-in orderupdate-in log-fn)
+            broker-dispose (broker-task (fn [_]) (fn [_]))
+            _ (vc/start-validation-channel! validator)]
+        (try
+          (m/? (m/sp
+                (m/? (order valid-new-order))
+                (m/? (m/sleep 100))))
+          (let [errors (schema-error-logs logs)]
+            (is (pos? (count errors))
+                "corrupted broker orderupdates produce schema/error log entries")
+            (is (every? #(and (string? (:schema/error %))
+                              (contains? % :original-msg))
+                        errors)))
+          (finally
+            (vc/stop-validation-channel! validator)
+            (broker-dispose)))))))
 
 (deftest corrupt-message-fails-validation
   (let [confirmed {:type :broker/order-confirmed

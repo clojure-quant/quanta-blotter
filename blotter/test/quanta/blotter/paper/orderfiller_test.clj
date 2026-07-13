@@ -2,7 +2,9 @@
   (:require
    [clojure.test :refer [deftest is testing]]
    [missionary.core :as m]
-   [quanta.blotter.paper.orderfiller :as of]))
+   [tick.core :as t]
+   [quanta.blotter.paper.orderfiller :as of]
+   [quanta.quote.core :as qc]))
 
 (def limit-order
   {:order-id 1
@@ -21,10 +23,32 @@
    :order-type :market
    :qty 0.001M})
 
+(def stop-buy-order
+  {:order-id 3
+   :account/id 3
+   :asset "BTCUSDT"
+   :side :buy
+   :order-type :stop
+   :limit 100.0M
+   :qty 0.001M})
+
+(def ctx {:quote-manager ::test-qm})
+
+(defn- q
+  ([bid] (q bid (t/instant)))
+  ([bid ts]
+   {:asset "BTCUSDT" :bid bid :ask (+ bid 0.01M) :ts ts}))
+
+(defn- quotes-flow
+  "Finite flow that emits each quote once."
+  [quotes]
+  (m/seed quotes))
+
 (defn- collect
-  "Runs the fill flow to completion and returns all emitted messages."
-  [settings & {:keys [order] :or {order limit-order}}]
-  (m/? (m/reduce conj [] (of/random-fill-flow settings (fn [_]) order))))
+  "Runs the fill flow to completion against a fixed quote sequence."
+  [settings quotes & {:keys [order] :or {order limit-order}}]
+  (with-redefs [qc/asset-quote-flow (fn [_ _] (quotes-flow quotes))]
+    (m/? (m/reduce conj [] (of/simulated-fill-flow ctx settings (fn [_]) order)))))
 
 (deftest fill-slices-single
   (is (= [0.001M] (of/fill-slices [100] 0.001M)))
@@ -43,47 +67,100 @@
     (is (= 0.001M (reduce + slices))
         "last slice absorbs rounding so total is exact")))
 
-(deftest guaranteed-single-fill
-  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]})
+(deftest order-executable-limit
+  (is (of/order-executable? :limit :buy 100.0M 99.0M))
+  (is (of/order-executable? :limit :buy 100.0M 100.0M))
+  (is (not (of/order-executable? :limit :buy 100.0M 101.0M)))
+  (is (of/order-executable? :limit :sell 100.0M 101.0M))
+  (is (of/order-executable? :limit :sell 100.0M 100.0M))
+  (is (not (of/order-executable? :limit :sell 100.0M 99.0M))))
+
+(deftest stop-triggered
+  (is (of/stop-triggered? :buy 100.0M 101.0M))
+  (is (not (of/stop-triggered? :buy 100.0M 100.0M)))
+  (is (of/stop-triggered? :sell 100.0M 99.0M))
+  (is (not (of/stop-triggered? :sell 100.0M 100.0M))))
+
+(deftest market-fills-at-bid
+  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+                           [(q 95.5M)]
+                           :order market-order)
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
     (is (= 1 (count fills)))
     (is (= 0.001M (:qty (first fills))))
-    (is (= :buy (:side (first fills))))
-    (is (= 100.0M (:price (first fills))))
+    (is (= 95.5M (:price (first fills))))
     (is (= 3 (:account/id (first fills))))))
 
+(deftest limit-buy-fills-when-bid-at-or-below-limit
+  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+                           [(q 101.0M) (q 100.0M)])
+        fills (filter #(= :broker/order-filled (:type %)) emissions)]
+    (is (= 1 (count fills)))
+    (is (= 100.0M (:price (first fills))))))
+
+(deftest limit-sell-fills-when-bid-at-or-above-limit
+  (let [sell (assoc limit-order :side :sell :limit 100.0M)
+        emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+                           [(q 99.0M) (q 100.0M)]
+                           :order sell)
+        fills (filter #(= :broker/order-filled (:type %)) emissions)]
+    (is (= 1 (count fills)))
+    (is (= 100.0M (:price (first fills))))))
+
+(deftest stop-buy-triggers-and-fills-at-bid
+  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+                           [(q 99.0M) (q 100.5M)]
+                           :order stop-buy-order)
+        fills (filter #(= :broker/order-filled (:type %)) emissions)]
+    (is (= 1 (count fills)))
+    (is (= 100.5M (:price (first fills))))))
+
 (deftest guaranteed-partial-fills
-  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [50 25 25]})
+  (let [t0 (t/instant)
+        t1 (t/>> t0 (t/new-duration 1 :seconds))
+        t2 (t/>> t0 (t/new-duration 2 :seconds))
+        emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [50 25 25]}
+                           [(q 90.0M t0) (q 91.0M t1) (q 92.0M t2)]
+                           :order market-order)
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
     (is (= 3 (count fills)) "one fill per slice")
     (is (= [0.0005M 0.00025M 0.00025M] (mapv :qty fills)))
+    (is (= [90.0M 91.0M 92.0M] (mapv :price fills)))
     (is (= 0.001M (reduce + (map :qty fills))) "total filled equals order qty")
     (is (apply distinct? (map :fill-id fills)) "each fill has a unique id")))
+
+(deftest wait-seconds-blocks-until-ts-elapsed
+  (let [t0 (t/instant)
+        t1 (t/>> t0 (t/new-duration 1 :seconds))
+        t5 (t/>> t0 (t/new-duration 5 :seconds))
+        emissions (collect {:fill-probability 100 :wait-seconds 5 :fill-qty-prct [50 50]}
+                           [(q 90.0M t0) (q 91.0M t1) (q 92.0M t5)]
+                           :order market-order)
+        fills (filter #(= :broker/order-filled (:type %)) emissions)]
+    (is (= 2 (count fills)))
+    (is (= [90.0M 92.0M] (mapv :price fills))
+        "second slice waits until quote ts is >= wait-seconds after first fill")))
+
+(deftest fill-probability-zero-never-fills
+  (let [emissions (collect {:fill-probability 0 :wait-seconds 0 :fill-qty-prct [100]}
+                           [(q 90.0M) (q 91.0M) (q 92.0M)]
+                           :order market-order)]
+    (is (empty? (filter #(= :broker/order-filled (:type %)) emissions)))))
 
 (deftest cancel-while-waiting-emits-order-canceled
   (testing "an unfilled order that is disposed emits :broker/order-canceled"
     (let [seen (atom [])
-          flow (of/random-fill-flow {:fill-probability 0 :wait-seconds 60 :fill-qty-prct [100]}
-                                    (fn [_]) limit-order)
+          ;; parks forever until cancelled
+          hanging (m/observe (fn [_] (fn [])))
+          flow (with-redefs [qc/asset-quote-flow (fn [_ _] hanging)]
+                 (of/simulated-fill-flow ctx
+                                         {:fill-probability 100 :wait-seconds 60 :fill-qty-prct [100]}
+                                         (fn [_])
+                                         limit-order))
           task (m/reduce (fn [_ v] (swap! seen conj v) nil) nil flow)
           dispose (task (fn [_]) (fn [_]))]
-      ;; the flow is parked in the wait; cancelling triggers the Cancelled branch
       (Thread/sleep 50)
       (dispose)
       (Thread/sleep 50)
       (is (some #(= :broker/order-canceled (:type %)) @seen))
       (is (not-any? #(= :broker/order-filled (:type %)) @seen)))))
-
-(deftest market-order-fill-prices-in-range
-  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
-                           :order market-order)
-        fills (filter #(= :broker/order-filled (:type %)) emissions)]
-    (is (= 1 (count fills)))
-    (is (<= 50.0M (:price (first fills)) 100.0M))))
-
-(deftest market-order-partial-fills-can-differ-in-price
-  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [50 50]}
-                           :order market-order)
-        fills (vec (filter #(= :broker/order-filled (:type %)) emissions))]
-    (is (= 2 (count fills)))
-    (is (every? #(<= 50.0M (:price %) 100.0M) fills))))

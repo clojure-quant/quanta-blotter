@@ -3,7 +3,7 @@
    [missionary.core :as m]
    [tick.core :as t]
    [quanta.blotter.protocol :as p]
-   [quanta.blotter.paper.orderfiller :refer [random-fill-flow]])
+   [quanta.blotter.paper.orderfiller :refer [simulated-fill-flow]])
   (:import [missionary Cancelled]))
 
 (def reject-reasons
@@ -85,8 +85,8 @@
           (corrupt-message msg)
           msg)))
 
-(defn- start-fill! [settings log order push]
-  (let [fill-flow (random-fill-flow settings log order)
+(defn- start-fill! [ctx settings log order push]
+  (let [fill-flow (simulated-fill-flow ctx settings log order)
         fill-send-flow (m/ap (let [fill (m/?> fill-flow)]
                                (m/? (push-update settings push fill))))
         fill-task (m/reduce (fn [r v] nil) nil fill-send-flow)]
@@ -102,11 +102,11 @@
            :qty (:qty action)
            :order-type (:order-type action)
            :date (t/instant)}
-    (= :limit (:order-type action)) (assoc :limit (:limit action))
+    (#{:limit :stop} (:order-type action)) (assoc :limit (:limit action))
     (some? (:campaign action)) (assoc :campaign (:campaign action))
     (some? (:label action)) (assoc :label (:label action))))
 
-(defn- paper-broker-task [settings pull push log]
+(defn- paper-broker-task [ctx settings pull push log]
   (m/sp
    (log {:paper/started settings})
    (let [orders (atom {})]
@@ -118,7 +118,7 @@
            (if-let [reason (reject-reason (:reject-probability settings))]
              (m/? (push-update settings push (reject-message action reason)))
              (let [_ (m/? (push-update settings push (order-confirmed action)))
-                   dispose-fill (start-fill! settings log action push)]
+                   dispose-fill (start-fill! ctx settings log action push)]
                (swap! orders assoc order-id dispose-fill)))
 
            :trader/cancel-order
@@ -142,4 +142,4 @@
 (defmethod p/create-trade-account :paper
   [ctx {:keys [account/id account/settings]} pull push log]
   (assert (:quote-manager ctx) "paper broker requires :quote-manager in ctx")
-  (paper-broker-task settings pull push log))
+  (paper-broker-task ctx settings pull push log))

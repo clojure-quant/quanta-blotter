@@ -94,9 +94,12 @@
               v) nil
             (take-first-non-nil f)))
 
+(defn asset-quote-flow [this asset]
+  (let [feed-id (calc-id this asset)]
+    (am/quotes (:am this) feed-id asset)))
+
 (defn quote-snapshot [this timeout-ms asset]
-  (let [feed-id (calc-id this asset)
-        quote-f (am/quotes (:am this) feed-id asset)
+  (let [quote-f (asset-quote-flow this asset)
         quote-v (current-v quote-f)]
     (m/race quote-v (m/sleep timeout-ms nil))
     ))
