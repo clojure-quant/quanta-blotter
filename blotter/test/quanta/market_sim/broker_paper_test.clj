@@ -1,10 +1,10 @@
-(ns quanta.blotter.paper.broker-test
+(ns quanta.market-sim.broker-paper-test
   (:require
    [clojure.test :refer [deftest is testing]]
    [missionary.core :as m]
    [tick.core :as t]
    [quanta.blotter.protocol :as p]
-   [quanta.blotter.paper.broker :as broker]
+   [quanta.market-sim.broker-paper :as broker]
    [quanta.blotter.oms.validation.schema :as s]
    [quanta.quote.core :as qc]))
 

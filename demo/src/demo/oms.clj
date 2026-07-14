@@ -12,7 +12,7 @@
    [quanta.blotter.oms.db-transactor :as db-transactor]
    [quanta.util.datahike :as datahike]
    ; side effects
-   [quanta.blotter.paper.broker] ; side effect: brings in paper broker implementation
+   [quanta.market-sim.broker-paper] ; side effect: brings in paper broker implementation
    ))
 
 (def oms  (create-order-manager {:log-file "log/oms-trace.txt"

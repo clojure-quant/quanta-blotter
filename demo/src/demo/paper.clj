@@ -4,7 +4,7 @@
    [clojure.edn :as edn]
    [missionary.core :as m]
    [quanta.blotter.protocol :as p]
-   [quanta.blotter.paper.broker]
+   [quanta.market-sim.broker-paper]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
    [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]
    [quanta.blotter.util :refer [push-flow-to-rdv]]

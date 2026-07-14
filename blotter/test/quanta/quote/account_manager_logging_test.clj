@@ -2,7 +2,7 @@
   (:require
    [clojure.test :refer [deftest is testing]]
    [quanta.quote.account-manager :refer [create-account-manager add-account remove-account]]
-   [quanta.quote.random]))
+   [quanta.market-sim.quote-random]))
 
 (defn- temp-dir [prefix]
   (.toFile (java.nio.file.Files/createTempDirectory prefix (into-array java.nio.file.attribute.FileAttribute []))))

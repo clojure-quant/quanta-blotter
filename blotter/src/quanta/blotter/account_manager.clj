@@ -5,8 +5,7 @@
    [missionary.core :as m]
    [quanta.missionary.logger :refer [create-logger log stop-logger]]
    [quanta.blotter.protocol :as p]
-   [quanta.blotter.util-rdv :refer [create-rdv]]
-   [quanta.blotter.paper.broker]
+   [quanta.blotter.util-rdv :refer [create-rdv]] 
    [quanta.blotter.oms.db :as db]
    ))
 

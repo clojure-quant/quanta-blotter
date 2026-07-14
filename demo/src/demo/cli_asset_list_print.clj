@@ -43,7 +43,8 @@
                        (quanta.asset.seed/seed-edn-lists-fn "demo-lists")]})
         qm (create-quote-manager {:db db
                                   :quote-accounts-file "demo-quote-accounts.edn"
-                                  :ns-require ['fix-engine.quote.account
+                                  :ns-require ['quanta.market-sim.quote-random
+                                               'fix-engine.quote.account
                                                'quanta.bybit.quote.account]})
         subscription-a (atom (or list "test"))
         mode (if list (str "list-mode" list) "switching-mode")

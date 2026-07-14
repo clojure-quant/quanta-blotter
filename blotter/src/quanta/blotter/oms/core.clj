@@ -11,9 +11,7 @@
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
    [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.oms.flow.trading-state :as trading-state]
-   ;; side effects 
-   [quanta.blotter.paper.broker]
-
+   
    ))
 
 (defn- account-manager-log-config [account-log-dir log-fn]

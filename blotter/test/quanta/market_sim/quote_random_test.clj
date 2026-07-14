@@ -1,7 +1,7 @@
-(ns quanta.quote.random-test
+(ns quanta.market-sim.quote-random-test
   (:require
    [clojure.test :refer [deftest is testing]]
-   [quanta.quote.random :as random]))
+   [quanta.market-sim.quote-random :as random]))
 
 (defn- two-decimal-places? [n]
   (= n (#'random/round-2 n)))

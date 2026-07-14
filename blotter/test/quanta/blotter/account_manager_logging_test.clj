@@ -3,7 +3,7 @@
    [clojure.test :refer [deftest is testing]]
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager
                                            add-account remove-account]]
-   [quanta.blotter.paper.broker]
+   [quanta.market-sim.broker-paper]
    [quanta.blotter.util-rdv :refer [create-rdv]]))
 
 (def paper-settings

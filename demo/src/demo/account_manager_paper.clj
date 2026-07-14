@@ -2,7 +2,7 @@
   (:require
    [missionary.core :as m]
    [tick.core :as t]
-   [quanta.blotter.paper.broker] ;; side effect: brings in paper broker implementation
+   [quanta.market-sim.broker-paper] ;; side effect: brings in paper broker implementation
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-accounts]]
    [quanta.blotter.consolidator :refer [create-consolidator start-consolidator!]]
    [quanta.missionary.logger :refer [create-logger log start-log-flow-to-logger]]

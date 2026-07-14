@@ -1,4 +1,4 @@
-(ns quanta.quote.random
+(ns quanta.market-sim.quote-random
   (:require
    [missionary.core :as m]
    [quanta.quote.protocol :as p]
@@ -56,8 +56,8 @@
 (defn message-loop [account state-a subscription-a settings log send-quote]
   (let [{:keys [quote-tick-interval-ms]} settings
         symbol->quote (fn [[asset price]]
-                        (let [bid (round-2 price)
-                              ask (round-2 (+ bid 0.01))]
+                        (let [bid (bigdec (round-2 price))
+                              ask (bigdec (round-2 (+ bid 0.01)))]
                           {:account (:account/id account)
                            :asset asset
                            :bid bid

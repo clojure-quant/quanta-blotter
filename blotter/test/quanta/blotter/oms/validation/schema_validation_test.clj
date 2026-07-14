@@ -6,7 +6,7 @@
    [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.oms.validation.channel :as vc]
    [quanta.blotter.oms.validation.schema :as s]
-   [quanta.blotter.paper.broker :as broker]
+   [quanta.market-sim.broker-paper :as broker]
    [quanta.quote.core :as qc]
    [tick.core :as t]))
 

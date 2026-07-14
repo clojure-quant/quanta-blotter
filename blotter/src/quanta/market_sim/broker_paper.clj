@@ -1,9 +1,9 @@
-(ns quanta.blotter.paper.broker
+(ns quanta.market-sim.broker-paper
   (:require
    [missionary.core :as m]
    [tick.core :as t]
    [quanta.blotter.protocol :as p]
-   [quanta.blotter.paper.orderfiller :refer [simulated-fill-flow]])
+   [quanta.market-sim.broker-paper.orderfiller :refer [simulated-fill-flow]])
   (:import [missionary Cancelled]))
 
 (def reject-reasons

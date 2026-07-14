@@ -6,7 +6,7 @@
    [quanta.blotter.account-manager :refer [add-account]]
    [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager!
                                     combined-flow]]
-   [quanta.blotter.paper.broker]
+   [quanta.market-sim.broker-paper]
    [quanta.quote.core :as qc]))
 (def account-id 3)
 

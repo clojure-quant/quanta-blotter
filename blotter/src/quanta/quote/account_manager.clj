@@ -6,7 +6,7 @@
    [quanta.missionary :refer [mix]]
    [quanta.missionary.logger :refer [create-logger log stop-logger]]
    [quanta.quote.protocol :as p]
-   [quanta.quote.random] ; side effects
+   [quanta.market-sim.quote-random] ; side effects
    )
   (:import missionary.Cancelled))
 
