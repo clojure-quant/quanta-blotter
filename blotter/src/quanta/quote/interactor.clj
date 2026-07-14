@@ -24,12 +24,12 @@
      (reset! assets-old assets-new)
        ; subscribe
      (when (seq sub)
-       (println "subscription-watcher subscribing to: " sub)
+       ;(println "subscription-watcher subscribing to: " sub)
        (let [msg (p/subscribe-msg quote-message-processor sub)]
          (m/? (push msg))))
        ; unsubscribe
      (when (seq unsub)
-       (println "subscription-watcher unsubscribing from: " unsub)
+       ;(println "subscription-watcher unsubscribing from: " unsub)
        (let [msg (p/unsubscribe-msg quote-message-processor unsub)]
          (m/? (push msg)))))))
 

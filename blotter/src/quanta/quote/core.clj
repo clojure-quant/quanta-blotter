@@ -43,15 +43,15 @@
   (let [{:keys [lists/name lists/asset]} (get-list (:db this) asset-list-name)
         ; #:lists{:name "default", :asset ["EURUSD" "USDJPY" "GBPUSD" "BTCUSDT.LF.BB" "ETHUSDT.LF.BB" "__TEST" "__TEST2"]}
        ]
-    (println "asset-list " asset-list-name " has " (count asset) " assets")
-    (println "asset-list " asset-list-name " assets: " (pr-str asset))
+    ;(println "asset-list " asset-list-name " has " (count asset) " assets")
+   ; (println "asset-list " asset-list-name " assets: " (pr-str asset))
     (asset-vec-dic-flow this asset)))
 
 
 (defn asset-list-flow-dict-flow [this asset-list-f]
   (m/ap
    (let [asset-list-name (m/?< asset-list-f)
-         _ (println "asset-list-flow-dict-flow: asset-list-name: " asset-list-name)
+         ;_ (println "asset-list-flow-dict-flow: asset-list-name: " asset-list-name)
          dict-flow (asset-list-dic-flow this asset-list-name)
          q (try (m/?> dict-flow)
                 (catch Cancelled _
