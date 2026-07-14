@@ -20,6 +20,9 @@
    {:db/ident :asset/quantity-step
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
+   {:db/ident :asset/currency
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
    ])
 
 (def oms-schema
@@ -197,6 +200,9 @@
     :db/cardinality :db.cardinality/one}
    {:db/ident :account/asset-list
     :db/valueType :db.type/ref
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :account/currency
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}])
 
 (def schema
@@ -241,6 +247,7 @@
                     (:account/name account-map) (assoc :account/name (:account/name account-map))
                     (:account/settings account-map) (assoc :account/settings (pr-str (:account/settings account-map)))
                     (:account/asset-list account-map) (assoc :account/asset-list (:account/asset-list account-map))
+                    (:account/currency account-map) (assoc :account/currency (:account/currency account-map))
                     (some? (:account/balance account-map)) (assoc :account/balance (:account/balance account-map))
                     (contains? account-map :account/enabled) (assoc :account/enabled (:account/enabled account-map)))]
       (when (> (count updates) 1)

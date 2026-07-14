@@ -1,5 +1,6 @@
  ;; spot-fx
 [{:asset/symbol "AUDJPY"
+  :asset/currency "JPY"
   :asset/name "Australian Dollar / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
@@ -10,6 +11,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "AUDNZD"
+  :asset/currency "NZD"
   :asset/name "Australian Dollar / New Zealand Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -20,6 +22,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "AUDUSD"
+  :asset/currency "USD"
   :asset/name "Australian Dollar / US Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -30,6 +33,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "CADJPY"
+  :asset/currency "JPY"
   :asset/name "Canadian Dollar / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
@@ -40,6 +44,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURAUD"
+  :asset/currency "AUD"
   :asset/name "Euro / Australian Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -50,6 +55,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURCAD"
+  :asset/currency "CAD"
   :asset/name "Euro / Canadian Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -60,6 +66,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURCHF"
+  :asset/currency "CHF"
   :asset/name "Euro / Swiss Franc"
   :asset/exchange "FX"
   :asset/category :fx
@@ -70,6 +77,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURCZK"
+  :asset/currency "CZK"
   :asset/name "Euro / Czech Koruna"
   :asset/exchange "FX"
   :asset/category :fx
@@ -80,6 +88,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURDKK"
+  :asset/currency "DKK"
   :asset/name "Euro / Danish Krone"
   :asset/exchange "FX"
   :asset/category :fx
@@ -90,6 +99,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURGBP"
+  :asset/currency "GBP"
   :asset/name "Euro / British Pound"
   :asset/exchange "FX"
   :asset/category :fx
@@ -100,6 +110,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURHKD"
+  :asset/currency "HKD"
   :asset/name "Euro / Hong Kong Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -110,6 +121,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURHUF"
+  :asset/currency "HUF"
   :asset/name "Euro / Hungarian Forint"
   :asset/exchange "FX"
   :asset/category :fx
@@ -120,6 +132,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURILS"
+  :asset/currency "ILS"
   :asset/name "Euro / Israeli Shekel"
   :asset/exchange "FX"
   :asset/category :fx
@@ -130,6 +143,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURJPY"
+  :asset/currency "JPY"
   :asset/name "Euro / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
@@ -140,6 +154,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURNOK"
+  :asset/currency "NOK"
   :asset/name "Euro / Norwegian Krone"
   :asset/exchange "FX"
   :asset/category :fx
@@ -150,6 +165,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURPLN"
+  :asset/currency "PLN"
   :asset/name "Euro / Polish Zloty"
   :asset/exchange "FX"
   :asset/category :fx
@@ -160,6 +176,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURSEK"
+  :asset/currency "SEK"
   :asset/name "Euro / Swedish Krona"
   :asset/exchange "FX"
   :asset/category :fx
@@ -170,6 +187,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURSGD"
+  :asset/currency "SGD"
   :asset/name "Euro / Singapore Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -180,6 +198,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURTRY"
+  :asset/currency "TRY"
   :asset/name "Euro / Turkish Lira"
   :asset/exchange "FX"
   :asset/category :fx
@@ -190,6 +209,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURTWD"
+  :asset/currency "TWD"
   :asset/name "Euro / Taiwan Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -200,6 +220,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURUSD"
+  :asset/currency "USD"
   :asset/name "Euro / US Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -210,6 +231,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "EURZAR"
+  :asset/currency "ZAR"
   :asset/name "Euro / South African Rand"
   :asset/exchange "FX"
   :asset/category :fx
@@ -220,6 +242,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "GBPCHF"
+  :asset/currency "CHF"
   :asset/name "British Pound / Swiss Franc"
   :asset/exchange "FX"
   :asset/category :fx
@@ -230,6 +253,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "GBPJPY"
+  :asset/currency "JPY"
   :asset/name "British Pound / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
@@ -240,6 +264,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "GBPSEK"
+  :asset/currency "SEK"
   :asset/name "British Pound / Swedish Krona"
   :asset/exchange "FX"
   :asset/category :fx
@@ -250,6 +275,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "GBPUSD"
+  :asset/currency "USD"
   :asset/name "British Pound / US Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -260,6 +286,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "NZDJPY"
+  :asset/currency "JPY"
   :asset/name "New Zealand Dollar / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
@@ -270,6 +297,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "NZDUSD"
+  :asset/currency "USD"
   :asset/name "New Zealand Dollar / US Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -280,6 +308,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDCAD"
+  :asset/currency "CAD"
   :asset/name "US Dollar / Canadian Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -290,6 +319,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDCHF"
+  :asset/currency "CHF"
   :asset/name "US Dollar / Swiss Franc"
   :asset/exchange "FX"
   :asset/category :fx
@@ -300,6 +330,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDCNH"
+  :asset/currency "CNH"
   :asset/name "US Dollar / Chinese Yuan (offshore)"
   :asset/exchange "FX"
   :asset/category :fx
@@ -310,6 +341,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDCZK"
+  :asset/currency "CZK"
   :asset/name "US Dollar / Czech Koruna"
   :asset/exchange "FX"
   :asset/category :fx
@@ -320,6 +352,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDDKK"
+  :asset/currency "DKK"
   :asset/name "US Dollar / Danish Krone"
   :asset/exchange "FX"
   :asset/category :fx
@@ -330,6 +363,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDHKD"
+  :asset/currency "HKD"
   :asset/name "US Dollar / Hong Kong Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -340,6 +374,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDHUF"
+  :asset/currency "HUF"
   :asset/name "US Dollar / Hungarian Forint"
   :asset/exchange "FX"
   :asset/category :fx
@@ -350,6 +385,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDILS"
+  :asset/currency "ILS"
   :asset/name "US Dollar / Israeli Shekel"
   :asset/exchange "FX"
   :asset/category :fx
@@ -360,6 +396,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDJPY"
+  :asset/currency "JPY"
   :asset/name "US Dollar / Japanese Yen"
   :asset/exchange "FX"
   :asset/category :fx
@@ -370,6 +407,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDMXN"
+  :asset/currency "MXN"
   :asset/name "US Dollar / Mexican Peso"
   :asset/exchange "FX"
   :asset/category :fx
@@ -380,6 +418,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDNOK"
+  :asset/currency "NOK"
   :asset/name "US Dollar / Norwegian Krone"
   :asset/exchange "FX"
   :asset/category :fx
@@ -390,6 +429,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDPLN"
+  :asset/currency "PLN"
   :asset/name "US Dollar / Polish Zloty"
   :asset/exchange "FX"
   :asset/category :fx
@@ -400,6 +440,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDSEK"
+  :asset/currency "SEK"
   :asset/name "US Dollar / Swedish Krona"
   :asset/exchange "FX"
   :asset/category :fx
@@ -410,6 +451,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDSGD"
+  :asset/currency "SGD"
   :asset/name "US Dollar / Singapore Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -420,6 +462,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDTRY"
+  :asset/currency "TRY"
   :asset/name "US Dollar / Turkish Lira"
   :asset/exchange "FX"
   :asset/category :fx
@@ -430,6 +473,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDTWD"
+  :asset/currency "TWD"
   :asset/name "US Dollar / Taiwan Dollar"
   :asset/exchange "FX"
   :asset/category :fx
@@ -440,6 +484,7 @@
   :asset/quantity-step 1000M
  }
  {:asset/symbol "USDZAR"
+  :asset/currency "ZAR"
   :asset/name "US Dollar / South African Rand"
   :asset/exchange "FX"
   :asset/category :fx
@@ -451,6 +496,7 @@
  }
  ;; test-assets
  {:asset/symbol "__TEST"
+  :asset/currency "USD"
   :asset/name "Test symbol"
   :asset/exchange "TEST"
   :asset/category :fx
@@ -461,6 +507,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "__TEST2"
+  :asset/currency "USD"
   :asset/name "Test symbol 2"
   :asset/exchange "TEST"
   :asset/category :fx
@@ -472,6 +519,7 @@
  }
  ;; crypto-assets
  {:asset/symbol "BTCUSDT.S.BB"
+  :asset/currency "USD"
   :asset/name "Bitcoin / Tether (Bybit spot)"
   :asset/exchange "BYBIT"
   :asset/category :crypto
@@ -483,6 +531,7 @@
   :asset/bybit [:spot "BTCUSDT"]
  }
  {:asset/symbol "ETHUSDT.S.BB"
+  :asset/currency "USD"
   :asset/name "Ethereum / Tether (Bybit spot)"
   :asset/exchange "BYBIT"
   :asset/category :crypto
@@ -494,6 +543,7 @@
   :asset/bybit [:spot "ETHUSDT"]
  }
  {:asset/symbol "BTCUSDT.LF.BB"
+  :asset/currency "USD"
   :asset/name "Bitcoin / Tether (Bybit linear perpetual)"
   :asset/exchange "BYBIT"
   :asset/category :crypto
@@ -505,6 +555,7 @@
   :asset/bybit [:linear "BTCUSDT"]
  }
  {:asset/symbol "ETHUSDT.LF.BB"
+  :asset/currency "USD"
   :asset/name "Ethereum / Tether (Bybit linear perpetual)"
   :asset/exchange "BYBIT"
   :asset/category :crypto
@@ -517,6 +568,7 @@
  }
  ;; futures
  {:asset/symbol "6B_USD"
+  :asset/currency "USD"
   :asset/name "British Pound"
   :asset/exchange "CME"
   :asset/category :future
@@ -527,6 +579,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "6E_USD"
+  :asset/currency "USD"
   :asset/name "Euro FX"
   :asset/exchange "CME"
   :asset/category :future
@@ -537,6 +590,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "CL_USD"
+  :asset/currency "USD"
   :asset/name "Crude Oil"
   :asset/exchange "CME"
   :asset/category :future
@@ -547,6 +601,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "E7_USD"
+  :asset/currency "USD"
   :asset/name "E-mini Euro FX"
   :asset/exchange "CME"
   :asset/category :future
@@ -557,6 +612,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "ES_USD"
+  :asset/currency "USD"
   :asset/name "E-mini S&P 500"
   :asset/exchange "CME"
   :asset/category :future
@@ -567,6 +623,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "J7_USD"
+  :asset/currency "USD"
   :asset/name "E-mini Japanese Yen"
   :asset/exchange "CME"
   :asset/category :future
@@ -577,6 +634,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "NG_USD"
+  :asset/currency "USD"
   :asset/name "Natural Gas"
   :asset/exchange "CME"
   :asset/category :future
@@ -587,6 +645,7 @@
   :asset/quantity-step 1M
  }
  {:asset/symbol "RP_USD"
+  :asset/currency "USD"
   :asset/name "Euro FX / British Pound"
   :asset/exchange "CME"
   :asset/category :future

@@ -147,7 +147,7 @@
           (db/update-account conn (merge (select-keys account [:account/id :account/notes
                                                                :account/settings :account/name
                                                                :account/balance :account/enabled
-                                                               ])
+                                                               :account/currency])
                                          {:account/asset-list asset-list-ref}))
           ;(db/enable-account conn (:account/id account) true)
           )))))
