@@ -2,8 +2,7 @@
   (:require
    [missionary.core :as m]
    [clojure.pprint :refer [print-table]]
-   [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts quotes]]
-   [quanta.missionary.logger :refer [create-logger log]]))
+   [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts quotes]]))
 
 (defn quote-printer [f]
   (m/reduce
@@ -25,10 +24,7 @@
 (defn start!
   "Mixed paper + FIX trade accounts via quanta-blotter account manager."
   []
-  (let [l (create-logger "log/quotes.txt" false)
-        log-fn (partial log l)
-
-        am (create-account-manager log-fn)
+  (let [am (create-account-manager {:account-log-dir "log/quote"})
         _ (add-edn-accounts am "demo-quote-accounts.edn")
 
         q1 (quotes am 1 "EURUSD")

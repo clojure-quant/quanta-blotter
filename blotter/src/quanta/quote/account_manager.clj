@@ -4,6 +4,7 @@
    [tick.core :as t]
    [missionary.core :as m]
    [quanta.missionary :refer [mix]]
+   [quanta.missionary.logger :refer [create-logger log stop-logger]]
    [quanta.quote.protocol :as p]
    [quanta.quote.random] ; side effects
    )
@@ -28,6 +29,13 @@
              (when-let [! @!-a]
                (! v)))}))
 
+(defn- account-log [state account-id]
+  (let [dir (:account-log-dir state)
+        _ (assert dir "account-log-dir is required")
+        logger (create-logger (str dir "/" account-id ".log") false)]
+    {:log-fn (partial log logger)
+     :logger logger}))
+
 (defn add-account [state account]
   (let [account-id (:account/id account)
         subscription-a (atom #{})
@@ -37,13 +45,15 @@
                        (assoc data :account account-id))))]
     (assert account-id "account must have an :account/id")
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
-    (let [quote-account (p/create-quote-account account subscription-a send (:log state))
+    (let [{:keys [log-fn logger]} (account-log state account-id)
+          quote-account (p/create-quote-account account subscription-a send log-fn)
           dispose-account! (quote-account #(println "account done" %) #(println "account error" %))]
       (swap! (:accounts state) assoc account-id {:account/id account-id
                                                  :lock (m/sem)
                                                  :dispose-account dispose-account!
                                                  :flow flow
-                                                 :subscription-a subscription-a}))))
+                                                 :subscription-a subscription-a
+                                                 :logger logger}))))
 
 (defn quotes-impl [this account-id asset]
   (let [_ (assert account-id (str "account-id is required for asset:" asset))
@@ -86,11 +96,13 @@
   (let [account (get @(:accounts state) account-id)]
     (when account
       (:dispose-account account)
+      (stop-logger (:logger account))
       (swap! (:accounts state) dissoc account-id))))
 
-(defn create-account-manager [log]
+(defn create-account-manager [{:keys [account-log-dir]}]
+  (assert account-log-dir "account-log-dir is required")
   (let [accounts-a (atom {})]
-    {:log log
+    {:account-log-dir account-log-dir
      :accounts accounts-a}))
 
 (defn get-account [this account-id]
@@ -101,10 +113,11 @@
     (:flow account)))
 
 (defn account-asset-flow [this account-id asset]
-  (when-let [account (get @(:accounts-a this) account-id)]
-    (let [{:keys [subscription-a flow]} account]
-      (m/ap
-       (swap! subscription-a conj asset)))))
+  (let [account (get @(:accounts-a this) account-id)
+        _ (assert account (str "account not found: " account-id))
+        {:keys [subscription-a flow]} account]
+    (m/ap
+     (swap! subscription-a conj asset))))
 
 ;; EDN
 
@@ -115,11 +128,11 @@
   (some #(when (= id (:account/id %)) %) accounts))
 
 (defn add-edn-account [state edn-filename account-id]
-  (let [accounts (load-edn-accounts edn-filename)]
-    (let [account (account-by-id accounts account-id)]
+  (let [accounts (load-edn-accounts edn-filename)
+        account (account-by-id accounts account-id)]
       (when account
         (println "adding account" account)
-        (add-account state account)))))
+        (add-account state account))))
 
 (defn add-edn-accounts [state edn-filename]
   (let [accounts (load-edn-accounts edn-filename)]

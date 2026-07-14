@@ -1,9 +1,9 @@
 (ns quanta.quote.core
   (:require
+   [clojure.java.io :as io]
    [datahike.api :as d]
    [missionary.core :as m]
    [modular.require :refer [require-namespaces]]
-   [quanta.missionary.logger :refer [create-logger log]]
    [quanta.asset.datahike :refer [get-list]]
    [quanta.quote.account-manager :as am])
    (:import missionary.Cancelled)
@@ -14,16 +14,15 @@
     (println "requiring namespaces:" (pr-str ns-require))
     (require-namespaces ns-require)))
 
-(defn create-quote-manager [{:keys [quote-accounts-file db log-file ns-require]
-                             :or {log-file "log/quotes.txt"
+(defn create-quote-manager [{:keys [quote-accounts-file db account-log-dir ns-require]
+                             :or {account-log-dir "log/quote"
                                   ns-require []
                                   }}]
   (assert quote-accounts-file "quote-accounts-file is required")
   (assert db "db is required")
   (require-config-namespaces! ns-require)
-  (let [l (create-logger log-file false)
-        log-fn (partial log l)
-        am (am/create-account-manager log-fn)
+  (.mkdirs (io/file account-log-dir))
+  (let [am (am/create-account-manager {:account-log-dir account-log-dir})
         _ (am/add-edn-accounts am quote-accounts-file)]
     {:am am
      :db db}))

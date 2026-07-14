@@ -26,23 +26,10 @@
 
 (defn subscription-changer [subscription-a]
   (m/sp
-
-   (m/? (m/sleep 7000))
-   (println "asset-list-print: subscribing to crypto")
-   (reset! subscription-a "crypto")
-
-   (m/? (m/sleep 7000))
-   (println "asset-list-print: subscribing to spot-fx")
-   (reset! subscription-a "spot-fx")
-
-   (m/? (m/sleep 7000))
-   (println "asset-list-print: subscribing to default (mix of crypto/spot/random)")
-   (reset! subscription-a "default")
-   
-   (m/? (m/sleep 7000))
-   (println "subscription-changer done!")
-
-   nil))
+   (doseq [list-name (cycle ["crypto" "spot-fx" "default" "test"])]
+     (m/? (m/sleep 7000))
+     (println "asset-list-print: subscribing to" list-name)
+     (reset! subscription-a list-name))))
 
 (defn start!
   ([] (start! {}))
@@ -56,7 +43,6 @@
                        (quanta.asset.seed/seed-edn-lists-fn "demo-lists")]})
         qm (create-quote-manager {:db db
                                   :quote-accounts-file "demo-quote-accounts.edn"
-                                  :log-file "log/quotes.txt"
                                   :ns-require ['fix-engine.quote.account
                                                'quanta.bybit.quote.account]})
         subscription-a (atom (or list "test"))

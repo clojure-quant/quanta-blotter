@@ -32,7 +32,6 @@
                         (quanta.asset.seed/seed-edn-lists-fn "demo-lists")]})
          qm (create-quote-manager {:db db
                                    :quote-accounts-file "demo-quote-accounts.edn"
-                                   :log-file "log/quotes.txt"
                                    :ns-require ['fix-engine.quote.account
                                                 'quanta.bybit.quote.account]})]
      (try

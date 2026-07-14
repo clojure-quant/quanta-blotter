@@ -22,7 +22,7 @@
 (deftest next-state-produces-two-decimal-places-and-clamped-trend
   (testing "iterated prices stay at 2dp and trend stays within clamp"
     (let [settings random/default-settings
-          clamp (:trend-clamp settings)
+          clamp (/ (:trend-clamp-prct settings) 100.0)
           states (take 50 (random/state-seq settings {:price 100.0 :trend 0.0}))]
       (is (every? #(two-decimal-places? (:price %)) states))
       (is (every? #(<= (- clamp) (:trend %) clamp) states)))))

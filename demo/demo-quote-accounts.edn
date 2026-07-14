@@ -33,9 +33,9 @@
   :account/api :random
   :account/notes "just random quotes"
   :account/settings {:initial-price 100.0
-                     :random-change 0.0002
-                     :trend-change 0.0002
-                     :trend-clamp 0.004
+                     :random-change-prct 0.2
+                     :trend-change-prct 0.2
+                     :trend-clamp-prct 0.4
                      :quote-tick-interval-ms 250}}
 
  ;

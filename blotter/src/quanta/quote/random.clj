@@ -6,13 +6,15 @@
 
 (def default-settings
   {:initial-price 100.0
-   :random-change 0.0002
-   :trend-change 0.0002
-   :trend-clamp 0.004
+   :random-change-prct 0.2
+   :trend-change-prct 0.2
+   :trend-clamp-prct 0.4
    :quote-tick-interval-ms 250})
 
-(defn random-return-value [change]
-  (* (- (rand change) (/ change 2.0)) 10.0))
+(defn random-return-value
+  "Uniform random return in [-change-prct/2, +change-prct/2], converted from percent to fraction."
+  [change-prct]
+  (/ (- (rand change-prct) (/ change-prct 2.0)) 100.0))
 
 (defn- round-2 [n]
   (/ (Math/round (* n 100.0)) 100.0))
@@ -20,10 +22,11 @@
 (defn clamp [x lo hi]
   (min hi (max lo x)))
 
-(defn next-state [{:keys [trend-change trend-clamp random-change]} {:keys [price trend]}]
-  (let [trend (-> (+ trend (random-return-value trend-change))
+(defn next-state [{:keys [trend-change-prct trend-clamp-prct random-change-prct]} {:keys [price trend]}]
+  (let [trend-clamp (/ trend-clamp-prct 100.0)
+        trend (-> (+ trend (random-return-value trend-change-prct))
                   (clamp (- trend-clamp) trend-clamp))
-        price (round-2 (* price (+ 1.0 trend (random-return-value random-change))))]
+        price (round-2 (* price (+ 1.0 trend (random-return-value random-change-prct))))]
     {:price price :trend trend}))
 
 (defn state-seq [settings start-state]
@@ -36,7 +39,7 @@
        (into {})))
 
 (comment
-  (random-return-value 0.0002)
+  (random-return-value 0.2)
   (take 10 (state-seq default-settings {:price 100.0 :trend 0.0}))
   (->> {"A" {:price 100.0 :trend 0.0}
         "B" {:price 104.0 :trend 0.0}}
@@ -62,6 +65,7 @@
     (m/sp
      (loop []
        (let [assets @subscription-a]
+         (log {:account (:account/id account) :type :generate-quote :assets assets})
          (swap! state-a (fn [d] (merge d (update-states settings (select-keys d assets)))))
          (doseq [asset assets]
            (when-let [price (:price (get @state-a asset))]
@@ -77,22 +81,41 @@
 (defn repeat-nr [initial-price n]
   (vec (repeatedly n #(initial-state initial-price))))
 
+(defn add-new-assets [d sub initial-price]
+  (let [new-assets (filter #(not (contains? d %)) sub)]
+    (merge d (zipmap new-assets (repeat-nr initial-price (count new-assets))))))
+
+(comment 
+  
+  (add-new-assets {"A" {:price 100.0 :trend 0.0}
+                   "B" {:price 104.0 :trend 0.0}}
+                  #{"C" "D"} 100.0)
+  #_{"A" {:price 100.0 :trend 0.0}
+     "B" {:price 104.0 :trend 0.0}
+     "C" {:price 100.0 :trend 0.0}
+     "D" {:price 100.0 :trend 0.0}}
+  ;
+  )
+
+
 (defrecord random-msg-processor [account log state-a initial-price]
   p/quote-messaging
   (subscribe-msg [_ sub]
-    (swap! state-a (fn [d]
-                     (let [new-assets (filter #(not (contains? d %)) sub)]
-                       (merge d (zipmap new-assets (repeat-nr initial-price (count new-assets)))))))
-    (log {:account (:account/id account) :type :subscribe :assets sub}))
+    (swap! state-a add-new-assets sub initial-price)
+    (log {:account (:account/id account) :type :subscribe :assets sub})
+    nil)
   (unsubscribe-msg [_ unsub]
     ;; keep last simulated state in state-a for later re-subscribe
-    (log {:account (:account/id account) :type :unsubscribe :assets unsub}))
-  (read-quote [_ fix-vec-in]
+    (log {:account (:account/id account) :type :unsubscribe :assets unsub})
+    nil)
+  (read-quote [_ _conn-msg-in]
     nil))
 
 ;; create quote account
 
-(defn dump-rdv [rdv]
+(defn drain-rdv [rdv]
+  ; sub watcher will push data to be sent to the remote connection
+  ; to not block the subscription watcher, we need to drain the rdv
   (m/sp
    (loop []
      (m/? rdv)
@@ -109,4 +132,4 @@
      (m/? (m/join vector
                   (subscription-watcher account rmp subscription-a push log)
                   (message-loop account state-a subscription-a settings log send-quote)
-                  (dump-rdv push))))))
+                  (drain-rdv push))))))
