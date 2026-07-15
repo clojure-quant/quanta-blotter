@@ -26,6 +26,14 @@
                            :profile "default"
                            :version "prod1"}}
 
+  :stresstest {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
+               :exec-fn modular.system/start!
+               :exec-args {:config ["config-stresstest.edn"]
+                           :services "services-stresstest.edn"
+                           :profile "default"
+                           :version "prod1"
+                           :run demo.stresstest/run}}
+
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
 

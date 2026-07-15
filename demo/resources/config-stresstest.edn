@@ -1,0 +1,22 @@
+{:db {:dir "stresstest-db"}
+
+ :db-seed {:accounts-file "demo-accounts.edn"
+           :assets-file "demo-assets.edn"
+           :lists-dir "demo-lists"}
+
+ :oms-server {:ns-require [fix-engine.blotter.account
+                           quanta.bybit.blotter.account
+                           quanta.market-sim.broker-paper]
+              :log-file "log-stresstest/oms-server-trace.txt"
+              :transaction-log-file "log-stresstest/oms-server-transaction.txt"
+              :account-log-dir "log-stresstest/oms-account"
+              :validate? true
+              :tag? true
+              :trading-state-log-file "log-stresstest/oms-server-trading-state.txt"
+              :trading-state-print-interval-ms 15000}
+ 
+ :quote-manager {:quote-accounts-file "demo-quote-accounts.edn"
+                 :account-log-dir "log-stresstest/quote"
+                 :ns-require [quanta.market-sim.quote-random
+                              fix-engine.quote.account
+                              quanta.bybit.quote.account]}}

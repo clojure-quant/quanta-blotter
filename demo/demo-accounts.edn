@@ -6,12 +6,12 @@
   :account/name "fpaper-2fills"
   :account/notes "always fills order with 2 fills; timing is random"
   :account/asset-list "test"
-  :account/api :paper 
+  :account/api :paper
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
-                     :fill-probability 20
+                     :fill-probability 75
                      :fill-qty-prct [50 50]
-                     :wait-seconds 5}}
+                     :wait-seconds 1}}
  {:account/id 2
   :account/enabled true
   :account/balance 10000M
@@ -20,7 +20,7 @@
   :account/name "apaper-1fill"
   :account/notes "always fills 100% of the order; timing is random"
   :account/asset-list "test"
-  :account/api :paper 
+  :account/api :paper
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
                      :fill-probability 10
@@ -62,37 +62,37 @@
   :account/name "fpaper fast/bad"
   :account/notes "a real world account with an unreliable but fast broker."
   :account/asset-list "test"
-  :account/api :paper 
+  :account/api :paper
   :account/settings {:reject-probability 20
                      :bad-orderupdate-probability 10
                      :fill-probability 20
                      :fill-qty-prct [25 25 50]
                      :wait-seconds 1}}
- 
+
  {:account/id 6
   :account/enabled true
   :account/balance 10000M
   :account/currency "USD"
   :account/trader "florian"
-  :account/name "fpaper corrupt"     
+  :account/name "fpaper corrupt"
   :account/notes "every message will be corrupted"
   :account/asset-list "test"
-  :account/api :paper 
+  :account/api :paper
   :account/settings {:reject-probability 1
                      :bad-orderupdate-probability 100
                      :fill-probability 100
                      :fill-qty-prct [100]
                      :wait-seconds 1}}
- 
+
  {:account/id 7
   :account/enabled true
   :account/balance 10000M
   :account/currency "USD"
   :account/trader "ant"
-  :account/name "apaper never" 
+  :account/name "apaper never"
   :account/notes "will never fill an order."
   :account/asset-list "test"
-  :account/api :paper 
+  :account/api :paper
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
                      :fill-probability 0
@@ -104,10 +104,10 @@
   :account/balance 10000M
   :account/currency "USD"
   :account/trader "florian"
-  :account/name "pepperstone demo1" 
+  :account/name "pepperstone demo1"
   :account/notes "Pepperstone demo SSL"
   :account/asset-list "spot-fx"
-  :account/api :fix-trade 
+  :account/api :fix-trade
   :account/settings {:spec "fix-specs/ctrader.edn"
                      :header {:begin-string "FIX.4.4"
                               :target-comp-id "CSERVER"
@@ -118,4 +118,16 @@
                            :port 5212
                            :ssl true}
                      :login {:username "5292473"
-                             :password "Regenschirm13!"}}}]
+                             :password "Regenschirm13!"}}}
+ {:account/id 2000
+  :account/enabled true
+  :account/balance 10000M
+  :account/currency "USD"
+  :account/trader "florian"
+  :account/name "bybit florian demo1"
+  :account/notes "bybit trade testnet"
+  :account/api :bybit-trade
+  :account/asset-list "crypto"
+  :account/settings {:connection {:mode :test}
+                     :login {:api-key "CtOKK6YezfVvOGmc0f"
+                             :api-secret "7HLHsB6f7XGbGPP42gunCVklQSIslaLgdur5"}}}]

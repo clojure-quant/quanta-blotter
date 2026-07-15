@@ -138,7 +138,9 @@
        (m/? ((:order-rdv this) message))
        (m/? (m/via m/blk (println "[OMS send-trader-message] success: " message)))
        message)
-     (throw (ex-info (human-error-trader-message message) {:message message})))))
+     (throw (ex-info "Invalid trader message"
+                     {:message message
+                      :errors (human-error-trader-message message)})))))
 
 (defn create-order
   "Create an order and push it on the OMS order channel.

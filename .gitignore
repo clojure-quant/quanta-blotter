@@ -14,3 +14,5 @@ blotter/target
 blotter-cli/target
 blotter/.clj-kondo/.cache
 demo/asset-db
+demo/stresstest-db
+demo/log-stresstest
