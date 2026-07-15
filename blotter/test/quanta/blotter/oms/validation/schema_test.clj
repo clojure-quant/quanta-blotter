@@ -5,6 +5,7 @@
    [ednx.edn :refer [read-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [malli.core :as m]
+   [malli.error :as me]
    [tick.core :as t]
    [quanta.blotter.oms.validation.schema :as s]))
 
@@ -12,7 +13,9 @@
 
 (deftest decimal-test
   (is (not (m/validate s/Decimal 100.3 {:registry s/r})))
-  (is (m/validate s/Decimal 100.3M {:registry s/r})))
+  (is (m/validate s/Decimal 100.3M {:registry s/r}))
+  (is (= ["must be a decimal"]
+         (me/humanize (m/explain s/Decimal 100.3 {:registry s/r})))))
 
 (def ^:private channel-paper-edn
   (io/file ".." "demo" "data" "channel-paper.edn"))
@@ -146,7 +149,32 @@
         :asset "ETHUSDT"
         :qty 0.001M
         :side :sell
-        :price 100.0M})))
+        :price 100.0M}))
+  (testing "double price/qty are rejected with a clear decimal error"
+    (let [msg {:date (t/instant "2026-07-14T14:29:09.019689207Z")
+               :account/id 1
+               :type :broker/order-filled
+               :fill-id "8tXmcV"
+               :order-id "2eKWRv"
+               :side :buy
+               :qty 10000M
+               :price 99.32
+               :asset "__TEST"}]
+      (is (not (s/validate-message msg)))
+      (is (= {:price ["must be a decimal"]}
+             (s/human-error-message msg))))
+    (let [msg {:date (t/instant "2026-07-14T14:29:09.019689207Z")
+               :account/id 1
+               :type :broker/order-filled
+               :fill-id "8tXmcV"
+               :order-id "2eKWRv"
+               :side :buy
+               :qty 10000.0
+               :price 99.32M
+               :asset "__TEST"}]
+      (is (not (s/validate-message msg)))
+      (is (= {:qty ["must be a decimal"]}
+             (s/human-error-message msg))))))
 
 (deftest broker-order-rejected-test
   (is (s/validate-message

@@ -32,7 +32,7 @@
     :market (nil? limit)
     false))
 
-(def Decimal [:fn decimal?])
+(def Decimal [:fn {:error/message "must be a decimal"} decimal?])
 
 (def PositiveDecimal
   [:and Decimal [:fn {:error/message "must be greater than zero"}
