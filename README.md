@@ -36,6 +36,12 @@ clojure -X:cli-asset-list-print
 
 ```
 
+## STRESS TESTS
+```
+  cd demo
+  clj -X:stresstest :account-id 1
+```
+
 
 
 ## MESSAGE TYPES
