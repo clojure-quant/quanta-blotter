@@ -10,22 +10,20 @@
 
 (def account-config
   {1 [; paper broker with simulated/bybit/ctrader quotes
-      :limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
-                                      :expect {:fill-qty 0.0M
-                                               :order-count 1  :active-order-count 0
-                                               :position-count 0 :open-position-qty 0M}}
+      ; limit buy + cancel
       :limit-near-market-open-cancel {:asset "__TEST" :qty 100M :offset-prct 20.0  :side :buy
                                       :expect {:fill-qty 0.0M
                                                :order-count 1  :active-order-count 0
                                                :position-count 0 :open-position-qty 0M}}
       :limit-near-market-open-cancel {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct 20.0  :side :buy
+                                :expect {:fill-qty 0.0M
+                                         :order-count 1  :active-order-count 0
+                                         :position-count 0 :open-position-qty 0M}}      
+      :limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
                                       :expect {:fill-qty 0.0M
                                                :order-count 1  :active-order-count 0
                                                :position-count 0 :open-position-qty 0M}}
-      :market-buy-sell {:asset "EURUSD" :qty 10000M
-                        :expect {:fill-qty 20000.0M
-                                 :order-count 2 :active-order-count 0
-                                 :position-count 1 :open-position-qty 0M}}
+      ; market buy/sell
       :market-buy-sell {:asset "__TEST" :qty 100M
                         :expect {:fill-qty 200.0M
                                  :order-count 2  :active-order-count 0
@@ -33,7 +31,13 @@
       :market-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M
                         :expect {:fill-qty 0.2M
                                  :order-count 2  :active-order-count 0
-                                 :position-count 1}}]
+                                 :position-count 1}}
+       :market-buy-sell {:asset "EURUSD" :qty 10000M
+                        :expect {:fill-qty 20000.0M
+                                 :order-count 2 :active-order-count 0
+                                 :position-count 1 :open-position-qty 0M}}
+      
+      ]
    1000 [:limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
@@ -59,17 +63,7 @@
         opts (assoc opts :account/id account-id)]
     (m/sp
      (warn "running" fn-kw "with" opts "campaign-id" campaign-id)
-     (let [r (try
-               (let [{:keys [expect result] :as res} (m/? (run oms runner-opts test-fn opts))]
-                 (println "res: " res)
-                 (if (= expect result)
-                   {:message "success"}
-                   {:message "expected different result."}))
-               (catch Exception e
-                 (error "error running test" fn-kw
-                          " opts " opts " campaign-id" campaign-id
-                          "error: " (ex-message e))
-                 {:message (ex-message e)}))
+     (let [r (m/? (run oms runner-opts test-fn opts))
            r (assoc r :account-id account-id :fn-kw fn-kw :campaign-id campaign-id :asset (:asset opts))]
        (warn "result" r)
        r))))
@@ -80,7 +74,7 @@
         results (atom [])
         run-tests-task (m/sp
                         (warn "running tests for account" account-id)
-                        (m/? (m/sleep 10000))
+                        (m/? (m/sleep 10000)) ; be sure that quotefeeds and accounts are ready.
                         (loop [tests tests]
                           (let [[fn-kw opts] (first tests)
                                 r (m/? (run-test-task oms account-id fn-kw opts))]

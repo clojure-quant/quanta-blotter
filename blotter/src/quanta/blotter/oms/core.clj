@@ -1,5 +1,6 @@
 (ns quanta.blotter.oms.core
   (:require
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]
    [nano-id.core :refer [nano-id]]
    [tick.core :as t]
@@ -134,9 +135,9 @@
    (assert (:order-rdv this) "this (oms) needs to have an order-rdv")
    (if (validate-trader-message message)
      (let [message (assoc message :date (t/instant))] 
-       (m/? (m/via m/blk (println "[OMS send-trader-message]: " message)))
+       (m/? (m/via m/blk (info "[OMS send-trader-message]: " message)))
        (m/? ((:order-rdv this) message))
-       (m/? (m/via m/blk (println "[OMS send-trader-message] success: " message)))
+       (m/? (m/via m/blk (info "[OMS send-trader-message] success: " message)))
        message)
      (throw (ex-info "Invalid trader message"
                      {:message message
