@@ -9,7 +9,7 @@
   :account/api :paper
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
-                     :fill-probability 75
+                     :fill-probability 100
                      :fill-qty-prct [50 50]
                      :wait-seconds 1}}
  {:account/id 2

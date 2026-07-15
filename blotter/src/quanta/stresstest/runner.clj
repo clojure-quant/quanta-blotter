@@ -20,10 +20,11 @@
                                (filter #(or (:error %) (pred %)))
                                (take 1)
                                (m/watch state)))
-         result (m/? (m/race state-task (m/sleep timeout-ms ::timeout)))]
+         result (m/? (m/race state-task 
+                             (m/sleep timeout-ms ::timeout)))]
      (cond
        (= ::timeout result)
-       (throw (ex-info "Timed out waiting for stress test state"
+       (throw (ex-info "Timed out"
                        {:campaign campaign
                         :phase phase
                         :timeout-ms timeout-ms}))

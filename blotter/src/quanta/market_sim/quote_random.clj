@@ -65,7 +65,7 @@
     (m/sp
      (loop []
        (let [assets @subscription-a]
-         (log {:account (:account/id account) :type :generate-quote :assets assets})
+         ;(log {:account (:account/id account) :type :generate-quote :assets assets})
          (swap! state-a (fn [d] (merge d (update-states settings (select-keys d assets)))))
          (doseq [asset assets]
            (when-let [price (:price (get @state-a asset))]

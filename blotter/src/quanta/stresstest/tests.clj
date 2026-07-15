@@ -1,5 +1,6 @@
 (ns quanta.stresstest.tests
   (:require
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]
    [clojure.pprint :refer [print-table]]
    [nano-id.core :refer [nano-id]]
@@ -42,6 +43,10 @@
                                                   :order-count 1 :active-order-count 0
                                                   :position-count 0 :open-position-qty 0M}}]})
 
+ ; {:expect {:fill-qty 200.0M, :order-count 2, :active-order-count 0, :position-count 1, :open-position-qty 0M},
+ ;  :result {:fill-qty 150M, :order-count 2, :active-order-count 1, :position-count 1, :open-position-qty 50M}}
+
+
 (def algos {:market-buy-sell market-buy-close
             :limit-near-market-open-cancel limit-near-market-open-cancel})
 
@@ -53,7 +58,7 @@
                      :timeout-ms 10000}
         opts (assoc opts :account/id account-id)]
     (m/sp
-     (println "running" fn-kw "with" opts "campaign-id" campaign-id)
+     (warn "running" fn-kw "with" opts "campaign-id" campaign-id)
      (let [r (try
                (let [{:keys [expect result] :as res} (m/? (run oms runner-opts test-fn opts))]
                  (println "res: " res)
@@ -61,12 +66,12 @@
                    {:message "success"}
                    {:message "expected different result."}))
                (catch Exception e
-                 (println "error running test" fn-kw
+                 (error "error running test" fn-kw
                           " opts " opts " campaign-id" campaign-id
                           "error: " (ex-message e))
                  {:message (ex-message e)}))
            r (assoc r :account-id account-id :fn-kw fn-kw :campaign-id campaign-id :asset (:asset opts))]
-       (println "result" r)
+       (warn "result" r)
        r))))
 
 (defn run-account-tests [oms account-id]
@@ -74,6 +79,8 @@
         tests (partition 2 tests)
         results (atom [])
         run-tests-task (m/sp
+                        (warn "running tests for account" account-id)
+                        (m/? (m/sleep 10000))
                         (loop [tests tests]
                           (let [[fn-kw opts] (first tests)
                                 r (m/? (run-test-task oms account-id fn-kw opts))]

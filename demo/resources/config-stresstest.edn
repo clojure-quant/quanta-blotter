@@ -1,4 +1,10 @@
-{:db {:dir "stresstest-db"}
+{
+ :timbre/clj {:min-level [[#{"*"} :info]]
+              :appenders {:default {:type :console-color}
+                          :file {:type :file
+                                 :fname "log-stresstest/app.log"}}}
+ 
+ :db {:dir "stresstest-db"}
 
  :db-seed {:accounts-file "demo-accounts.edn"
            :assets-file "demo-assets.edn"

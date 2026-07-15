@@ -2,6 +2,9 @@
  :components
  {:config {:start (deref (modular.config/load-config! (:config #ref [:modular])))}
 
+  :timbre {:start (modular.log/timbre-config!
+                   (:timbre/clj (clip/ref :config)))}
+
   :db {:start (quanta.util.datahike/db-start
                {:schema (concat
                          (deref quanta.blotter.oms.db/schema)

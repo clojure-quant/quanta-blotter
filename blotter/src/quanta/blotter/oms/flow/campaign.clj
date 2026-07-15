@@ -1,6 +1,7 @@
 (ns quanta.blotter.oms.flow.campaign
   (:require
    [missionary.core :as m]
+   [taoensso.timbre :refer [debug info warn error]]
    [quanta.blotter.oms.flow.working-orders :as wo]
    [quanta.blotter.oms.flow.fill :as fill]
    [quanta.blotter.oms.flow.open-positions :as op]))
@@ -29,7 +30,7 @@
                           (if-let [[campaign-id label] (get @dict order-id)]
                             (assoc msg :campaign campaign-id :label label)
                             (do
-                              (println "*** order-id has no compaign: " order-id  "type: " (:type msg))
+                              (info "order-id has no compaign: " order-id  "type: " (:type msg))
                               msg))
 
                             ;:broker/order-filled                        
