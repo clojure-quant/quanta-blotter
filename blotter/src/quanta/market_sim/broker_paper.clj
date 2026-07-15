@@ -1,6 +1,7 @@
 (ns quanta.market-sim.broker-paper
   (:require
    [missionary.core :as m]
+   [taoensso.timbre :refer [info]]
    [tick.core :as t]
    [quanta.blotter.protocol :as p]
    [quanta.market-sim.broker-paper.orderfiller :refer [simulated-fill-flow]])
@@ -90,8 +91,8 @@
         fill-send-flow (m/ap (let [fill (m/?> fill-flow)]
                                (m/? (push-update settings push fill))))
         fill-task (m/reduce (fn [r v] nil) nil fill-send-flow)]
-    (fill-task #(println "[paper-broker] fill-order" (:order-id order) " done" %)
-               #(println "[paper-broker] fill-order " (:order-id order) " error" %))))
+    (fill-task #(info "[paper-broker] fill-order-task" (:order-id order) "done" %)
+               #(info "[paper-broker] fill-order-task" (:order-id order) "error" %))))
 
 (defn- order-confirmed [action]
   (cond-> {:type :broker/order-confirmed
@@ -122,11 +123,11 @@
                (swap! orders assoc order-id dispose-fill)))
 
            :trader/cancel-order
-           (if-let [dispose-fill (get @orders order-id)]
-             (do (m/? (push-update settings push (assoc action
-                                                        :type :broker/cancel-confirmed)))
-                 (dispose-fill)
-                 (swap! orders dissoc order-id))
+           (if-let [dispose-order-filler! (get @orders order-id)]
+             (do (dispose-order-filler!)
+                 (swap! orders dissoc order-id)
+                 (m/? (push-update settings push (assoc action
+                                                        :type :broker/cancel-confirmed))))
              (do
                (log {:paper/cancel-reject (str "cancel-rejected, unknown order-id " order-id)})
                (m/? (push-update settings push (assoc action
