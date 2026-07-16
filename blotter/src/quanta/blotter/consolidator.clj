@@ -1,6 +1,7 @@
 (ns quanta.blotter.consolidator
   (:require
    [missionary.core :as m]
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [quanta.blotter.util-rdv :refer [create-rdv]]))
 
 (defn msg-flow [!-a]
@@ -20,8 +21,10 @@
   (let [!-a (atom nil)]
     {:flow (msg-flow !-a)
      :send (fn [v]
-             (when-let [! @!-a]
-               (! v)))}))
+             (if-let [! @!-a]
+               (! v)
+               (warn "consolidator: flow-sender: no flow to send to" v))
+               )}))
 
 (defn create-consolidator [{:keys [order orderupdate log] :as channel}]
   (assert order "consolidator needs order")

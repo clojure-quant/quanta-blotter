@@ -16,9 +16,9 @@
                                                :order-count 1  :active-order-count 0
                                                :position-count 0 :open-position-qty 0M}}
       :limit-near-market-open-cancel {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct 20.0  :side :buy
-                                :expect {:fill-qty 0.0M
-                                         :order-count 1  :active-order-count 0
-                                         :position-count 0 :open-position-qty 0M}}      
+                                      :expect {:fill-qty 0.0M
+                                               :order-count 1  :active-order-count 0
+                                               :position-count 0 :open-position-qty 0M}}
       :limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
                                       :expect {:fill-qty 0.0M
                                                :order-count 1  :active-order-count 0
@@ -32,12 +32,10 @@
                         :expect {:fill-qty 0.2M
                                  :order-count 2  :active-order-count 0
                                  :position-count 1}}
-       :market-buy-sell {:asset "EURUSD" :qty 10000M
+      :market-buy-sell {:asset "EURUSD" :qty 10000M
                         :expect {:fill-qty 20000.0M
                                  :order-count 2 :active-order-count 0
-                                 :position-count 1 :open-position-qty 0M}}
-      
-      ]
+                                 :position-count 1 :open-position-qty 0M}}]
    1000 [:limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
@@ -59,7 +57,7 @@
   (let [test-fn (get algos fn-kw)
         campaign-id (str (name fn-kw) "-" (nano-id 8))
         runner-opts {:campaign-id campaign-id
-                     :timeout-ms 10000}
+                     :timeout-ms 30000}
         opts (assoc opts :account/id account-id)]
     (m/sp
      (warn "running" fn-kw "with" opts "campaign-id" campaign-id)

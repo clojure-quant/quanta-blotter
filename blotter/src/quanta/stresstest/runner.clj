@@ -45,15 +45,16 @@
 (defn start-runner
   "Starts campaign-scoped flow consumers and returns a runner map.
 
-   Tests receive `:oms`, `:campaign`, a live `:state` atom, and use
-   `wait-for-state` with a predicate and phase keyword."
+   Uses OMS `:combined-flow` (already campaign-tagged); only filters by
+   campaign-id. Tests receive `:oms`, `:campaign`, a live `:state` atom,
+   and use `wait-for-state` with a predicate and phase keyword."
   [oms {:keys [campaign-id timeout-ms]}]
   (info "starting runner" campaign-id)
-  (let [combined-flow (get-in oms [:consolidator :combined-flow])]
+  (let [combined-flow (:combined-flow oms)]
     (when-not combined-flow
-      (throw (ex-info "OMS has no consolidator combined flow" {:oms oms})))
-    (let [tagged-flow (campaign/campaign-tagged-combined-flow combined-flow)
-          {:keys [working-order-dict-flow fill-flow open-position-dict-flow]} (campaign/campaign-flows tagged-flow campaign-id)
+      (throw (ex-info "OMS has no combined flow" {:oms oms})))
+    (let [{:keys [working-order-dict-flow fill-flow open-position-dict-flow]}
+          (campaign/campaign-flows combined-flow campaign-id)
           state (atom {:working-orders {}
                        :open-positions {}
                        :fills []})
