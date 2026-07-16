@@ -41,12 +41,9 @@
         combined (apply util/mix (tagged-flows oms))
         buffered (logger/time-buffered buffer-ms combined)
         transacting-f (m/ap
-                       (loop []
-                         (m/amb
-                          (let [block (m/?> buffered)]
-                            (m/? (m/via m/blk (write-block! db state block)))
-                            block)
-                          (recur))))]
+                       (let [block (m/?> buffered)]
+                         (m/? (m/via m/blk (write-block! db state block)))
+                         block))]
     (m/reduce (fn [_r _v] nil) nil transacting-f)))
 
 (defn start-db-transactor

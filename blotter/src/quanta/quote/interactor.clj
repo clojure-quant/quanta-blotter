@@ -45,7 +45,7 @@
   (m/sp
    (try
      (loop []
-       (when-let [fix-payload (m/? (pull))]
+       (when-let [fix-payload (m/? (pull))] ;; why is pull in brackets?
          (when-let [normalized (p/read-quote quote-message-processor fix-payload)]
            (send-quote normalized)))
        (recur))

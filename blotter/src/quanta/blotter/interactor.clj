@@ -32,7 +32,7 @@
   (m/sp
    (try
      (loop []
-       (when-let [fix-payload (m/? (pull))]
+       (when-let [fix-payload (m/? (pull))] ;; awb99. why is pull in brackets?
          (when-let [update (p/blotter-order-update trade-message-processor fix-payload)]
            (m/? (res-rdv update))))
        (recur))
