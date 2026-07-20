@@ -100,8 +100,8 @@
   [{:keys [_order-rdv orderupdate-rdv consolidator validator log-transaction account-manager combined-flow _trading-state] :as this}]
   (let [dispose-transaction-logger (start-log-flow-to-logger log-transaction combined-flow)
         dispose-orderupdate-consumer!  ((consume-orderupdate orderupdate-rdv)
-                                        #(println "orderupdate-consumer done " %)
-                                        #(println "orderupdate-consumer error " %))
+                                        #(info "orderupdate-consumer done " %)
+                                        #(error "orderupdate-consumer error " %))
         dispose-validation! (when validator
                               (start-validation-channel! validator))
         dispose-consolidator! (start-consolidator! consolidator)
@@ -180,7 +180,8 @@
   (let [process-flow (m/ap (let [v (m/?> flow)]
                              (m/? (send-message this v))))
         process-t (m/reduce (fn [r v] nil) nil process-flow)
-        dispose!  (process-t #(println "process done" %) #(println "process error " %))]
+        dispose!  (process-t #(info "process done" %)
+                             #(error "process error " %))]
     dispose!))
 
 

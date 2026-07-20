@@ -1,5 +1,6 @@
 (ns quanta.blotter.oms.trader
   (:require
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]
    [quanta.blotter.oms.db :as db]))
 
@@ -50,5 +51,6 @@
                        (reset! trading-state-trader data)
                        data))
         t (m/reduce (fn [_r _v] nil) nil tt-a-f)]
-    {:dispose! (t #(println "trader-tagger done" %) #(println "trader-tagger error" %))
+    {:dispose! (t #(info "trader-tagger done" %)
+                  #(error "trader-tagger error" %))
      :trading-state-trader trading-state-trader}))

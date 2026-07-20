@@ -5,11 +5,10 @@
    [quanta.blotter.oms.flow.campaign :as campaign]))
 
 (defn- start-consumer! [state flow update-state]
-  (let [task (m/reduce (fn [_ value]
-                         (swap! state update-state value)
-                         nil)
-                       nil
-                       flow)]
+  (let [state-setter-flow (m/ap (let [v (m/?> flow)]
+                                  (swap! state update-state v)         
+                                  )) 
+        task (m/reduce (fn [_ _] nil) nil state-setter-flow)]
     (task (fn [_])
           #(swap! state assoc :error %))))
 
@@ -107,7 +106,10 @@
                         (m/sleep 30000 ::timeout)))
          result (cond
                   (= ::timeout r)
-                  {:message "timeout 30 seconds."}
+                  (do 
+                    (error "timeout state: " @(:state this))
+                    {:message "timeout 30 seconds."})
+                  
 
                   (= ::exception r)
                   {:message "exception in test task"}
@@ -116,7 +118,9 @@
                   (let [result (calc-result-stats this)]
                     (if (= expect result)
                       {:message "success"}
-                      {:message "expected different result."})))]
+                      {:message "expected different result."
+                       :expect expect
+                       :result result})))]
      (stop-runner this)
      result)))
 

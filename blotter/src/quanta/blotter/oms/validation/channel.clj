@@ -1,5 +1,6 @@
 (ns quanta.blotter.oms.validation.channel
   (:require
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]
    [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.oms.validation.schema :as s]))
@@ -56,8 +57,8 @@
                                              :original-msg data}))
                                      (recur))))
         t (m/join concat validate-order-sp validate-orderupdate-sp)
-        dispose (t #(println "validation channel done" %)
-                   #(println "validation channel error" %))]
+        dispose (t #(info "validation channel done" %)
+                   #(error "validation channel error" %))]
     (reset! dispose! dispose)
     dispose))
 

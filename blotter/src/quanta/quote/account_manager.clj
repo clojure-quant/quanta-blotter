@@ -1,6 +1,7 @@
 (ns quanta.quote.account-manager
   (:require
    [clojure.edn :as edn]
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [tick.core :as t]
    [missionary.core :as m]
    [quanta.missionary :refer [mix]]
@@ -47,7 +48,8 @@
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
     (let [{:keys [log-fn logger]} (account-log state account-id)
           quote-account (p/create-quote-account account subscription-a send log-fn)
-          dispose-account! (quote-account #(println "account done" %) #(println "account error" %))]
+          dispose-account! (quote-account #(info "account done" %) 
+                                          #(error "account error" %))]
       (swap! (:accounts state) assoc account-id {:account/id account-id
                                                  :lock (m/sem)
                                                  :dispose-account dispose-account!
@@ -131,7 +133,7 @@
   (let [accounts (load-edn-accounts edn-filename)
         account (account-by-id accounts account-id)]
       (when account
-        (println "adding account" account)
+        (info "adding account" account)
         (add-account state account))))
 
 (defn add-edn-accounts [state edn-filename]

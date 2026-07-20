@@ -93,13 +93,11 @@
            fill-qty-prct]}
    log-fn
    {:keys [order-id asset qty side limit order-type] :as order}]
-  (let [log (fn [& data]
-              (log-fn {:order/fill order-id :data (vec data)}))
-        remaining-slices (atom (fill-slices fill-qty-prct qty))
+  (let [remaining-slices (atom (fill-slices fill-qty-prct qty))
         last-fill-date (atom nil)
         current-type (atom order-type)
         quote-f (asset-quote-flow (:quote-manager ctx) asset)]
-    (log {:message (str "order created. fill slices: " @remaining-slices)})
+    (log-fn {:message (str "order created. fill slices: " @remaining-slices)})
     (m/eduction
      (remove nil?)
      (m/ap
@@ -111,7 +109,7 @@
               quote-ts (or (:ts quote) (t/instant))
               order-type* (if (and (= :stop @current-type)
                                    (stop-triggered? side limit bid))
-                            (do (log {:message "stop triggered → market"
+                            (do (log-fn {:message "stop triggered → market"
                                       :bid bid :limit limit})
                                 (reset! current-type :market)
                                 :market)
@@ -123,10 +121,10 @@
                   fill (->fill order slice bid quote-ts)]
               (swap! remaining-slices rest)
               (reset! last-fill-date quote-ts)
-              (log "filled: " fill)
+              (log-fn fill)
               fill)))
         (catch Cancelled _
-          (log "cancelled")
+          (log-fn {:message "cancelled (eventually cancel order)" :date (t/instant)})
           (when (seq @remaining-slices)
             {:type :broker/order-canceled
              :order-id order-id

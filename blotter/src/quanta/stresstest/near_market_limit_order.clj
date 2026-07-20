@@ -6,9 +6,11 @@
 (defn near-market-limit-order
   "Returns a task yielding a limit order offset from the current market.
 
-   Buy orders are priced below the bid and sell orders above the ask. The
-   order map must include `:asset`, `:side`, and `:offset-prct`; quote lookup
-   uses the quote manager in the OMS context."
+   Positive `:offset-prct` prices buys below the bid and sells above the ask
+   (resting). Negative `:offset-prct` prices buys above the bid and sells below
+   the ask (aggressive / fillable). The order map must include `:asset`,
+   `:side`, and `:offset-prct`; quote lookup uses the quote manager in the OMS
+   context."
   [oms {:keys [asset side offset-prct timeout-ms]
         :or {timeout-ms 5000}
         :as order}]
@@ -20,9 +22,9 @@
        (throw (ex-info "Near-market limit order side must be :buy or :sell"
                        {:side side})))
      (when-not (and (number? offset-prct)
-                    (pos? offset-prct)
-                    (< offset-prct 100))
-       (throw (ex-info "Near-market limit order offset percentage must be greater than 0 and less than 100"
+                    (not (zero? offset-prct))
+                    (< (Math/abs (double offset-prct)) 100))
+       (throw (ex-info "Near-market limit order offset percentage must be non-zero and |offset| < 100"
                        {:offset-prct offset-prct})))
      (let [current-quote (m/? (quote/quote-snapshot quote-manager timeout-ms asset))]
        (when-not current-quote

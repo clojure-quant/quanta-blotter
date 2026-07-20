@@ -1,5 +1,6 @@
 (ns quanta.blotter.oms.flow.fill
   (:require
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]))
 
 (defn fill?
@@ -10,7 +11,7 @@
 (defn ->fill
   "Projects a :broker/order-filled message to a db-shaped fill record."
   [msg]
-  (println "fill orderupdate: " msg)
+  (info "fill orderupdate: " msg)
   (cond-> {:fill/id (:fill-id msg)
            :fill/order-id (:order-id msg)
            :fill/account-id (:account/id msg)

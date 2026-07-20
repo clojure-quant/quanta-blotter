@@ -113,12 +113,17 @@
    (let [orders (atom {})]
      (loop []
        (let [{:keys [type order-id] :as action} (m/? pull)]
-         (log {:paper/action-in action})
+         (log action)
          (case type
            :trader/new-order
            (if-let [reason (reject-reason (:reject-probability settings))]
-             (m/? (push-update settings push (reject-message action reason)))
-             (let [_ (m/? (push-update settings push (order-confirmed action)))
+             (let [rejected (reject-message action reason)]
+               (log rejected)
+               (m/? (push-update settings push rejected)))
+             
+             (let [confirmed (order-confirmed action)
+                   _ (log confirmed)
+                   _ (m/? (push-update settings push confirmed))
                    dispose-fill (start-fill! ctx settings log action push)]
                (swap! orders assoc order-id dispose-fill)))
 

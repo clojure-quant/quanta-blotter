@@ -1,5 +1,6 @@
 (ns quanta.blotter.oms.server
   (:require
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [clojure.java.io :as io]
    [modular.require :refer [require-namespaces]]
    [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager!]]
@@ -15,7 +16,7 @@
 
 (defn- require-config-namespaces! [ns-require]
   (when (seq ns-require)
-    (println "requiring namespaces:" (pr-str ns-require))
+    (info "requiring namespaces:" (pr-str ns-require))
     (require-namespaces ns-require)))
 
 ; (vf/bad-message-with-explaination combined-flow)

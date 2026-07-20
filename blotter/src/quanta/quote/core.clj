@@ -1,6 +1,7 @@
 (ns quanta.quote.core
   (:require
    [clojure.java.io :as io]
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [datahike.api :as d]
    [missionary.core :as m]
    [modular.require :refer [require-namespaces]]
@@ -11,7 +12,7 @@
 
 (defn- require-config-namespaces! [ns-require]
   (when (seq ns-require)
-    (println "requiring namespaces:" (pr-str ns-require))
+    (info "requiring namespaces:" (pr-str ns-require))
     (require-namespaces ns-require)))
 
 (defn create-quote-manager [{:keys [quote-accounts-file db account-log-dir ns-require]
@@ -71,8 +72,8 @@
                              (reset! quotelist-a v)
                              nil)
                            nil quote-dict-flow)
-        dispose! (quote-processor #(println "quote-printer done " %)
-                                  #(println "quote-printer CRASH " %))]
+        dispose! (quote-processor #(info "quote-printer done " %)
+                                  #(error "quote-printer CRASH " %))]
     {:dispose! dispose!
      :quotelist quotelist-a}))
 

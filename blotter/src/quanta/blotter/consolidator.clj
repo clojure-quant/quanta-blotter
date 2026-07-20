@@ -45,22 +45,31 @@
   (let [{:keys [order orderupdate _log]} channel-original
         order-2-rdv (:order channel)
         orderupdate-2-rdv (:orderupdate channel)
+        combined-rdv (create-rdv "consolidator/combined")
+        send-sp (m/sp
+                 (loop []
+                   (let [data (m/? combined-rdv)] 
+                     (info "consolidater sending:" data)
+                     (m/? (m/via m/blk (send data)))
+                     (info "consolidater sent:" data)
+                     (recur))))
         copy-order-sp (m/sp
                        (loop []
                          (let [data (m/? order)] ; read original order
                            ;(println "ORDER: " data)
-                           (send data)
+                           (m/? (combined-rdv data))
                            (m/? (order-2-rdv data)) ; copy order 
                            (recur))))
         copy-orderupdate-sp (m/sp
                              (loop []
                                (let [data (m/? orderupdate-2-rdv)] ; read original orderupdate
                                  ;(println "ORDERUPDATE: " data)
-                                 (send data)
+                                  (m/? (combined-rdv data))
                                  (m/? (orderupdate data)) ; copy orderupdate
                                  (recur))))
-        t (m/join concat copy-order-sp copy-orderupdate-sp)
-        dispose (t #(println "consolidator done" %) #(println "consolidator error" %))]
+        t (m/join concat copy-order-sp copy-orderupdate-sp send-sp)
+        dispose (t #(info "consolidator done" %)
+                   #(error "consolidator error" %))]
     dispose))
 
 (defn stop-consolidator! [{:keys [dispose!] :as this}]

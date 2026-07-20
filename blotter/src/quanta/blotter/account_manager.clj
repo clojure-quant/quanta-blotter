@@ -1,5 +1,6 @@
 (ns quanta.blotter.account-manager
   (:require
+   [taoensso.timbre :as timbre :refer [debug info warn error]]
    [clojure.edn :as edn]
    [datahike.api :as d]
    [missionary.core :as m]
@@ -141,7 +142,7 @@
       (doseq [account accounts]
         (let [list-name (:account/asset-list account)
               asset-list-ref (resolve-asset-list! conn list-name)]
-          (println "seeding account" (:account/id account))
+          (info "seeding account" (:account/id account))
           (db/create-account conn (select-keys account [:account/id :account/trader :account/api]))
           (db/update-account conn (merge (select-keys account [:account/id :account/notes
                                                                :account/settings :account/name

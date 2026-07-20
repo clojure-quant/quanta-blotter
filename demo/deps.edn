@@ -16,6 +16,7 @@
   :cli-quote-list {:exec-fn demo.cli-quote-list/start-cli}
   :cli-asset-list-print {:exec-fn demo.cli-asset-list-print/start-cli}
   :cli-quote-snapshot {:exec-fn demo.cli-quote-snapshot/start-cli}
+  :quote-snapshot-repeat {:exec-fn demo.quote-snapshot-repeat/start-cli}
   
   ;; trade
   :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}
