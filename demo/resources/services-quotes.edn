@@ -1,0 +1,21 @@
+{:modular (modular.system/modular-env)
+ :components
+ {:config {:start (deref (modular.config/load-config! (:config #ref [:modular])))}
+
+  :timbre {:start (modular.log/timbre-config!
+                   (:timbre/clj (clip/ref :config)))}
+
+  :db {:start (quanta.util.datahike/db-start
+               {:schema (concat
+                         (deref quanta.blotter.oms.db/schema)
+                         (deref quanta.asset.schema/asset))
+                :db-path (get-in (clip/ref :config) [:db :dir])
+                :seed-fn [(quanta.asset.seed/seed-edn-assets-fn
+                           (get-in (clip/ref :config) [:db-seed :assets-file]))
+                          (quanta.asset.seed/seed-edn-lists-fn
+                           (get-in (clip/ref :config) [:db-seed :lists-dir]))]})
+       :stop (quanta.util.datahike/db-stop this)}
+
+  :quote-manager {:start (quanta.quote.core/create-quote-manager
+                          (assoc (:quote-manager (clip/ref :config))
+                                 :db (clip/ref :db)))}}}

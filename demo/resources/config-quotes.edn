@@ -1,0 +1,16 @@
+{
+ :timbre/clj {:min-level [[#{"*"} :info]]
+              :appenders {:default {:type :console-color}
+                          :file {:type :file
+                                 :fname "log-quotes/app.log"}}}
+
+ :db {:dir "quotes-db"}
+
+ :db-seed {:assets-file "demo-assets.edn"
+           :lists-dir "demo-lists"}
+
+ :quote-manager {:quote-accounts-file "demo-quote-accounts.edn"
+                 :account-log-dir "log-quotes/quote"
+                 :ns-require [quanta.market-sim.quote-random
+                              fix-engine.quote.account
+                              quanta.bybit.quote.account]}}

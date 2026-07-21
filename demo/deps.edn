@@ -35,6 +35,14 @@
                            :version "prod1"
                            :run demo.stresstest/run}}
 
+  :quote-snapshot-performance {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
+                               :exec-fn modular.system/start!
+                               :exec-args {:config ["config-quotes.edn"]
+                                           :services "services-quotes.edn"
+                                           :profile "default"
+                                           :version "prod1"
+                                           :run demo.quote-snapshot-performance/run}}
+
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
 
