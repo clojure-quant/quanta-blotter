@@ -26,6 +26,7 @@
   ([config trade-db]
    (let [{:keys [transaction-log-file account-log-dir validate? tag?
                  db-enabled trading-state-printer-enabled
+                 calculate-ui-views calculate-trading-state-trader
                  ns-require
                  trading-state-log-file trading-state-print-interval-ms
                  ui-recent-ms
@@ -34,6 +35,8 @@
                tag? true
                db-enabled false
                trading-state-printer-enabled false
+               calculate-ui-views false
+               calculate-trading-state-trader false
                trading-state-log-file "log/oms-server-trading-state.txt"
                trading-state-print-interval-ms 15000
                ui-recent-ms 60000}} config]
@@ -48,9 +51,11 @@
                                       :tag? tag?
                                       :ctx ctx})
            _ (add-enabled-db-accounts (:account-manager oms) trade-db)
-           {:keys [trading-state-a snapshot-flow] :as tsc} (tsc/create-trading-state-consumer! (:trading-state oms) ui-recent-ms)
-           _ (tsc/start! tsc)
-           {:keys [trading-state-trader] :as trader-tagger} (trader/start-trader-tagger trade-db trading-state-a)
+           tsc (when calculate-ui-views
+                 (tsc/create-trading-state-consumer! (:trading-state oms) ui-recent-ms))
+           _ (when tsc (tsc/start! tsc))
+           trader-tagger (when (and calculate-trading-state-trader tsc)
+                           (trader/start-trader-tagger trade-db (:trading-state-a tsc)))
            oms (start-order-manager! oms)
 
            dispose-wo-op-logger (when trading-state-printer-enabled
@@ -58,27 +63,25 @@
            db-transactor (when db-enabled
                            (db-transactor/start-db-transactor oms trade-db))
            oms-server {:oms oms
-                       :tsc tsc
-                       :trader-tagger trader-tagger
-                       :dispose-wo-op-logger dispose-wo-op-logger
-                       :trade-db trade-db
-                       :db-enabled db-enabled
-                       :trading-state-printer-enabled trading-state-printer-enabled
-                       :db-transactor db-transactor
-                       :trading-state-a trading-state-a
-                       :trading-state-trader trading-state-trader
-                       :snapshot-flow snapshot-flow}]
+                       :internal {:tsc tsc
+                                  :trader-tagger trader-tagger
+                                  :dispose-wo-op-logger dispose-wo-op-logger
+                                  :trade-db trade-db
+                                  :db-transactor db-transactor}}]
        (assert (get-in oms [:combined-flow]) "oms :combined-flow is required")
        oms-server))))
 
-(defn stop-oms-server [{:keys [oms dispose-wo-op-logger trade-db db-transactor tsc trader-tagger]}]
-  (when db-transactor
-    (db-transactor/stop-db-transactor db-transactor))
-  (when-let [dispose! (:dispose! trader-tagger)] (dispose!))
-  (datahike/db-stop trade-db)
-  (stop-order-manager! oms)
-  (tsc/stop! tsc)
-  (when dispose-wo-op-logger (dispose-wo-op-logger)))
+(defn stop-oms-server [{:keys [oms internal]}]
+  (let [{:keys [dispose-wo-op-logger db-transactor tsc trader-tagger]} internal]
+    (when db-transactor
+      (db-transactor/stop-db-transactor db-transactor))
+    (when-let [dispose! (:dispose! trader-tagger)] (dispose!))
+    (stop-order-manager! oms)
+    (when tsc (tsc/stop! tsc))
+    (when dispose-wo-op-logger (dispose-wo-op-logger))))
 
-(defn snapshot-flow [{:keys [snapshot-flow]}]
-  snapshot-flow)
+(defn snapshot-flow [state]
+  (get-in state [:internal :tsc :snapshot-flow]))
+
+(defn trading-state-trader [state]
+  (get-in state [:internal :trader-tagger :trading-state-trader]))

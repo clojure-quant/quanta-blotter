@@ -102,25 +102,29 @@
    (let [this (start-runner oms runner-opts)
          expect (:expect test-opts)
          opts (dissoc test-opts :expect)
+         start-ts (System/nanoTime)
          r (m/? (m/race (run-task-safe (test-fn this opts))
-                        (m/sleep 7000 ::timeout)))
+                        (m/sleep 30000 ::timeout)))
          result (cond
                   (= ::timeout r)
-                  (do 
+                  (do
                     (error "timeout state: " @(:state this))
                     {:message "timeout 30 seconds."})
-                  
 
                   (= ::exception r)
                   {:message "exception in test task"}
 
                   :else
-                  (let [result (calc-result-stats this)]
-                    (if (= expect result)
-                      {:message "success"}
+                  (let [stats (calc-result-stats this)
+                        end-ts (System/nanoTime)
+                        runtime-ms (long (/ (- end-ts start-ts) 1000000))]
+                    (if (= expect stats)
+                      {:message "success"
+                       :runtime-ms runtime-ms}
                       {:message "expected different result."
                        :expect expect
-                       :result result})))]
+                       :result stats
+                       :runtime-ms runtime-ms})))]
      (stop-runner this)
      result)))
 

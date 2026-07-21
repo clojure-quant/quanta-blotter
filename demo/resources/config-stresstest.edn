@@ -20,6 +20,9 @@
               :validate? false
               :tag? true
               :db-enabled false
+              :calculate-ui-views false
+              :calculate-trading-state-trader false
+              ; trading state printer (prints wo and op to logfile)
               :trading-state-printer-enabled false
               :trading-state-log-file "log-stresstest/oms-server-trading-state.txt"
               :trading-state-print-interval-ms 15000}

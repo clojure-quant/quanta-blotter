@@ -7,6 +7,7 @@
   :account/notes "always fills order with 2 fills; timing is random"
   :account/asset-list "test"
   :account/api :paper
+  ; this account is used for stress testing. do not change the settings.
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
                      :fill-probability 100

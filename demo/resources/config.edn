@@ -11,6 +11,8 @@
               :account-log-dir "log/oms-account"
               :validate? true
               :tag? true
+              :calculate-ui-views true
+              :calculate-trading-state-trader true
               :trading-state-log-file "log/oms-server-trading-state.txt"
               :trading-state-print-interval-ms 15000}
 
