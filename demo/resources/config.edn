@@ -7,7 +7,6 @@
  :oms-server {:ns-require [fix-engine.blotter.account
                            quanta.bybit.blotter.account
                            quanta.market-sim.broker-paper]
-              :log-file "log/oms-server-trace.txt"
               :transaction-log-file "log/oms-server-transaction.txt"
               :account-log-dir "log/oms-account"
               :validate? true

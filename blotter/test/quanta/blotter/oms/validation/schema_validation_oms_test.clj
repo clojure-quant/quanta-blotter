@@ -42,10 +42,8 @@
                                             :bid 100.0M
                                             :ask 100.01M
                                             :ts (t/instant)}))))]
-    (let [log-file (temp-file "oms-validation-log-")
-          tx-file (temp-file "oms-validation-tx-")
-          oms (create-order-manager {:log-file log-file
-                                     :transaction-log-file tx-file
+    (let [tx-file (temp-file "oms-validation-tx-")
+          oms (create-order-manager {:transaction-log-file tx-file
                                      :validate? true
                                      :tag? false
                                      :ctx {:quote-manager ::test-quote-manager}})
@@ -62,21 +60,23 @@
                                          :fill-qty-prct [100]
                                          :wait-seconds 0}})
         (testing "invalid order is rejected with spec-error on orderupdate channel"
-          (let [bad (second original-orders)]
+          (let [bad (second original-orders)
+                order-rdv (get-in oms [:internal :order-rdv])]
             (m/? (m/sp
-                  (m/? ((:order-rdv oms) bad))
+                  (m/? (order-rdv bad))
                   (m/? (m/sleep 50))))
             (is (some #(and (= :broker/order-rejected (:type %))
                             (re-find #"^spec-error" (:message %)))
                       @combined-events)
                 "order spec rejection appears on combined channel")))
         (testing "corrupted broker orderupdate is logged as schema/error"
-          (m/? (m/sp
-                (m/? ((:order-rdv oms) valid-new-order))
-                (m/? (m/sleep 750))))
-          (let [log-text (when (.exists (java.io.File. log-file)) (slurp log-file))]
-            (is (re-find #":schema/error" log-text)
-                "failed orderupdate produces schema/error log entry")
-            (is (re-find #":original-msg" log-text))))
+          (let [order-rdv (get-in oms [:internal :order-rdv])]
+            (m/? (m/sp
+                  (m/? (order-rdv valid-new-order))
+                  (m/? (m/sleep 750))))
+            (let [log-text (when (.exists (java.io.File. log-file)) (slurp log-file))]
+              (is (re-find #":schema/error" log-text)
+                  "failed orderupdate produces schema/error log entry")
+              (is (re-find #":original-msg" log-text))))
         (finally
           (stop-order-manager! oms))))))

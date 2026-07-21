@@ -26,10 +26,9 @@
                (warn "consolidator: flow-sender: no flow to send to" v))
                )}))
 
-(defn create-consolidator [{:keys [order orderupdate log] :as channel}]
+(defn create-consolidator [{:keys [order orderupdate] :as channel}]
   (assert order "consolidator needs order")
   (assert orderupdate "consolidator needs orderupdate")
-  (assert log "consolidator needs log")
   (let [{:keys [flow send]} (flow-sender)
         order-2-rdv (create-rdv "consolidator/order-out")
         orderupdate-2-rdv (create-rdv "consolidator/orderupdate-in")]
@@ -37,12 +36,11 @@
      :combined-flow flow
      :channel-original channel
      :channel {:order order-2-rdv
-               :orderupdate orderupdate-2-rdv
-               :log log}
+               :orderupdate orderupdate-2-rdv}
      :dispose! (atom nil)}))
 
 (defn start-consolidator! [{:keys [send _combined-flow channel-original channel dispose!] :as this}]
-  (let [{:keys [order orderupdate _log]} channel-original
+  (let [{:keys [order orderupdate]} channel-original
         order-2-rdv (:order channel)
         orderupdate-2-rdv (:orderupdate channel)
         combined-rdv (create-rdv "consolidator/combined")

@@ -24,21 +24,19 @@
   consolidator inner channels)."
   ([channel]
    (create-validation-channel channel nil))
-  ([{:keys [order orderupdate log] :as channel} output-channel]
+  ([{:keys [order orderupdate] :as channel} output-channel]
    (assert order "validation channel needs order")
    (assert orderupdate "validation channel needs orderupdate")
-   (assert log "validation channel needs log")
    (let [order-out-rdv (or (:order output-channel) (create-rdv "validation/order-out"))
          orderupdate-out-rdv (or (:orderupdate output-channel) (create-rdv "validation/orderupdate-out"))]
      {:channel-original channel
       :channel {:order order-out-rdv
-                :orderupdate orderupdate-out-rdv
-                :log log}
+                :orderupdate orderupdate-out-rdv}
       :dispose! (atom nil)})))
 
 (defn start-validation-channel!
   [{:keys [channel-original channel dispose!]}]
-  (let [{:keys [order orderupdate log]} channel-original
+  (let [{:keys [order orderupdate]} channel-original
         order-out-rdv (:order channel)
         orderupdate-out-rdv (:orderupdate channel)
         validate-order-sp (m/sp
@@ -46,15 +44,22 @@
                              (let [data (m/? order-out-rdv)]
                                (if (s/validate-message data)
                                  (m/? (order data))
-                                 (m/? (orderupdate-out-rdv (order-rejection data))))
+                                 (do 
+                                   (error (str {:direction :order
+                                                :schema/error (pr-str (s/human-error-message data))
+                                                :original-msg data}))
+                                   (m/? (orderupdate-out-rdv (order-rejection data)))
+                                   )
+                                 )
                                (recur))))
         validate-orderupdate-sp (m/sp
                                  (loop []
                                    (let [data (m/? orderupdate)]
                                      (if (s/validate-message data)
                                        (m/? (orderupdate-out-rdv data))
-                                       (log {:schema/error (pr-str (s/human-error-message data))
-                                             :original-msg data}))
+                                       (error (str {:direction :orderupdate
+                                             :schema/error (pr-str (s/human-error-message data))
+                                             :original-msg data})))
                                      (recur))))
         t (m/join concat validate-order-sp validate-orderupdate-sp)
         dispose (t #(info "validation channel done" %)

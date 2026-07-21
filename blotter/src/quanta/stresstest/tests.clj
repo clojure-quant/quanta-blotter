@@ -25,18 +25,37 @@
                                                :order-count 1  :active-order-count 0
                                                :position-count 0 :open-position-qty 0M}}
       ; limit buy + sell (aggressive / fillable)
-      ; :limit-buy-sell {:asset "__TEST" :qty 100M :offset-prct -20.0
-      ;                  :expect {:fill-qty 200.0M
-      ;                           :order-count 2  :active-order-count 0
-      ;                           :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "__TEST" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "__TEST2" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "__TEST" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "__TEST2" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
       ; :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
       ;                  :expect {:fill-qty 0.2M
       ;                           :order-count 2  :active-order-count 0
       ;                           :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "USDCAD" :qty 10000M :offset-prct -0.1
+                       :expect {:fill-qty 20000.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
       :limit-buy-sell {:asset "EURUSD" :qty 10000M :offset-prct -0.1
                        :expect {:fill-qty 20000.0M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}
+
+
+
       ; market buy/sell
       :market-buy-sell {:asset "__TEST" :qty 100M
                         :expect {:fill-qty 200.0M

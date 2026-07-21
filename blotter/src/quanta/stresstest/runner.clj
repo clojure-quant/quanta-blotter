@@ -103,7 +103,7 @@
          expect (:expect test-opts)
          opts (dissoc test-opts :expect)
          r (m/? (m/race (run-task-safe (test-fn this opts))
-                        (m/sleep 30000 ::timeout)))
+                        (m/sleep 7000 ::timeout)))
          result (cond
                   (= ::timeout r)
                   (do 

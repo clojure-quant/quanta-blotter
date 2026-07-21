@@ -15,7 +15,7 @@
     (let [logger (create-logger (str dir "/" account-id ".log") false)]
       {:log-fn (partial log logger)
        :logger logger})
-    {:log-fn (:log state)
+    {:log-fn (fn [_] nil)
      :logger nil}))
 
 (defn add-account [state account]
@@ -26,7 +26,7 @@
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
     (let [{:keys [log-fn logger]} (account-log state account-id)
           trade-account (p/create-trade-account (:ctx state) account account-order-rdf account-orderupdate-rdf log-fn)
-          dispose-account! (trade-account #(println "account done" %) #(println "account error" %))]
+          dispose-account! (trade-account #(info "account done" %) #(error "account error" %))]
       (swap! (:accounts state) assoc account-id {:account/id account-id
                                                  :dispose-account dispose-account!
                                                  :account-order-rdf account-order-rdf
@@ -40,18 +40,16 @@
         (stop-logger logger))
       (swap! (:accounts state) dissoc account-id))))
 
-(defn create-account-manager [ctx orderflow-rdv orderupdate-rdv {:keys [log account-log-dir]}]
+(defn create-account-manager [ctx orderflow-rdv orderupdate-rdv {:keys [account-log-dir]}]
   (let [accounts-a (atom {})]
-    {:ctx ctx
-     :log log
+    {:ctx ctx 
      :account-log-dir account-log-dir
      :orderflow-rdv orderflow-rdv
      :orderupdate-rdv orderupdate-rdv
      :accounts accounts-a
      :account-change-f (let [f (m/watch accounts-a)]
                          (m/ap
-                          (let [data (m/?> f)]
-
+                          (let [_ (m/?> f)]
                             ::account-change)))
      :dispose! (atom nil)}))
 
@@ -61,7 +59,7 @@
                                   (:account-change-f state))
         waiting-f (m/ap
                    (let [v (m/?> next-change-f)]
-                     (m/? (m/via m/blk (println "** account change: " v)))
+                     (m/? (m/via m/blk (info "** account change: " v)))
                      v))]
     (m/reduce (fn [_r v] v) nil waiting-f)))
 
@@ -77,7 +75,7 @@
            inputs (map read-account-orderupdate (vals accounts))
            data  (m/? (apply m/race (conj inputs (wait-for-account-change state))))]
        (if (= data ::account-change)
-         (m/? (m/via m/blk (println "consolidate account change!")))
+         (m/? (m/via m/blk (info "consolidate account change!")))
          (m/? ((:orderupdate-rdv state) data)))
        (recur)))))
 
@@ -90,7 +88,7 @@
          (let [account (get @(:accounts state) account-id)]
            (when account
              (m/? ((:account-order-rdf account) data-in))))
-         (m/? (m/via m/blk (println "ignoring msg without account/id:")))))
+         (m/? (m/via m/blk (error "ignoring msg without account/id:")))))
      (recur))))
 
 (defn multiplex-t [state]
@@ -100,7 +98,7 @@
 
 (defn start-account-manager [state]
   (reset! (:dispose! state)
-          ((multiplex-t state) #(println "multiplex done" %) #(println "multiplex error" %))))
+          ((multiplex-t state) #(info "multiplex done" %) #(error "multiplex error" %))))
 
 ;; EDN
 

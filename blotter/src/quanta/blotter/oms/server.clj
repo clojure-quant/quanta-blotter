@@ -24,25 +24,25 @@
 (defn start-oms-server
   ([config] (start-oms-server config nil))
   ([config trade-db]
-   (let [{:keys [log-file transaction-log-file account-log-dir validate? tag?
+   (let [{:keys [transaction-log-file account-log-dir validate? tag?
+                 db-enabled trading-state-printer-enabled
                  ns-require
                  trading-state-log-file trading-state-print-interval-ms
                  ui-recent-ms
                  ctx]
-          :or {log-file "log/oms-server-trace.txt"
-               transaction-log-file "log/oms-server-transaction.txt"
-               account-log-dir "log/oms-account"
-               validate? true
+          :or {validate? true
                tag? true
+               db-enabled false
+               trading-state-printer-enabled false
                trading-state-log-file "log/oms-server-trading-state.txt"
                trading-state-print-interval-ms 15000
                ui-recent-ms 60000}} config]
      (assert trade-db "trade-db connection is required")
      (require-config-namespaces! ns-require)
      (let [_ (.mkdirs (io/file "log"))
-           _ (.mkdirs (io/file account-log-dir))
-           oms (create-order-manager {:log-file log-file
-                                      :transaction-log-file transaction-log-file
+           _ (when account-log-dir
+               (.mkdirs (io/file account-log-dir)))
+           oms (create-order-manager {:transaction-log-file transaction-log-file
                                       :account-log-dir account-log-dir
                                       :validate? validate?
                                       :tag? tag?
@@ -52,14 +52,18 @@
            _ (tsc/start! tsc)
            {:keys [trading-state-trader] :as trader-tagger} (trader/start-trader-tagger trade-db trading-state-a)
            oms (start-order-manager! oms)
-           
-           dispose-wo-op-logger (start-trading-state-logger! (:trading-state oms) trading-state-log-file trading-state-print-interval-ms false)
-           db-transactor (db-transactor/start-db-transactor oms trade-db)
+
+           dispose-wo-op-logger (when trading-state-printer-enabled
+                                  (start-trading-state-logger! (:trading-state oms) trading-state-log-file trading-state-print-interval-ms false))
+           db-transactor (when db-enabled
+                           (db-transactor/start-db-transactor oms trade-db))
            oms-server {:oms oms
                        :tsc tsc
                        :trader-tagger trader-tagger
                        :dispose-wo-op-logger dispose-wo-op-logger
                        :trade-db trade-db
+                       :db-enabled db-enabled
+                       :trading-state-printer-enabled trading-state-printer-enabled
                        :db-transactor db-transactor
                        :trading-state-a trading-state-a
                        :trading-state-trader trading-state-trader
@@ -68,7 +72,8 @@
        oms-server))))
 
 (defn stop-oms-server [{:keys [oms dispose-wo-op-logger trade-db db-transactor tsc trader-tagger]}]
-  (db-transactor/stop-db-transactor db-transactor)
+  (when db-transactor
+    (db-transactor/stop-db-transactor db-transactor))
   (when-let [dispose! (:dispose! trader-tagger)] (dispose!))
   (datahike/db-stop trade-db)
   (stop-order-manager! oms)

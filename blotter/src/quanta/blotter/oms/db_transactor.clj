@@ -13,10 +13,9 @@
 
 (defn- tagged-flows
   "Builds the four tagged flows from shared trading-state flows."
-  [{:keys [consolidator trading-state] :as oms}]
-  (let [{:keys [order-change-flow fill-flow position-change-flow]} trading-state
-        channel-flow (:combined-flow consolidator)]
-    [(tag :msg channel-flow)
+  [{:keys [combined-flow trading-state] :as oms}]
+  (let [{:keys [order-change-flow fill-flow position-change-flow]} trading-state]
+    [(tag :msg combined-flow)
      (tag :order order-change-flow)
      (tag :fill fill-flow)
      (tag :position position-change-flow)]))
@@ -30,7 +29,9 @@
 (defn- write-block! [db state block]
   (let [tx-vector (block->tx-vector block)]
     (info "db-transactor writing block of" (count block) "events")
-    (db/process db state tx-vector)))
+    (db/process db state tx-vector)
+    (info "db-transactor wrote block of" (count block) "events")
+    ))
 
 (defn transact-task
   "Missionary task that persists all OMS flows of `this` into `db`.

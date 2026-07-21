@@ -15,8 +15,7 @@
    [quanta.market-sim.broker-paper] ; side effect: brings in paper broker implementation
    ))
 
-(def oms  (create-order-manager {:log-file "log/oms-trace.txt"
-                                 :transaction-log-file "log/oms-transaction.txt"
+(def oms  (create-order-manager {:transaction-log-file "log/oms-transaction.txt"
                                  :validate? true
                                  :tag? true
                                  :ctx {:quote-manager ::test-quote-manager}}))
@@ -33,7 +32,7 @@ oms
 (def db-transactor (db-transactor/start-db-transactor oms trade-db))
 
 (def dispose-orderflow-simulated
-  (push-flow-to-rdv (:order-rdv oms) demo-order-action-flow))
+  (push-flow-to-rdv (get-in oms [:internal :order-rdv]) demo-order-action-flow))
 
 (start-order-manager! oms)
 
