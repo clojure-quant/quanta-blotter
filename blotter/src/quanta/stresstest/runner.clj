@@ -95,7 +95,8 @@
      nil
      (catch Exception e
        (error "exception running test task " (ex-message e))
-       ::exception))))
+       [::exception (ex-message e)]
+       ))))
 
 (defn run [oms runner-opts test-fn test-opts]
   (m/sp
@@ -111,8 +112,8 @@
                     (error "timeout state: " @(:state this))
                     {:message "timeout 30 seconds."})
 
-                  (= ::exception r)
-                  {:message "exception in test task"}
+                  (and (vector? r) (= ::exception (first r)))
+                  {:message (or (second r) "exception")}
 
                   :else
                   (let [stats (calc-result-stats this)

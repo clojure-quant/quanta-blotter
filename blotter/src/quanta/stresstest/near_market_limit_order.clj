@@ -28,7 +28,7 @@
                        {:offset-prct offset-prct})))
      (let [current-quote (m/? (quote/quote-snapshot quote-manager timeout-ms asset))]
        (when-not current-quote
-         (throw (ex-info "Timed out waiting for asset quote"
+         (throw (ex-info (str "Quote Timeout " timeout-ms)
                          {:asset asset :timeout-ms timeout-ms})))
        (let [reference-price (case side
                                :buy (:bid current-quote)

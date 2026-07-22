@@ -13,13 +13,13 @@
  :oms-server {:ns-require [fix-engine.blotter.account
                            quanta.bybit.blotter.account
                            quanta.market-sim.broker-paper]
-              ;; :transaction-log-file "log-stresstest/oms-server-transaction.txt"
-              :transaction-log-file nil
-              ;; :account-log-dir "log-stresstest/oms-account"
-              :account-log-dir nil
+              :transaction-log-file "log-stresstest/oms-server-transaction.txt"
+              ;:transaction-log-file nil
+              :account-log-dir "log-stresstest/oms-account"
+              ;:account-log-dir nil
               :validate? false
               :tag? true
-              :db-enabled false
+              :db-enabled true
               :calculate-ui-views false
               :calculate-trading-state-trader false
               ; trading state printer (prints wo and op to logfile)

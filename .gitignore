@@ -16,3 +16,5 @@ blotter/.clj-kondo/.cache
 demo/asset-db
 demo/stresstest-db
 demo/log-stresstest
+demo/quotes-db
+demo/log-quotes
