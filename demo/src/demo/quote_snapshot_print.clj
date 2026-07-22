@@ -1,4 +1,4 @@
-(ns demo.cli-quote-snapshot
+(ns demo.quote-snapshot-print
   (:require
    [clojure.pprint :refer [pprint]]
    [missionary.core :as m]
@@ -42,6 +42,6 @@
          (quanta.util.datahike/db-stop db))))))
 
 (defn start-cli
-  "Usage: cd demo && clojure -X:cli-quote-snapshot"
+  "Usage: cd demo && clojure -X:quote-snapshot-print"
   [_]
   (start!))

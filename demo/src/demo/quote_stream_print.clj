@@ -1,4 +1,4 @@
-(ns demo.cli-quote-print
+(ns demo.quote-stream-print
   (:require
    [missionary.core :as m]
    [quanta.quote.account-manager :refer [create-account-manager add-edn-accounts get-account]]))
@@ -63,7 +63,7 @@
      :dispose-sub-changer dispose-sub-changer}))
 
 (defn start-cli
-  "Usage: cd demo && clojure -X:blotter-trade"
+  "Usage: cd demo && clojure -X:quote-stream-print"
   [_]
   (start!)
   @(promise))

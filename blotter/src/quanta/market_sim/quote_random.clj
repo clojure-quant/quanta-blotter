@@ -1,6 +1,7 @@
 (ns quanta.market-sim.quote-random
   (:require
    [missionary.core :as m]
+   [tick.core :as t]
    [quanta.quote.protocol :as p]
    [quanta.quote.interactor :refer [subscription-watcher]]))
 
@@ -101,12 +102,14 @@
 (defrecord random-msg-processor [account log state-a initial-price]
   p/quote-messaging
   (subscribe-msg [_ sub]
-    (swap! state-a add-new-assets sub initial-price)
-    (log {:account (:account/id account) :type :subscribe :assets sub})
-    nil)
+                 (swap! state-a add-new-assets sub initial-price)
+                 (log {:date (t/instant) :account (:account/id account) 
+                       :type :subscribe :assets sub})
+                 nil)
   (unsubscribe-msg [_ unsub]
     ;; keep last simulated state in state-a for later re-subscribe
-    (log {:account (:account/id account) :type :unsubscribe :assets unsub})
+    (log {:date (t/instant) :account (:account/id account) 
+          :type :unsubscribe :assets unsub})
     nil)
   (read-quote [_ _conn-msg-in]
     nil))

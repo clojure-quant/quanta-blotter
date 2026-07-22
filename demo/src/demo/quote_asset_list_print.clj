@@ -1,4 +1,4 @@
-(ns demo.cli-asset-list-print
+(ns demo.quote-asset-list-print
   (:require
    [clojure.pprint :refer [print-table]]
    [missionary.core :as m]
@@ -63,9 +63,8 @@
 
 (defn start-cli
   "Usage:
-     cd demo && clojure -X:cli-asset-list-print
-     cd demo && clojure -X:cli-asset-list-print :list '\"crypto\"'"
+     cd demo && clojure -X:quote-asset-list-print
+     cd demo && clojure -X:quote-asset-list-print :list '\"crypto\"'"
   [opts]
   (start! opts)
   @(promise))
-

@@ -1,6 +1,7 @@
 (ns quanta.quote.interactor
   (:require
    [clojure.set :refer [difference]]
+   [tick.core :as t]
    [missionary.core :as m]
    [quanta.quote.protocol :as p])
   (:import missionary.Cancelled))
@@ -19,7 +20,8 @@
   (m/ap
    (let [assets-old (atom #{})
          assets-new (m/?> 1 subscription-f)
-         _  (session-log {:type :subscriptions :assets assets-new :account (:account/id account)})
+         _  (session-log {:date (t/instant) :account (:account/id account)
+                          :type :subscriptions :assets assets-new })
          {:keys [sub unsub]} (sub-unsub-sets @assets-old assets-new)]
      (reset! assets-old assets-new)
        ; subscribe
@@ -41,7 +43,7 @@
     (m/reduce (fn [_ _] nil) nil sub-process-f)))
 
 (defn- message-loop
-  [quote-message-processor pull log send-quote]
+  [pull log send-quote quote-message-processor]
   (m/sp
    (try
      (loop []
@@ -62,4 +64,4 @@
        (log {:type :interactor-start})
        (m/? (m/join vector
                     (subscription-watcher account quote-message-processor subscription-a push log)
-                    (message-loop quote-message-processor pull log send-quote)))))))
+                    (message-loop pull log send-quote quote-message-processor)))))))

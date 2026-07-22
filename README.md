@@ -3,7 +3,60 @@
 
 [Clojars Project](https://clojars.org/io.github.clojure-quant/quanta-blotter-cli)
 
-orders executions positions with account/trader routing
+- quote manager and 
+- order management system
+  - multiple accounts
+  - multiple traders
+  - working order and open position view
+  - backoffice (datahike db)
+  - multiple apis (bybit and fix in other clojure-quant artefacts)
+  
+## QUOTES
+
+*quote-stream-print* starts a quote account manager, prints live quotes as they arrive,
+and cycles FX subscriptions over time (add/remove pairs every ~7s) to demo
+streaming quotes and dynamic subscription changes.
+```
+cd demo
+clj -X:quote-stream-print
+```
+
+*quote-stream-mixer* demos the `quotes` API: opens per-asset quote flows (EURUSD, USDJPY, EURNOK),
+prints one stream alone and a mixed stream of all three, then stops the mixed printer after 5s.
+```
+cd demo
+clj -X:quote-stream-mixer
+```
+
+*quote-asset-list-print* will print a table of quotes to the terminal.
+the :list parameter comes from asset-lists from the database.
+default list has assets from bybit/ctrader-fix/random.
+if no list is specified, then the asset-lists are changed every 7 seconds.
+```
+cd demo
+clojure -X:quote-asset-list-print :list '"crypto"'
+clojure -X:quote-asset-list-print :list '"spot-fx"'
+clojure -X:quote-asset-list-print :list '"test"'
+clojure -X:quote-asset-list-print :list '"default"'
+clojure -X:quote-asset-list-print
+
+```
+
+*quote-snapshot-print* takes one quote-snapshot per source (random, spot-fx FIX, crypto)
+and prints each result, then exits.
+```
+cd demo
+clj -X:quote-snapshot-print
+```
+
+*quote-snapshot-performance* times sequential (default) or parallel quote-snapshots for a fixed set of assets.
+`:repeat` controls how many times each unique asset is requested (default 5).
+```
+cd demo
+clj -X:quote-snapshot-performance
+clj -X:quote-snapshot-performance :parallel true
+clj -X:quote-snapshot-performance :parallel true :repeat 3
+```
 
 ## DEMO OMS
 
@@ -19,22 +72,6 @@ bb send-orders qqq
 
 ```
 
-## DEMO QUOTES
-
-*asset-list-printer* will print a table of quotes to the terminal.
-the :list parameter comes from asset-lists from the database.
-default list has assets from bybit/ctrader-fix/random.
-if no list is specified, then the asset-lists are changed every 7 seconds.
-```
-cd demo
-clj -X:cli-server
-clojure -X:cli-asset-list-print :list '"crypto"'
-clojure -X:cli-asset-list-print :list '"spot-fx"'
-clojure -X:cli-asset-list-print :list '"test"'
-clojure -X:cli-asset-list-print :list '"default"'
-clojure -X:cli-asset-list-print
-
-```
 
 ## STRESS TESTS
 ```

@@ -6,9 +6,7 @@
    [missionary.core :as m]
    [quanta.missionary :refer [mix]]
    [quanta.missionary.logger :refer [create-logger log stop-logger]]
-   [quanta.quote.protocol :as p]
-   [quanta.market-sim.quote-random] ; side effects
-   )
+   [quanta.quote.protocol :as p])
   (:import missionary.Cancelled))
 
 (defn- msg-flow
@@ -31,19 +29,20 @@
                (! v)))}))
 
 (defn- account-log [state account-id]
-  (let [dir (:account-log-dir state)
-        _ (assert dir "account-log-dir is required")
-        logger (create-logger (str dir "/" account-id ".log") false)]
-    {:log-fn (partial log logger)
-     :logger logger}))
+  (if-let [dir (:account-log-dir state)]
+    (let [logger (create-logger (str dir "/" account-id ".log") false)]
+      {:log-fn (partial log logger)
+       :logger logger})
+    {:log-fn (fn [_] nil)
+     :logger nil}))
 
 (defn add-account [state account]
   (let [account-id (:account/id account)
         subscription-a (atom #{})
         {:keys [flow send]} (flow-sender)
-        flow (m/ap (let [data (m/?> flow)]
-                     (when data
-                       (assoc data :account account-id))))]
+        flow (m/stream (m/ap (let [data (m/?> flow)]
+                               (when data
+                                 (assoc data :account account-id)))))]
     (assert account-id "account must have an :account/id")
     (assert (not (some? (get @(:accounts state) account-id))) "account/id is already in use.")
     (let [{:keys [log-fn logger]} (account-log state account-id)
@@ -98,11 +97,11 @@
   (let [account (get @(:accounts state) account-id)]
     (when account
       (:dispose-account account)
-      (stop-logger (:logger account))
+      (when-let [logger (:logger account)]
+        (stop-logger logger))
       (swap! (:accounts state) dissoc account-id))))
 
 (defn create-account-manager [{:keys [account-log-dir]}]
-  (assert account-log-dir "account-log-dir is required")
   (let [accounts-a (atom {})]
     {:account-log-dir account-log-dir
      :accounts accounts-a}))

@@ -1,4 +1,4 @@
-(ns demo.cli-quote-api
+(ns demo.quote-stream-mixer
   (:require
    [missionary.core :as m]
    [clojure.pprint :refer [print-table]]
@@ -51,7 +51,7 @@
      :dispose-stopper dispose-stopper}))
 
 (defn start-cli
-  "Usage: cd demo && clojure -X:blotter-trade"
+  "Usage: cd demo && clojure -X:quote-stream-mixer"
   [_]
   (start!)
   @(promise))

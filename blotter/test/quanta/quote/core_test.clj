@@ -1,6 +1,6 @@
 (ns quanta.quote.core-test
   "Tests quanta.quote.core/calc-id against a disk-backed asset db seeded like
-   demo.cli-asset-list-print."
+   demo.quote-asset-list-print."
   (:require
    [clojure.test :refer [deftest is testing use-fixtures]]
    [clojure.java.io :as io]

@@ -3,7 +3,8 @@
         io.github.clojure-quant/blotter {:local/root "../blotter" :deps/manifest :deps}
         io.github.clojure-quant/blotter-cli {:local/root "../blotter-cli" :deps/manifest :deps}
         io.github.clojure-quant/fix-engine {:mvn/version "0.1.75"}
-        io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.11"}
+        io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.13"}
+        ;io.github.clojure-quant/quanta-bybit {:local/root "../../quanta-bybit/quanta-bybit" :deps/manifest :deps}
         }
  :aliases
  {:nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
@@ -11,12 +12,17 @@
           :main-opts  ["-m" "nrepl.cmdline"]}
   
   ;; quote
-  :cli-quote-print {:exec-fn demo.cli-quote-print/start-cli}
-  :cli-quote-api {:exec-fn demo.cli-quote-api/start-cli}
-  :cli-quote-list {:exec-fn demo.cli-quote-list/start-cli}
-  :cli-asset-list-print {:exec-fn demo.cli-asset-list-print/start-cli}
-  :cli-quote-snapshot {:exec-fn demo.cli-quote-snapshot/start-cli}
-  :quote-snapshot-repeat {:exec-fn demo.quote-snapshot-repeat/start-cli}
+  :quote-stream-print {:exec-fn demo.quote-stream-print/start-cli}
+  :quote-stream-mixer {:exec-fn demo.quote-stream-mixer/start-cli}
+  :quote-snapshot-print {:exec-fn demo.quote-snapshot-print/start-cli}
+  :quote-asset-list-print {:exec-fn demo.quote-asset-list-print/start-cli}
+  :quote-snapshot-performance {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
+                               :exec-fn modular.system/start!
+                               :exec-args {:config ["config-quotes.edn"]
+                                           :services "services-quotes.edn"
+                                           :profile "default"
+                                           :version "prod1"
+                                           :run demo.quote-snapshot-performance/run}}
   
   ;; trade
   :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}
@@ -35,13 +41,7 @@
                            :version "prod1"
                            :run demo.stresstest/run}}
 
-  :quote-snapshot-performance {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
-                               :exec-fn modular.system/start!
-                               :exec-args {:config ["config-quotes.edn"]
-                                           :services "services-quotes.edn"
-                                           :profile "default"
-                                           :version "prod1"
-                                           :run demo.quote-snapshot-performance/run}}
+ 
 
   :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
