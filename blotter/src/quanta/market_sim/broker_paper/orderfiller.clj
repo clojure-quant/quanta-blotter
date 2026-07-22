@@ -29,11 +29,11 @@
 
 (defn wait-elapsed?
   "True when this is the first fill (last-fill-date nil), or when quote-ts is
-   at least wait-seconds after last-fill-date."
-  [last-fill-date quote-ts wait-seconds]
+   at least ms-between-fills after last-fill-date."
+  [last-fill-date quote-ts ms-between-fills]
   (or (nil? last-fill-date)
-      (let [elapsed (t/seconds (t/between last-fill-date quote-ts))]
-        (>= elapsed wait-seconds))))
+      (let [elapsed (t/millis (t/between last-fill-date quote-ts))]
+        (>= elapsed ms-between-fills))))
 
 (defn stop-triggered?
   "Buy stop triggers when bid is above limit; sell stop when bid is below limit."
@@ -75,7 +75,7 @@
   "Returns a flow of fills driven by asset quotes from the quote-manager in `ctx`.
 
    On each quote:
-   - waits until quote :ts is nil-last-fill or >= wait-seconds after last fill
+   - waits until quote :ts is nil-last-fill or >= ms-between-fills after last fill
    - stop orders convert to market when triggered (buy: bid > limit; sell: bid < limit)
      and may fill on the same quote
    - market fills at :bid; limit fills when limit is on the market side of :bid
@@ -89,7 +89,7 @@
    If cancelled while slices remain, emits :broker/order-canceled."
   [ctx
    {:keys [fill-probability
-           wait-seconds
+           ms-between-fills
            fill-qty-prct]}
    log-fn
    {:keys [order-id asset qty side limit order-type] :as order}]
@@ -114,7 +114,7 @@
                                 (reset! current-type :market)
                                 :market)
                             @current-type)]
-          (when (and (wait-elapsed? @last-fill-date quote-ts wait-seconds)
+          (when (and (wait-elapsed? @last-fill-date quote-ts ms-between-fills)
                      (order-executable? order-type* side limit bid)
                      (fill? fill-probability))
             (let [slice (first @remaining-slices)

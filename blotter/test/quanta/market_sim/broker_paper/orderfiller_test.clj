@@ -82,7 +82,7 @@
   (is (not (of/stop-triggered? :sell 100.0M 100.0M))))
 
 (deftest market-fills-at-bid
-  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+  (let [emissions (collect {:fill-probability 100 :ms-between-fills 0 :fill-qty-prct [100]}
                            [(q 95.5M)]
                            :order market-order)
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
@@ -92,7 +92,7 @@
     (is (= 3 (:account/id (first fills))))))
 
 (deftest limit-buy-fills-when-bid-at-or-below-limit
-  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+  (let [emissions (collect {:fill-probability 100 :ms-between-fills 0 :fill-qty-prct [100]}
                            [(q 101.0M) (q 100.0M)])
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
     (is (= 1 (count fills)))
@@ -100,7 +100,7 @@
 
 (deftest limit-sell-fills-when-bid-at-or-above-limit
   (let [sell (assoc limit-order :side :sell :limit 100.0M)
-        emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+        emissions (collect {:fill-probability 100 :ms-between-fills 0 :fill-qty-prct [100]}
                            [(q 99.0M) (q 100.0M)]
                            :order sell)
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
@@ -108,7 +108,7 @@
     (is (= 100.0M (:price (first fills))))))
 
 (deftest stop-buy-triggers-and-fills-at-bid
-  (let [emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [100]}
+  (let [emissions (collect {:fill-probability 100 :ms-between-fills 0 :fill-qty-prct [100]}
                            [(q 99.0M) (q 100.5M)]
                            :order stop-buy-order)
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
@@ -119,7 +119,7 @@
   (let [t0 (t/instant)
         t1 (t/>> t0 (t/new-duration 1 :seconds))
         t2 (t/>> t0 (t/new-duration 2 :seconds))
-        emissions (collect {:fill-probability 100 :wait-seconds 0 :fill-qty-prct [50 25 25]}
+        emissions (collect {:fill-probability 100 :ms-between-fills 0 :fill-qty-prct [50 25 25]}
                            [(q 90.0M t0) (q 91.0M t1) (q 92.0M t2)]
                            :order market-order)
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
@@ -129,20 +129,20 @@
     (is (= 0.001M (reduce + (map :qty fills))) "total filled equals order qty")
     (is (apply distinct? (map :fill-id fills)) "each fill has a unique id")))
 
-(deftest wait-seconds-blocks-until-ts-elapsed
+(deftest ms-between-fills-blocks-until-ts-elapsed
   (let [t0 (t/instant)
         t1 (t/>> t0 (t/new-duration 1 :seconds))
         t5 (t/>> t0 (t/new-duration 5 :seconds))
-        emissions (collect {:fill-probability 100 :wait-seconds 5 :fill-qty-prct [50 50]}
+        emissions (collect {:fill-probability 100 :ms-between-fills 5000 :fill-qty-prct [50 50]}
                            [(q 90.0M t0) (q 91.0M t1) (q 92.0M t5)]
                            :order market-order)
         fills (filter #(= :broker/order-filled (:type %)) emissions)]
     (is (= 2 (count fills)))
     (is (= [90.0M 92.0M] (mapv :price fills))
-        "second slice waits until quote ts is >= wait-seconds after first fill")))
+        "second slice waits until quote ts is >= ms-between-fills after first fill")))
 
 (deftest fill-probability-zero-never-fills
-  (let [emissions (collect {:fill-probability 0 :wait-seconds 0 :fill-qty-prct [100]}
+  (let [emissions (collect {:fill-probability 0 :ms-between-fills 0 :fill-qty-prct [100]}
                            [(q 90.0M) (q 91.0M) (q 92.0M)]
                            :order market-order)]
     (is (empty? (filter #(= :broker/order-filled (:type %)) emissions)))))
@@ -154,7 +154,7 @@
           hanging (m/observe (fn [_] (fn [])))
           flow (with-redefs [qc/asset-quote-flow (fn [_ _] hanging)]
                  (of/simulated-fill-flow ctx
-                                         {:fill-probability 100 :wait-seconds 60 :fill-qty-prct [100]}
+                                         {:fill-probability 100 :ms-between-fills 60 :fill-qty-prct [100]}
                                          (fn [_])
                                          limit-order))
           task (m/reduce (fn [_ v] (swap! seen conj v) nil) nil flow)

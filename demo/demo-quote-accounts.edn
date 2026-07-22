@@ -36,7 +36,7 @@
                      :random-change-prct 0.2
                      :trend-change-prct 0.2
                      :trend-clamp-prct 0.4
-                     :quote-tick-interval-ms 250}}
+                     :quote-tick-interval-ms 100}}
 
  ;
  ]

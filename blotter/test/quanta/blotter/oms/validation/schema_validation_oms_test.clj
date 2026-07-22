@@ -58,7 +58,7 @@
                                          :bad-orderupdate-probability 100
                                          :fill-probability 100
                                          :fill-qty-prct [100]
-                                         :wait-seconds 0}})
+                                         :ms-between-fills 0}})
         (testing "invalid order is rejected with spec-error on orderupdate channel"
           (let [bad (second original-orders)
                 order-rdv (get-in oms [:internal :order-rdv])]

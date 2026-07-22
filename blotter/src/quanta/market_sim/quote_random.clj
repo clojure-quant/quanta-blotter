@@ -9,7 +9,7 @@
    :random-change-prct 0.2
    :trend-change-prct 0.2
    :trend-clamp-prct 0.4
-   :quote-tick-interval-ms 250})
+   :quote-tick-interval-ms 100})
 
 (defn random-return-value
   "Uniform random return in [-change-prct/2, +change-prct/2], converted from percent to fraction."

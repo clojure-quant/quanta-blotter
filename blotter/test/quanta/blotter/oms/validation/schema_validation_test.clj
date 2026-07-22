@@ -140,7 +140,7 @@
                      :account/settings {:reject-probability 0
                                         :fill-probability 100
                                         :fill-qty-prct [100]
-                                        :wait-seconds 0
+                                        :ms-between-fills 0
                                         :bad-orderupdate-probability 100}}
             broker-task (p/create-trade-account {:quote-manager ::test-quote-manager}
                                                 account order-in orderupdate-in log-fn)

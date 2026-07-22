@@ -11,7 +11,7 @@
    :bad-orderupdate-probability 0
    :fill-probability 0
    :fill-qty-prct [100]
-   :wait-seconds 60})
+   :ms-between-fills 60})
 
 (defn- temp-dir [prefix]
   (.toFile (java.nio.file.Files/createTempDirectory prefix (into-array java.nio.file.attribute.FileAttribute []))))

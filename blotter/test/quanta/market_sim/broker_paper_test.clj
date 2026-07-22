@@ -82,7 +82,7 @@
     (let [[update] (run-broker {:reject-probability 100
                                 :fill-probability 100
                                 :fill-qty-prct [100]
-                                :wait-seconds 0}
+                                :ms-between-fills 0}
                                1)]
       (is (= :broker/order-rejected (:type update)))
       (is (= 1 (:order-id update)))
@@ -94,7 +94,7 @@
     (let [updates (run-broker {:reject-probability 0
                                :fill-probability 100
                                :fill-qty-prct [100]
-                               :wait-seconds 0}
+                               :ms-between-fills 0}
                               2)
           types (map :type updates)
           confirmed (first updates)
@@ -111,7 +111,7 @@
         updates (run-broker {:reject-probability 0
                              :fill-probability 0
                              :fill-qty-prct [100]
-                             :wait-seconds 0}
+                             :ms-between-fills 0}
                             1
                             :order order)
         confirmed (first updates)]
@@ -124,7 +124,7 @@
     (let [updates (run-broker {:reject-probability 0
                                :fill-probability 100
                                :fill-qty-prct [100]
-                               :wait-seconds 0}
+                               :ms-between-fills 0}
                               2
                               :order market-order
                               :bid 95.5M)
@@ -169,7 +169,7 @@
           settings {:reject-probability 0
                     :fill-probability 100
                     :fill-qty-prct [100]
-                    :wait-seconds 0}
+                    :ms-between-fills 0}
           market {:type :trader/new-order
                   :account/id 3
                   :order-id 1
