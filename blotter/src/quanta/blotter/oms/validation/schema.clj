@@ -118,6 +118,14 @@
    [:date {:optional true} Instant]
    [:message {:optional true} :string]])
 
+(def BrokerOrderupdateSchemaError
+  [:map
+   [:type [:= :broker/orderupdate-schema-error]]
+   [:account/id AccountId]
+   [:order-id OrderId]
+   [:date {:optional true} Instant]
+   [:message {:optional true} :string]])
+
 (def BrokerCancelConfirmed
   [:map
    [:type [:= :broker/cancel-confirmed]]
@@ -166,6 +174,7 @@
    [:broker/order-filled BrokerOrderFilled]
    [:broker/order-confirmed BrokerOrderConfirmed]
    [:broker/order-rejected BrokerOrderRejected]
+   [:broker/orderupdate-schema-error BrokerOrderupdateSchemaError]
    [:broker/cancel-confirmed BrokerCancelConfirmed]
    [:broker/cancel-rejected BrokerCancelRejected]
    [:broker/order-modified BrokerOrderModified]

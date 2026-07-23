@@ -79,6 +79,18 @@
         1 (corrupt-field msg :order-id "not-an-id")
         2 (corrupt-field msg :account/id "not-an-int"))
 
+      :broker/order-modified
+      (case n
+        0 (drop-field msg :asset)
+        1 (corrupt-field msg :qty "not-a-decimal")
+        2 (corrupt-field msg :account/id "not-an-int"))
+
+      :broker/modify-rejected
+      (case n
+        0 (drop-field msg :order-id)
+        1 (corrupt-field msg :account/id "not-an-int")
+        2 (corrupt-field msg :message 123))
+
       msg)))
 
 (defn- push-update [settings push msg]
@@ -120,16 +132,16 @@
              (let [rejected (reject-message action reason)]
                (log rejected)
                (m/? (push-update settings push rejected)))
-             
              (let [confirmed (order-confirmed action)
                    _ (log confirmed)
                    _ (m/? (push-update settings push confirmed))
                    dispose-fill (start-fill! ctx settings log action push)]
-               (swap! orders assoc order-id dispose-fill)))
+               (swap! orders assoc order-id {:dispose dispose-fill
+                                             :order-details action})))
 
            :trader/cancel-order
-           (if-let [dispose-order-filler! (get @orders order-id)]
-             (do (dispose-order-filler!)
+           (if-let [{:keys [dispose]} (get @orders order-id)]
+             (do (dispose)
                  (swap! orders dissoc order-id)
                  (m/? (push-update settings push (assoc action
                                                         :type :broker/cancel-confirmed))))
@@ -137,6 +149,23 @@
                (log {:paper/cancel-reject (str "cancel-rejected, unknown order-id " order-id)})
                (m/? (push-update settings push (assoc action
                                                       :type :broker/cancel-rejected
+                                                      :message "unknown order")))))
+
+           :trader/modify-order
+           (if-let [{:keys [order-details]} (get @orders order-id)]
+             (let [modified (cond-> {:type :broker/order-modified
+                                     :account/id (:account/id action)
+                                     :order-id order-id
+                                     :asset (or (:asset action) (:asset order-details))
+                                     :message "modify accepted"}
+                              (some? (:qty action)) (assoc :qty (:qty action))
+                              (some? (:limit action)) (assoc :limit (:limit action)))]
+               (log modified)
+               (m/? (push-update settings push modified)))
+             (do
+               (log {:paper/modify-reject (str "modify-rejected, unknown order-id " order-id)})
+               (m/? (push-update settings push (assoc action
+                                                      :type :broker/modify-rejected
                                                       :message "unknown order")))))
 
            ; else

@@ -8,6 +8,7 @@
                                     combined-flow]]
    [quanta.market-sim.broker-paper]
    [quanta.quote.core :as qc]))
+
 (def account-id 3)
 
 (def valid-new-order
@@ -59,7 +60,7 @@
                                          :fill-probability 100
                                          :fill-qty-prct [100]
                                          :ms-between-fills 0}})
-        (testing "invalid order is rejected with spec-error on orderupdate channel"
+        (testing "invalid order is rejected with :broker/order-rejected"
           (let [bad (second original-orders)
                 order-rdv (get-in oms [:internal :order-rdv])]
             (m/? (m/sp
@@ -69,14 +70,14 @@
                             (re-find #"^spec-error" (:message %)))
                       @combined-events)
                 "order spec rejection appears on combined channel")))
-        (testing "corrupted broker orderupdate is logged as schema/error"
+        (testing "corrupted broker orderupdate emits :broker/orderupdate-schema-error"
           (let [order-rdv (get-in oms [:internal :order-rdv])]
             (m/? (m/sp
                   (m/? (order-rdv valid-new-order))
                   (m/? (m/sleep 750))))
-            (let [log-text (when (.exists (java.io.File. log-file)) (slurp log-file))]
-              (is (re-find #":schema/error" log-text)
-                  "failed orderupdate produces schema/error log entry")
-              (is (re-find #":original-msg" log-text))))
+            (is (some #(and (= :broker/orderupdate-schema-error (:type %))
+                            (re-find #"^spec-error" (:message %)))
+                      @combined-events)
+                "corrupted orderupdates appear as :broker/orderupdate-schema-error on combined channel")))
         (finally
           (stop-order-manager! oms))))))

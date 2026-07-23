@@ -4,15 +4,16 @@
    [quanta.quote.core :as quote]))
 
 (defn near-market-limit-order
-  "Returns a task yielding a limit order offset from the current market.
+  "Returns a task yielding a limit/stop order offset from the current market.
 
    Positive `:offset-prct` prices buys below the bid and sells above the ask
    (resting). Negative `:offset-prct` prices buys above the bid and sells below
    the ask (aggressive / fillable). The order map must include `:asset`,
-   `:side`, and `:offset-prct`; quote lookup uses the quote manager in the OMS
-   context."
-  [oms {:keys [asset side offset-prct timeout-ms]
-        :or {timeout-ms 5000}
+   `:side`, and `:offset-prct`; optional `:order-type` is `:limit` (default) or
+   `:stop`. Quote lookup uses the quote manager in the OMS context."
+  [oms {:keys [asset side offset-prct order-type timeout-ms]
+        :or {timeout-ms 5000
+             order-type :limit}
         :as order}]
   (m/sp
    (let [quote-manager (get-in oms [:ctx :quote-manager])]
@@ -21,6 +22,9 @@
      (when-not (contains? #{:buy :sell} side)
        (throw (ex-info "Near-market limit order side must be :buy or :sell"
                        {:side side})))
+     (when-not (contains? #{:limit :stop} order-type)
+       (throw (ex-info "Near-market order-type must be :limit or :stop"
+                       {:order-type order-type})))
      (when-not (and (number? offset-prct)
                     (not (zero? offset-prct))
                     (< (Math/abs (double offset-prct)) 100))
@@ -45,5 +49,5 @@
                             :sell (+ 1M offset))]
            (-> order
                (dissoc :offset-prct :timeout-ms)
-               (assoc :order-type :limit
+               (assoc :order-type order-type
                       :limit (* ref-price multiplier)))))))))

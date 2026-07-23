@@ -1,12 +1,6 @@
 
 
 
-1.
-quanta.quote.interactor pull in brackets.
-  test this first.
-quanta.blotter.interactor pull in brackets.
-
-
 2. market order stresstest is not working
    - what is the difference in lmt and mkt?
      - knowing the difference is crucial
@@ -18,6 +12,12 @@ quanta.blotter.interactor pull in brackets.
         - Trading-state file logger
         - TSC / snapshot-flow
 
+TODO:
 
-3. paper broker 
-   - log outgoing messages as they are produced.
+1. fix-engine needs to support order modification.
+
+2. run modify-order on bybit broker.
+
+3. make a quote-pre-subscriber that subscribes for 
+certain quotes. just so that we have them 
+always subscribed subscribed

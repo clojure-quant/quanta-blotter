@@ -58,7 +58,15 @@ clj -X:quote-snapshot-performance :parallel true
 clj -X:quote-snapshot-performance :parallel true :repeat 3
 ```
 
-## DEMO OMS
+## OMS
+
+### STRESS TESTS
+```
+  cd demo
+  clj -X:stresstest :account-id 1
+```
+
+### OMS Server
 
 ```
 cd demo
@@ -73,15 +81,11 @@ bb send-orders qqq
 ```
 
 
-## STRESS TESTS
-```
-  cd demo
-  clj -X:stresstest :account-id 1
-```
 
 
 
-## MESSAGE TYPES
+
+### MESSAGE TYPES
 
 - trader/new-order              place a new order
 - trader/cancel-order           cancel existing order

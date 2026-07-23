@@ -71,27 +71,29 @@
        1 (assoc filled :side :long)
        2 (assoc filled :qty "not-a-decimal"))]))
 
-(defn- schema-error-logs [logs]
-  (filter #(and (map? %) (contains? % :schema/error)) @logs))
-
 (defn- with-validation-channel [f]
-  (let [logs (atom [])
-        log-fn #(swap! logs conj %)
-        order-in (create-rdv "test/order-in")
+  (let [order-in (create-rdv "test/order-in")
         orderupdate-in (create-rdv "test/orderupdate-in")
         validator (vc/create-validation-channel {:order order-in
-                                                 :orderupdate orderupdate-in
-                                                 :log log-fn})
+                                                 :orderupdate orderupdate-in})
         {:keys [order orderupdate]} (:channel validator)
         _ (vc/start-validation-channel! validator)]
     (try
       (f {:output-order order
           :output-orderupdate orderupdate
           :inner-order order-in
-          :inner-orderupdate orderupdate-in
-          :logs logs})
+          :inner-orderupdate orderupdate-in})
       (finally
         (vc/stop-validation-channel! validator)))))
+
+(defn- take-until-timeout [rdv timeout-ms]
+  "Takes from `rdv` until timeout; returns collected values."
+  (m/sp
+   (loop [acc []]
+     (let [v (m/? (m/race rdv (m/sleep timeout-ms ::timeout)))]
+       (if (= v ::timeout)
+         acc
+         (recur (conj acc v)))))))
 
 (deftest schema-validation-test
   (testing "invalid orders are rejected on the output orderupdate channel"
@@ -104,22 +106,22 @@
             (is (re-find #"^spec-error" (:message update)))
             (is (not (s/validate-message bad))))))))
 
-  (testing "invalid orderupdates are logged and not forwarded"
+  (testing "invalid orderupdates are rejected on the output orderupdate channel"
     (with-validation-channel
-      (fn [{:keys [output-orderupdate inner-orderupdate logs]}]
+      (fn [{:keys [output-orderupdate inner-orderupdate]}]
         (doseq [msg original-orderupdates]
-          (m/? (inner-orderupdate msg)))
-        (let [errors (schema-error-logs logs)]
-          (is (= (count original-orderupdates) (count errors)))
-          (doseq [entry errors]
-            (is (string? (:schema/error entry)))
-            (is (map? (:original-msg entry)))
-            (is (not (s/validate-message (:original-msg entry))))))
+          (m/? (inner-orderupdate msg))
+          (let [update (m/? output-orderupdate)]
+            (is (= :broker/orderupdate-schema-error (:type update)))
+            (is (re-find #"^spec-error" (:message update)))
+            (is (= account-id (:account/id update)))
+            (is (= 99 (:order-id update)))
+            (is (not (s/validate-message msg)))))
         (m/? (inner-orderupdate valid-orderupdate))
         (is (= :broker/order-confirmed (:type (m/? output-orderupdate)))
             "valid orderupdates still pass through"))))
 
-  (testing "paper broker with bad-orderupdate-probability logs failed orderupdates"
+  (testing "paper broker with bad-orderupdate-probability emits orderupdate-schema-error"
     (with-redefs [qc/asset-quote-flow
                   (fn [_ _]
                     (m/seed (repeatedly 20 (fn []
@@ -127,13 +129,10 @@
                                               :bid 100.0M
                                               :ask 100.01M
                                               :ts (t/instant)}))))]
-      (let [logs (atom [])
-            log-fn #(swap! logs conj %)
-            order-in (create-rdv "test/order-in")
+      (let [order-in (create-rdv "test/order-in")
             orderupdate-in (create-rdv "test/orderupdate-in")
             validator (vc/create-validation-channel {:order order-in
-                                                     :orderupdate orderupdate-in
-                                                     :log log-fn})
+                                                     :orderupdate orderupdate-in})
             {:keys [order orderupdate]} (:channel validator)
             account {:account/id account-id
                      :account/api :paper
@@ -143,19 +142,16 @@
                                         :ms-between-fills 0
                                         :bad-orderupdate-probability 100}}
             broker-task (p/create-trade-account {:quote-manager ::test-quote-manager}
-                                                account order-in orderupdate-in log-fn)
+                                                account order-in orderupdate-in (fn [_]))
             broker-dispose (broker-task (fn [_]) (fn [_]))
             _ (vc/start-validation-channel! validator)]
         (try
-          (m/? (m/sp
-                (m/? (order valid-new-order))
-                (m/? (m/sleep 100))))
-          (let [errors (schema-error-logs logs)]
-            (is (pos? (count errors))
-                "corrupted broker orderupdates produce schema/error log entries")
-            (is (every? #(and (string? (:schema/error %))
-                              (contains? % :original-msg))
-                        errors)))
+          (m/? (order valid-new-order))
+          (let [updates (m/? (take-until-timeout orderupdate 300))
+                rejects (filter #(= :broker/orderupdate-schema-error (:type %)) updates)]
+            (is (pos? (count rejects))
+                "corrupted broker orderupdates produce :broker/orderupdate-schema-error")
+            (is (every? #(re-find #"^spec-error" (:message %)) rejects)))
           (finally
             (vc/stop-validation-channel! validator)
             (broker-dispose)))))))

@@ -14,6 +14,12 @@
     (:account/id order) (assoc :account/id (:account/id order))
     (:order-id order) (assoc :order-id (:order-id order))))
 
+(defn- orderupdate-schema-error [orderupdate]
+  (cond-> {:type :broker/orderupdate-schema-error
+           :message (spec-error-text orderupdate)}
+    (:account/id orderupdate) (assoc :account/id (:account/id orderupdate))
+    (:order-id orderupdate) (assoc :order-id (:order-id orderupdate))))
+
 (defn create-validation-channel
   "Channel middleware that validates orders and orderupdates against the OMS schema.
 
@@ -57,9 +63,11 @@
                                    (let [data (m/? orderupdate)]
                                      (if (s/validate-message data)
                                        (m/? (orderupdate-out-rdv data))
-                                       (error (str {:direction :orderupdate
-                                             :schema/error (pr-str (s/human-error-message data))
-                                             :original-msg data})))
+                                       (do 
+                                         (error (str {:direction :orderupdate
+                                                      :schema/error (pr-str (s/human-error-message data))
+                                                      :original-msg data}))
+                                         (m/? (orderupdate-out-rdv (orderupdate-schema-error data)))))
                                      (recur))))
         t (m/join concat validate-order-sp validate-orderupdate-sp)
         dispose (t #(info "validation channel done" %)

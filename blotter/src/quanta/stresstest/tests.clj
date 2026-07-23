@@ -7,6 +7,7 @@
    [quanta.stresstest.tests.limit-buy-sell :refer [limit-buy-sell]]
    [quanta.stresstest.tests.limit-near-market-open-cancel :refer [limit-near-market-open-cancel]]
    [quanta.stresstest.tests.market-buy-close :refer [market-buy-close]]
+   [quanta.stresstest.tests.modify-order :refer [modify-order]]
    [quanta.stresstest.runner :refer [run]]))
 
 (def account-config
@@ -24,6 +25,27 @@
                                       :expect {:fill-qty 0.0M
                                                :order-count 1  :active-order-count 0
                                                :position-count 0 :open-position-qty 0M}}
+      ; modify then cancel (resting)
+      :modify-order {:asset "__TEST" :qty 100M :offset-prct 20.0 :order-type :limit
+                     :modify-price-prct 5.0 :modify-qty-prct 30
+                     :expect {:fill-qty 0.0M
+                              :order-count 1 :active-order-count 0
+                              :position-count 0 :open-position-qty 0M}}
+      :modify-order {:asset "__TEST" :qty 100M :offset-prct 20.0 :order-type :stop
+                     :modify-price-prct 5.0 :modify-qty-prct 30
+                     :expect {:fill-qty 0.0M
+                              :order-count 1 :active-order-count 0
+                              :position-count 0 :open-position-qty 0M}}
+      :modify-order {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct 20.0 :order-type :limit
+                     :modify-price-prct 5.0 :modify-qty-prct 30
+                     :expect {:fill-qty 0.0M
+                              :order-count 1 :active-order-count 0
+                              :position-count 0 :open-position-qty 0M}}
+      :modify-order {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :order-type :limit
+                     :modify-price-prct 5.0 :modify-qty-prct 30
+                     :expect {:fill-qty 0.0M
+                              :order-count 1 :active-order-count 0
+                              :position-count 0 :open-position-qty 0M}}
       ; limit buy + sell (aggressive / fillable)
       :limit-buy-sell {:asset "__TEST" :qty 100M :offset-prct -20.0
                        :expect {:fill-qty 200.0M
@@ -78,11 +100,21 @@
    1000 [:limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
-                                                  :position-count 0 :open-position-qty 0M}}]
+                                                  :position-count 0 :open-position-qty 0M}}
+         :modify-order {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :order-type :limit
+                        :modify-price-prct 5.0 :modify-qty-prct 30
+                        :expect {:fill-qty 0.0M
+                                 :order-count 1 :active-order-count 0
+                                 :position-count 0 :open-position-qty 0M}}]
    2000 [:limit-near-market-open-cancel {:asset "BTCUSDT.LF.BB" :qty 0.2M :offset-prct 5.0 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
-                                                  :position-count 0 :open-position-qty 0M}}]})
+                                                  :position-count 0 :open-position-qty 0M}}
+         :modify-order {:asset "BTCUSDT.LF.BB" :qty 0.2M :offset-prct 5.0 :order-type :limit
+                        :modify-price-prct 5.0 :modify-qty-prct 30
+                        :expect {:fill-qty 0.0M
+                                 :order-count 1 :active-order-count 0
+                                 :position-count 0 :open-position-qty 0M}}]})
 
  ; {:expect {:fill-qty 200.0M, :order-count 2, :active-order-count 0, :position-count 1, :open-position-qty 0M},
  ;  :result {:fill-qty 150M, :order-count 2, :active-order-count 1, :position-count 1, :open-position-qty 50M}}
@@ -90,7 +122,8 @@
 
 (def algos {:market-buy-sell market-buy-close
             :limit-near-market-open-cancel limit-near-market-open-cancel
-            :limit-buy-sell limit-buy-sell})
+            :limit-buy-sell limit-buy-sell
+            :modify-order modify-order})
 
 
 (defn run-test-task [oms account-id fn-kw opts]
@@ -130,5 +163,3 @@
                                  (recur (rest tests)))))))]
      (m/? run-tests-task)
      (print-table [:fn-kw :campaign-id :account-id :asset :message :runtime-ms] @results))))
-
-
