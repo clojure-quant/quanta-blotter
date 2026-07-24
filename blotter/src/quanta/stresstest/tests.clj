@@ -125,7 +125,10 @@
                        :expect {:fill-qty 200.0M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}]
-   1000 [:limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 1.0 :side :buy
+   1000 [;; ctrader fix account 
+         ;; cannot do tests that produce executions, as ctrader cancel needs position-id or 
+         ;; something similar.
+         :limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 1.0 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
                                                   :position-count 0 :open-position-qty 0M}}

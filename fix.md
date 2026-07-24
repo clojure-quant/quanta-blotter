@@ -12,12 +12,11 @@
         - Trading-state file logger
         - TSC / snapshot-flow
 
-TODO:
 
-1. fix-engine needs to support order modification.
+FIX-ENGINE needs to retport position-id from an order
+back to the OMS.
 
-2. run modify-order on bybit broker.
-
+DB TRANSACTOR NOW DOES NOT SHUTDOWN CORRECTLY.
 
 
 

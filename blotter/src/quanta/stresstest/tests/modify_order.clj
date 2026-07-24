@@ -35,7 +35,9 @@
          order-id (:order-id open-message)
          initial-limit (:limit placed)
          qty-modified (* qty (/ (bigdec modify-qty-prct) 100M))
-         limit-modified (* initial-limit (+ 1M (/ (bigdec modify-price-prct) 100M)))
+         limit-modified (near-market/round-to-ref-digits
+                         (* initial-limit (+ 1M (/ (bigdec modify-price-prct) 100M)))
+                         initial-limit)
          working? #(contains? (:working-orders %) order-id)]
      (m/? (wait-for-state this working? :order-open))
      (m/? (oms/modify-order oms {:account/id id

@@ -60,7 +60,7 @@
                              #(info "db-transactor done" %)
                              #(error "db-transactor error" %))
         dispose! (fn []
-                   ((cancel-rdv ::end)
+                   ((cancel-rdv :quanta.missionary.logger/end)
                     (fn [_]
                       (info "db transactor received the timeout signal.")
                    )
@@ -72,6 +72,9 @@
 
 (defn stop-db-transactor [{:keys [dispose!]}]
   (info "stopping db-transactor ..")
-  (when dispose! (dispose!))
-     (Thread/sleep 100)
+  (when dispose! 
+    (dispose!)
+    (Thread/sleep 100)
+    )
+    
   )

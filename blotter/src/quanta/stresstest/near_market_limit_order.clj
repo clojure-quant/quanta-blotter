@@ -3,6 +3,11 @@
    [missionary.core :as m]
    [quanta.quote.core :as quote]))
 
+(defn round-to-ref-digits
+  "Round `price` to the same number of fractional digits as `reference`."
+  [^BigDecimal price ^BigDecimal reference]
+  (.setScale price (.scale reference) java.math.RoundingMode/HALF_UP))
+
 (defn near-market-limit-order
   "Returns a task yielding a limit/stop order offset from the current market.
 
@@ -10,7 +15,8 @@
    (resting). Negative `:offset-prct` prices buys above the bid and sells below
    the ask (aggressive / fillable). The order map must include `:asset`,
    `:side`, and `:offset-prct`; optional `:order-type` is `:limit` (default) or
-   `:stop`. Quote lookup uses the quote manager in the OMS context."
+   `:stop`. Quote lookup uses the quote manager in the OMS context.
+   `:limit` is rounded to the same fractional digits as the reference bid/ask."
   [oms {:keys [asset side offset-prct order-type timeout-ms]
         :or {timeout-ms 5000
              order-type :limit}
@@ -46,8 +52,9 @@
                offset (/ (bigdec offset-prct) 100M)
                multiplier (case side
                             :buy (- 1M offset)
-                            :sell (+ 1M offset))]
+                            :sell (+ 1M offset))
+               limit (round-to-ref-digits (* ref-price multiplier) ref-price)]
            (-> order
                (dissoc :offset-prct :timeout-ms)
                (assoc :order-type order-type
-                      :limit (* ref-price multiplier)))))))))
+                      :limit limit))))))))
