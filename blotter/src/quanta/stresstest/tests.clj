@@ -60,6 +60,14 @@
                        :expect {:fill-qty 200.0M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "__TEST" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "__TEST" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
       :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
                        :expect {:fill-qty 0.2M
                                 :order-count 2  :active-order-count 0
@@ -143,9 +151,7 @@
          :limit-buy-sell {:asset "EURUSD" :qty 10000M :offset-prct -1.0
                           :expect {:fill-qty 20000.0M
                                    :order-count 2  :active-order-count 0
-                                   :position-count 0 :open-position-qty 0M}}
-         
-         ]
+                                   :position-count 0 :open-position-qty 0M}}]
    2000 [;; tests that have no execution expectation
          :limit-near-market-open-cancel {:asset "BTCUSDT.LF.BBT" :qty 0.2M :offset-prct 5.0 :side :buy
                                          :expect {:fill-qty 0.0M
@@ -165,9 +171,7 @@
                           :asset "BTCUSDT.LF.BBT" :qty 0.1M :offset-prct -1.0
                           :expect {:fill-qty 0.2M
                                    :order-count 2  :active-order-count 0
-                                   :position-count 0 :open-position-qty 0M}}
-         
-         ]})
+                                   :position-count 0 :open-position-qty 0M}}]})
 
  ; {:expect {:fill-qty 200.0M, :order-count 2, :active-order-count 0, :position-count 1, :open-position-qty 0M},
  ;  :result {:fill-qty 150M, :order-count 2, :active-order-count 1, :position-count 1, :open-position-qty 50M}}
@@ -179,11 +183,11 @@
             :modify-order modify-order})
 
 
-(defn run-test-task [oms account-id fn-kw opts]
+(defn run-test-task [oms runner-opts account-id fn-kw opts]
   (let [test-fn (get algos fn-kw)
         campaign-id (str (name fn-kw) "-" (nano-id 8))
-        runner-opts {:campaign-id campaign-id
-                     :timeout-ms 30000}
+        runner-opts (assoc runner-opts 
+                           :campaign-id campaign-id) 
         opts (assoc opts :account/id account-id)]
     (m/sp
      (warn "running" fn-kw "with" opts "campaign-id" campaign-id)
@@ -204,13 +208,17 @@
          tests (cond->> (partition 2 tests)
                  algo (filter (fn [[fn-kw _]] (= fn-kw algo))))
          results (atom [])
+         runner-opts {:test-timeout-ms 60000
+                      :quote-timeout-ms 10000}
          run-tests-task (m/sp
                          (warn "running tests for account" account-id
-                               (when algo (str "algo " algo)))
+                               (when algo (str "algo " algo))
+                               "runner-opts" runner-opts
+                               )
                          (m/? (m/sleep 10000)) ; be sure that quotefeeds and accounts are ready.
                          (loop [tests tests]
                            (when-let [[fn-kw opts] (first tests)]
-                             (let [r (m/? (run-test-task oms account-id fn-kw opts))]
+                             (let [r (m/? (run-test-task oms runner-opts account-id fn-kw opts))]
                                (swap! results conj r)
                                (when (next tests)
                                  (recur (rest tests)))))))]

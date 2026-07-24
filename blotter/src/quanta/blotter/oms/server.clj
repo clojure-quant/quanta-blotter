@@ -5,9 +5,9 @@
    [modular.require :refer [require-namespaces]]
    [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager!]]
    [quanta.blotter.account-manager :refer [add-enabled-db-accounts]]
-   [quanta.blotter.oms.flow.print :refer [start-trading-state-logger!]]
-   [quanta.blotter.oms.trading-state-consumer :as tsc]
-   [quanta.blotter.oms.trader :as trader]
+   [quanta.blotter.oms.report.text-logger :refer [start-trading-state-logger!]]
+   [quanta.blotter.oms.report.web-ui :as tsc]
+   [quanta.blotter.oms.report.trader :as trader]
    [quanta.blotter.oms.db-transactor :as db-transactor]
    [quanta.util.datahike :as datahike]
    ; side effects
@@ -25,21 +25,24 @@
   ([config] (start-oms-server config nil))
   ([config trade-db]
    (let [{:keys [transaction-log-file account-log-dir validate? tag?
-                 db-enabled trading-state-printer-enabled
-                 calculate-ui-views calculate-trading-state-trader
+                 db-enabled
+                 calculate-trading-state-trader
                  ns-require
-                 trading-state-log-file trading-state-print-interval-ms
-                 ui-recent-ms
+                 web-ui text-logger
                  ctx]
           :or {validate? true
                tag? true
                db-enabled false
-               trading-state-printer-enabled false
-               calculate-ui-views false
                calculate-trading-state-trader false
-               trading-state-log-file "log/oms-server-trading-state.txt"
-               trading-state-print-interval-ms 15000
-               ui-recent-ms 60000}} config]
+               web-ui {}
+               text-logger {}}} config
+         {:keys [calculate-enabled history-recent-ms]
+          :or {calculate-enabled false
+               history-recent-ms 60000}} web-ui
+         {:keys [print-enabled log-file interval-ms]
+          :or {print-enabled false
+               log-file "log/oms-server-trading-state.txt"
+               interval-ms 15000}} text-logger]
      (assert trade-db "trade-db connection is required")
      (require-config-namespaces! ns-require)
      (let [_ (.mkdirs (io/file "log"))
@@ -51,15 +54,15 @@
                                       :tag? tag?
                                       :ctx ctx})
            _ (add-enabled-db-accounts (:account-manager oms) trade-db)
-           tsc (when calculate-ui-views
-                 (tsc/create-trading-state-consumer! (:trading-state oms) ui-recent-ms))
+           tsc (when calculate-enabled
+                 (tsc/create-trading-state-consumer! (:trading-state oms) history-recent-ms))
            _ (when tsc (tsc/start! tsc))
            trader-tagger (when (and calculate-trading-state-trader tsc)
                            (trader/start-trader-tagger trade-db (:trading-state-a tsc)))
            oms (start-order-manager! oms)
 
-           dispose-wo-op-logger (when trading-state-printer-enabled
-                                  (start-trading-state-logger! (:trading-state oms) trading-state-log-file trading-state-print-interval-ms false))
+           dispose-wo-op-logger (when print-enabled
+                                  (start-trading-state-logger! (:trading-state oms) log-file interval-ms false))
            db-transactor (when db-enabled
                            (db-transactor/start-db-transactor oms trade-db))
            oms-server {:oms oms

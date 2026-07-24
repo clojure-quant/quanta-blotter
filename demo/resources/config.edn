@@ -11,10 +11,12 @@
               :account-log-dir "log/oms-account"
               :validate? true
               :tag? true
-              :calculate-ui-views true
+              :web-ui {:calculate-enabled true
+                       :history-recent-ms 60000}
               :calculate-trading-state-trader true
-              :trading-state-log-file "log/oms-server-trading-state.txt"
-              :trading-state-print-interval-ms 15000}
+              :text-logger {:print-enabled false
+                            :log-file "log/oms-server-trading-state.txt"
+                            :interval-ms 15000}}
 
  :test-order {:account-id 3
               :interval-sec 30}}

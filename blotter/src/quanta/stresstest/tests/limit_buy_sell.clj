@@ -29,10 +29,11 @@
    `:offset-prct` should be negative so both legs price through the market.
    When the open fill carries `:fill/position-id`, it is forwarded on the
    closing sell (required by cTrader FIX)."
-  [{:keys [oms campaign] :as this} {:keys [account/id qty]
-                                    :as order}]
+  [{:keys [oms campaign quote-timeout-ms] :as this} {:keys [account/id qty]
+                                                    :as order}]
   (m/sp
-   (let [buy-order (m/? (near-market/near-market-limit-order oms (assoc order :side :buy)))
+   (let [buy-order (m/? (near-market/near-market-limit-order
+                         oms (assoc order :side :buy :quote-timeout-ms quote-timeout-ms)))
          open-message (m/? (oms/create-order oms (assoc buy-order
                                                         :campaign campaign
                                                         :account/id id)))
@@ -42,7 +43,8 @@
          position-id (->> (:fills state-after-open)
                           (filter #(= open-id (:fill/order-id %)))
                           (some :fill/position-id))
-         sell-order (m/? (near-market/near-market-limit-order oms (assoc order :side :sell)))
+         sell-order (m/? (near-market/near-market-limit-order
+                          oms (assoc order :side :sell :quote-timeout-ms quote-timeout-ms)))
          close-message (m/? (oms/create-order oms (cond-> (assoc sell-order
                                                                  :campaign campaign
                                                                  :account/id id)

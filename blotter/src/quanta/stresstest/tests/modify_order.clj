@@ -19,7 +19,7 @@
 
    Expects no fills. `:modify-qty-prct` is percent of original qty (30 → 30%).
    `:modify-price-prct` increases the limit by that percent."
-  [{:keys [oms campaign] :as this}
+  [{:keys [oms campaign quote-timeout-ms] :as this}
    {:keys [account/id asset qty order-type
            modify-price-prct modify-qty-prct]
     :or {order-type :limit}
@@ -27,7 +27,9 @@
   (m/sp
    (let [placed (m/? (near-market/near-market-limit-order
                       oms (-> order
-                              (assoc :side :buy :order-type order-type)
+                              (assoc :side :buy
+                                     :order-type order-type
+                                     :quote-timeout-ms quote-timeout-ms)
                               (dissoc :modify-price-prct :modify-qty-prct :expect))))
          open-message (m/? (oms/create-order oms (assoc placed
                                                         :campaign campaign

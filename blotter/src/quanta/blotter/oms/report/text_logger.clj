@@ -1,4 +1,4 @@
-(ns quanta.blotter.oms.flow.print
+(ns quanta.blotter.oms.report.text-logger
   (:require
    [missionary.core :as m]
    [tick.core :as t]

@@ -6,7 +6,7 @@
    ; demo order flow
    [quanta.blotter.util :refer [push-flow-to-rdv]]
    [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
-   [quanta.blotter.oms.flow.print :refer [start-trading-state-logger!]]
+   [quanta.blotter.oms.report.text-logger :refer [start-trading-state-logger!]]
    ; persistence
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.db-transactor :as db-transactor]

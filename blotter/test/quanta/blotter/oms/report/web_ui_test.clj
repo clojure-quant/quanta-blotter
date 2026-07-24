@@ -1,10 +1,10 @@
-(ns quanta.blotter.oms.trading-state-consumer-test
+(ns quanta.blotter.oms.report.web-ui-test
   (:require
    [clojure.test :refer :all]
    [missionary.core :as m]
    [quanta.missionary.time-flow :refer [create-time-flow]]
    [quanta.blotter.oms.flow.trading-state :as trading-state]
-   [quanta.blotter.oms.trading-state-consumer :as tsc]
+   [quanta.blotter.oms.report.web-ui :as tsc]
    [quanta.blotter.oms.print :as print]))
 
 (def channel-paper-time-flow

@@ -1,4 +1,4 @@
-(ns quanta.blotter.oms.trading-state-consumer
+(ns quanta.blotter.oms.report.web-ui
   (:require
    [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]
@@ -72,7 +72,7 @@
   [{:keys [dispose-a snapshot-flow] :as _this}]
   (let [t (m/reduce (fn [_r _v] nil) nil snapshot-flow)
         dispose! (t
-                  #(info "tranding-state-consumer done" %)
+                  #(info "trading-state-consumer done" %)
                   #(error "trading-state-consumer error" %))]
     (reset! dispose-a dispose!)))
 

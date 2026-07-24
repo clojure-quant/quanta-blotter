@@ -11,7 +11,7 @@
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [quanta.blotter.oms.flow.campaign :as campaign]
    [quanta.blotter.oms.flow.trading-state :as trading-state]
-   [quanta.blotter.oms.flow.print :refer [start-trading-state-logger!]]))
+   [quanta.blotter.oms.report.text-logger :refer [start-trading-state-logger!]]))
 
 (add-tick-edn-handlers!)
 

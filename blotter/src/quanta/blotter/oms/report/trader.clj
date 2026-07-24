@@ -1,4 +1,4 @@
-(ns quanta.blotter.oms.trader
+(ns quanta.blotter.oms.report.trader
   (:require
    [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]

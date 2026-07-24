@@ -6,7 +6,7 @@
 
 (defn delayed-flow [f delay-ms]
   (m/ap
-   (let [v (m/?> f)]
+   (let [v (m/?> ##Inf f)] ; this needs to be ## Inf, becaus otherwise we cannot have more than 1 position at the same time 
      (m/? (m/sleep delay-ms))
      v)))
 

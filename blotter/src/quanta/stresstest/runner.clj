@@ -12,7 +12,7 @@
     (task (fn [_])
           #(swap! state assoc :error %))))
 
-(defn wait-for-state [{:keys [state campaign timeout-ms]} pred phase]
+(defn wait-for-state [{:keys [state campaign test-timeout-ms]} pred phase]
   (m/sp
    (let [state-task (m/reduce (fn [_ value] value)
                               nil
@@ -21,13 +21,13 @@
                                (take 1)
                                (m/watch state)))
          result (m/? (m/race state-task
-                             (m/sleep timeout-ms ::timeout)))]
+                             (m/sleep test-timeout-ms ::timeout)))]
      (cond
        (= ::timeout result)
        (throw (ex-info "Timed out"
                        {:campaign campaign
                         :phase phase
-                        :timeout-ms timeout-ms}))
+                        :test-timeout-ms test-timeout-ms}))
 
        (:error result)
        (throw (:error result))
@@ -47,7 +47,7 @@
    Uses OMS `:combined-flow` (already campaign-tagged); only filters by
    campaign-id. Tests receive `:oms`, `:campaign`, a live `:state` atom,
    and use `wait-for-state` with a predicate and phase keyword."
-  [oms {:keys [campaign-id timeout-ms]}]
+  [oms {:keys [campaign-id test-timeout-ms quote-timeout-ms]}]
   (info "starting runner" campaign-id)
   (let [combined-flow (:combined-flow oms)]
     (when-not combined-flow
@@ -63,7 +63,8 @@
                      (start-consumer! state open-position-dict-flow
                                       #(assoc %1 :open-positions %2))]]
       {:oms oms
-       :timeout-ms timeout-ms
+       :test-timeout-ms test-timeout-ms
+       :quote-timeout-ms quote-timeout-ms
        :state state
        :campaign campaign-id
        :disposers disposers})))
@@ -101,16 +102,17 @@
 (defn run [oms runner-opts test-fn test-opts]
   (m/sp
    (let [this (start-runner oms runner-opts)
+         test-timeout-ms (:test-timeout-ms runner-opts)
          expect (:expect test-opts)
          opts (dissoc test-opts :expect)
          start-ts (System/nanoTime)
          r (m/? (m/race (run-task-safe (test-fn this opts))
-                        (m/sleep 30000 ::timeout)))
+                        (m/sleep test-timeout-ms ::timeout)))
          result (cond
                   (= ::timeout r)
                   (do
                     (error "timeout state: " @(:state this))
-                    {:message "timeout 30 seconds."})
+                    {:message (str "timeout " test-timeout-ms " ms.")})
 
                   (and (vector? r) (= ::exception (first r)))
                   {:message (or (second r) "exception")}

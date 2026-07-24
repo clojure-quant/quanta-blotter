@@ -1,9 +1,9 @@
-(ns quanta.blotter.oms.trader-test
+(ns quanta.blotter.oms.report.trader-test
   (:require
    [clojure.test :refer [deftest is]]
    [missionary.core :as m]
    [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.trader :as trader]
+   [quanta.blotter.oms.report.trader :as trader]
    [quanta.util.datahike :as datahike]))
 
 (def accounts-by-id

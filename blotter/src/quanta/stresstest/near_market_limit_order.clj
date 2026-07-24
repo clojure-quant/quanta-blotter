@@ -16,9 +16,10 @@
    the ask (aggressive / fillable). The order map must include `:asset`,
    `:side`, and `:offset-prct`; optional `:order-type` is `:limit` (default) or
    `:stop`. Quote lookup uses the quote manager in the OMS context.
+   Optional `:quote-timeout-ms` defaults to 5000.
    `:limit` is rounded to the same fractional digits as the reference bid/ask."
-  [oms {:keys [asset side offset-prct order-type timeout-ms]
-        :or {timeout-ms 5000
+  [oms {:keys [asset side offset-prct order-type quote-timeout-ms]
+        :or {quote-timeout-ms 5000
              order-type :limit}
         :as order}]
   (m/sp
@@ -36,10 +37,10 @@
                     (< (Math/abs (double offset-prct)) 100))
        (throw (ex-info "Near-market limit order offset percentage must be non-zero and |offset| < 100"
                        {:offset-prct offset-prct})))
-     (let [current-quote (m/? (quote/quote-snapshot quote-manager timeout-ms asset))]
+     (let [current-quote (m/? (quote/quote-snapshot quote-manager quote-timeout-ms asset))]
        (when-not current-quote
-         (throw (ex-info (str "Quote Timeout " timeout-ms)
-                         {:asset asset :timeout-ms timeout-ms})))
+         (throw (ex-info (str "Quote Timeout " quote-timeout-ms)
+                         {:asset asset :quote-timeout-ms quote-timeout-ms})))
        (let [reference-price (case side
                                :buy (:bid current-quote)
                                :sell (:ask current-quote))]
@@ -55,6 +56,6 @@
                             :sell (+ 1M offset))
                limit (round-to-ref-digits (* ref-price multiplier) ref-price)]
            (-> order
-               (dissoc :offset-prct :timeout-ms)
+               (dissoc :offset-prct :quote-timeout-ms)
                (assoc :order-type order-type
                       :limit limit))))))))
