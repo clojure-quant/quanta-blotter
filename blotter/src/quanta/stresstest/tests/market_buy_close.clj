@@ -34,4 +34,6 @@
                                                          :order-type :market
                                                          :qty qty)))
          close-id (:order-id close-message)]
-     (m/? (wait-for-state this (filled? close-id qty) :close-filled)))))
+     (m/? (wait-for-state this (filled? close-id qty) :close-filled))
+     (m/? (m/sleep 250)) ; make sure working order and fill is in sync.
+     )))

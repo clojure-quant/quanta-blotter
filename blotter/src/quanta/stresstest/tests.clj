@@ -107,15 +107,15 @@
       :market-buy-sell {:asset "__TEST" :qty 100M
                         :expect {:fill-qty 200.0M
                                  :order-count 2  :active-order-count 0
-                                 :position-count 1 :open-position-qty 0M}}
+                                 :position-count 0 :open-position-qty 0M}}
       :market-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M
                         :expect {:fill-qty 0.2M
                                  :order-count 2  :active-order-count 0
-                                 :position-count 1}}
+                                 :position-count 0 :open-position-qty 0M}}
       :market-buy-sell {:asset "EURUSD" :qty 10000M
                         :expect {:fill-qty 20000.0M
                                  :order-count 2 :active-order-count 0
-                                 :position-count 1 :open-position-qty 0M}}]
+                                 :position-count 0 :open-position-qty 0M}}]
    2 [; paper broker (fast 1-fill) with __TEST2 quotes
       :limit-buy-sell {:asset "__TEST2" :qty 100M :offset-prct -20.0
                        :expect {:fill-qty 200.0M
@@ -125,16 +125,17 @@
                        :expect {:fill-qty 200.0M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}]
-   1000 [:limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
+   1000 [:limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 1.0 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
                                                   :position-count 0 :open-position-qty 0M}}
-         :modify-order {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :order-type :limit
-                        :modify-price-prct 5.0 :modify-qty-prct 30
+         :modify-order {:asset "EURUSD" :qty 10000M :offset-prct 1.0 :order-type :limit
+                        :modify-price-prct 0.1 :modify-qty-prct 30
                         :expect {:fill-qty 0.0M
                                  :order-count 1 :active-order-count 0
                                  :position-count 0 :open-position-qty 0M}}]
-   2000 [:limit-near-market-open-cancel {:asset "BTCUSDT.LF.BBT" :qty 0.2M :offset-prct 5.0 :side :buy
+   2000 [;; tests that have no execution expectation
+         :limit-near-market-open-cancel {:asset "BTCUSDT.LF.BBT" :qty 0.2M :offset-prct 5.0 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
                                                   :position-count 0 :open-position-qty 0M}}
@@ -142,7 +143,19 @@
                         :modify-price-prct 5.0 :modify-qty-prct 30
                         :expect {:fill-qty 0.0M
                                  :order-count 1 :active-order-count 0
-                                 :position-count 0 :open-position-qty 0M}}]})
+                                 :position-count 0 :open-position-qty 0M}}
+         ; tests that will produce executions.
+         :market-buy-sell {:asset "BTCUSDT.LF.BBT" :qty 0.1M
+                           :expect {:fill-qty 0.2M
+                                    :order-count 2  :active-order-count 0
+                                    :position-count 0 :open-position-qty 0M}}
+         :limit-buy-sell {; testnet is not that liquid; 1% offset is not enough to fill.
+                          :asset "BTCUSDT.LF.BBT" :qty 0.1M :offset-prct -1.0
+                          :expect {:fill-qty 0.2M
+                                   :order-count 2  :active-order-count 0
+                                   :position-count 0 :open-position-qty 0M}}
+         
+         ]})
 
  ; {:expect {:fill-qty 200.0M, :order-count 2, :active-order-count 0, :position-count 1, :open-position-qty 0M},
  ;  :result {:fill-qty 150M, :order-count 2, :active-order-count 1, :position-count 1, :open-position-qty 50M}}

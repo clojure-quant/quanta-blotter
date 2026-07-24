@@ -42,7 +42,12 @@ We have .BB for Bybit Main and .BBT for Bybit testnet.
 
 FIX only sends subscribe/unsubscribe reject. There is no subscribe/unsubscribe confirm message.
 
-## OMS limit buy-sell
+## OMS TESTS
+
+### PaperBroker Slow 
+
+This test makes sure the oms works. It uses random quotes / ctrader quotes /
+bybit testnet quotes, depending on the asset.
 
 Stresstest Performance Limit Buy/Sell
 
@@ -64,6 +69,9 @@ two order                       1500          600          2100
 reality:                        1500
 ```
 
+## PaperBroker Fast
+
+This tests the speed of our paperbroker, so it is a speedtest for the oms.
 
 clj -X:stresstest :account-id 2 :algo :limit-buy-sell
 
@@ -72,7 +80,18 @@ this stresstest goes to
 - it uses feed-id 5 which gives prices in 10ms.
 - so: 10ms for limit order. 10ms for fill1 5ms wait = 20-25ms (depending if 5ms hits) 
   or 40-50ms for two limit order. 
-- actual results 43.77 ms.  
+- actual results 43-77 ms.  
 
+## Bybit Test Account.
 
+clj -X:stresstest :account-id 2000
+
+This will test the proper functionality of the bybit broker api implementation.
+
+| test | asset | message | runtime-ms |
+|------|-------|---------|------------|
+| limit-near-market-open-cancel | BTCUSDT.LF.BBT | success | 634 |
+| modify-order | BTCUSDT.LF.BBT | success | 964 |
+| market-buy-sell | BTCUSDT.LF.BBT | success | 889 |
+| limit-buy-sell | BTCUSDT.LF.BBT | success | 1238 |
 
