@@ -26,7 +26,9 @@
    completion, then closes with an aggressive near-market sell limit and waits
    for full fill and completion.
 
-   `:offset-prct` should be negative so both legs price through the market."
+   `:offset-prct` should be negative so both legs price through the market.
+   When the open fill carries `:fill/position-id`, it is forwarded on the
+   closing sell (required by cTrader FIX)."
   [{:keys [oms campaign] :as this} {:keys [account/id qty]
                                     :as order}]
   (m/sp
@@ -35,12 +37,16 @@
                                                         :campaign campaign
                                                         :account/id id)))
          open-id (:order-id open-message)
-         _ (m/? (wait-for-state this (filled? open-id qty) :open-filled))
+         state-after-open (m/? (wait-for-state this (filled? open-id qty) :open-filled))
          _ (m/? (wait-for-state this (order-completed? open-id) :open-completed))
+         position-id (->> (:fills state-after-open)
+                          (filter #(= open-id (:fill/order-id %)))
+                          (some :fill/position-id))
          sell-order (m/? (near-market/near-market-limit-order oms (assoc order :side :sell)))
-         close-message (m/? (oms/create-order oms (assoc sell-order
-                                                         :campaign campaign
-                                                         :account/id id)))
+         close-message (m/? (oms/create-order oms (cond-> (assoc sell-order
+                                                                 :campaign campaign
+                                                                 :account/id id)
+                                                    position-id (assoc :position-id position-id))))
          close-id (:order-id close-message)
          _ (m/? (wait-for-state this (filled? close-id qty) :close-filled))]
      (m/? (wait-for-state this (order-completed? close-id) :close-completed)))))

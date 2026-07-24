@@ -92,6 +92,9 @@
    {:db/ident :order/label
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
+   {:db/ident :order/position-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
    {:db/ident :order/history
     :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
@@ -132,6 +135,9 @@
     :db/cardinality :db.cardinality/one}
    {:db/ident :fill/label
     :db/valueType :db.type/keyword
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :fill/position-id
+    :db/valueType :db.type/string
     :db/cardinality :db.cardinality/one}
    
    ;; position (created once, then updated)
@@ -330,6 +336,7 @@
     (:order/text order) (assoc :order/text (:order/text order))
     (:order/campaign order) (assoc :order/campaign (:order/campaign order))
     (:order/label order) (assoc :order/label (:order/label order))
+    (:order/position-id order) (assoc :order/position-id (:order/position-id order))
     (:order/history order) (assoc :order/history (pr-str (:order/history order)))))
 
 (defn fill->entity [eid order-ref fill account-ref]
@@ -345,7 +352,8 @@
     (some? (:fill/campaign fill)) (assoc :fill/campaign (:fill/campaign fill))
     (some? (:fill/qty fill)) (assoc :fill/qty (as-bigdec (:fill/qty fill)))
     (some? (:fill/price fill)) (assoc :fill/price (as-bigdec (:fill/price fill)))
-    (:fill/date fill) (assoc :fill/date (as-date (:fill/date fill)))))
+    (:fill/date fill) (assoc :fill/date (as-date (:fill/date fill)))
+    (:fill/position-id fill) (assoc :fill/position-id (:fill/position-id fill))))
 
 (defn position->entity [eid position account-ref]
   (cond-> {:db/id eid

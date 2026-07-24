@@ -21,7 +21,8 @@
            :fill/price (some-> (:price msg) bigdec)
            :fill/date (:date msg)}
     (:campaign msg) (assoc :fill/campaign (:campaign msg))
-    (:label msg) (assoc :fill/label (:label msg))))
+    (:label msg) (assoc :fill/label (:label msg))
+    (:position-id msg) (assoc :fill/position-id (:position-id msg))))
 
 (defn fill-flow
   "Consumes a mixed channel flow; emits one fill record per :broker/order-filled

@@ -52,7 +52,8 @@
     [:order-type OrderType]
     [:limit {:optional true} PositiveDecimal]
     [:campaign {:optional true} :string]
-    [:label {:optional true} :keyword]]
+    [:label {:optional true} :keyword]
+    [:position-id {:optional true} :string]]
    [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}
     limit-market-exclusive?]])
 
@@ -90,7 +91,8 @@
    [:asset :string]
    [:qty PositiveDecimal]
    [:side Side]
-   [:price PositiveDecimal]])
+   [:price PositiveDecimal]
+   [:position-id {:optional true} :string]])
 
 (def BrokerOrderConfirmed
   [:and

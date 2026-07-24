@@ -126,8 +126,6 @@
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}]
    1000 [;; ctrader fix account 
-         ;; cannot do tests that produce executions, as ctrader cancel needs position-id or 
-         ;; something similar.
          :limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 1.0 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
@@ -136,7 +134,18 @@
                         :modify-price-prct 0.1 :modify-qty-prct 30
                         :expect {:fill-qty 0.0M
                                  :order-count 1 :active-order-count 0
-                                 :position-count 0 :open-position-qty 0M}}]
+                                 :position-count 0 :open-position-qty 0M}}
+         ; tests that will produce executions.
+         :market-buy-sell {:asset "EURUSD" :qty 10000M
+                           :expect {:fill-qty 20000.0M
+                                    :order-count 2  :active-order-count 0
+                                    :position-count 0 :open-position-qty 0M}}
+         :limit-buy-sell {:asset "EURUSD" :qty 10000M :offset-prct -1.0
+                          :expect {:fill-qty 20000.0M
+                                   :order-count 2  :active-order-count 0
+                                   :position-count 0 :open-position-qty 0M}}
+         
+         ]
    2000 [;; tests that have no execution expectation
          :limit-near-market-open-cancel {:asset "BTCUSDT.LF.BBT" :qty 0.2M :offset-prct 5.0 :side :buy
                                          :expect {:fill-qty 0.0M

@@ -26,7 +26,7 @@
     (assoc state :order-date (t/inst (:date msg)))
     state))
 
-(defn- apply-fill [state {:keys [qty price]}]
+(defn- apply-fill [state {:keys [qty price position-id]}]
   (let [fill-qty (or (:fill-qty state) 0M)
         fill-notional (or (:fill-notional state) 0M)
         q (if qty (bigdec qty) 0M)
@@ -41,6 +41,7 @@
                    :fill-qty new-fill-qty
                    :fill-notional new-notional
                    :price-scale price-scale)
+      position-id (assoc :position-id position-id)
       filled? (assoc :terminal? true :terminal-status :filled))))
 
 (defn- apply-modify [state {:keys [qty limit]}]
@@ -65,7 +66,8 @@
          :terminal-status nil
          :reject-text nil
          :campaign (:campaign msg)
-         :label (:label msg)))
+         :label (:label msg)
+         :position-id (:position-id msg)))
 
 (defn- mark-terminal [state status & {:keys [text]}]
   (cond-> (assoc state :terminal? true :terminal-status status)
@@ -78,7 +80,7 @@
   "Projects internal accumulator state to the public order map."
   [{:keys [order-id account asset side qty limit order-type fill-qty fill-notional
            price-scale history terminal? terminal-status reject-text order-date
-           campaign label]}]
+           campaign label position-id]}]
   (let [qty-filled (or fill-qty 0M)
         scale (or price-scale 0)
         done? (true? terminal?)]
@@ -98,6 +100,7 @@
       (assoc :order/text (str reject-text))
       campaign (assoc :order/campaign campaign)
       label (assoc :order/label label)
+      position-id (assoc :order/position-id position-id)
       limit (assoc :order/limit limit))))
 
 (defn- public-order-view [state]
