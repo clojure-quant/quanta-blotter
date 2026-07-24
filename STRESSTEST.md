@@ -18,6 +18,17 @@
 
 Bybit sends subscribe/unsubscribe response (for both success and failure)
 
+| market | msg/s | ≈ messages / day | ≈ top bid/ask changes / day |
+|--------|------:|-----------------:|----------------------------:|
+| Mainnet linear (`.LF.BB`) | 21.0 | ~1.82M | ~1.81M |
+| Mainnet spot | 22.3 | ~1.93M | ~1.93M |
+| Testnet linear (stresstest) | 0.50 | ~44k | ~33k |
+
+Bybit testnet has 1 orderbook update for every 2 seconds. 
+
+We have .BB for Bybit Main and .BBT for Bybit testnet.
+
+
 ### CTrader FIX Quote Subscription Latency.
 
 | account | asset | op | delay | note |
@@ -52,3 +63,16 @@ one order                        750          300          1050
 two order                       1500          600          2100
 reality:                        1500
 ```
+
+
+clj -X:stresstest :account-id 2 :algo :limit-buy-sell
+
+this stresstest goes to 
+- account-id 2 which gives 1 fill with 5ms wait time.
+- it uses feed-id 5 which gives prices in 10ms.
+- so: 10ms for limit order. 10ms for fill1 5ms wait = 20-25ms (depending if 5ms hits) 
+  or 40-50ms for two limit order. 
+- actual results 43.77 ms.  
+
+
+

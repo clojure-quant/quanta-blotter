@@ -508,12 +508,12 @@
  }
  {:asset/symbol "__TEST2"
   :asset/currency "USD"
-  :asset/name "Test symbol 2"
+  :asset/name "Test symbol 2 (fast quotes)"
   :asset/exchange "TEST"
   :asset/category :fx
   :asset/market :fx
   :asset/margin 10
-  :asset/default-quote-account 4
+  :asset/default-quote-account 5
   :asset/price-point 0.01M
   :asset/quantity-step 1M
  }
@@ -528,7 +528,7 @@
   :asset/default-quote-account 3
   :asset/price-point 0.1M
   :asset/quantity-step 0.000001M
-  :asset/bybit [:spot "BTCUSDT"]
+  :asset/bybit [:main :spot "BTCUSDT"]
  }
  {:asset/symbol "ETHUSDT.S.BB"
   :asset/currency "USD"
@@ -540,7 +540,7 @@
   :asset/default-quote-account 3
   :asset/price-point 0.01M
   :asset/quantity-step 0.00001M
-  :asset/bybit [:spot "ETHUSDT"]
+  :asset/bybit [:main :spot "ETHUSDT"]
  }
  {:asset/symbol "BTCUSDT.LF.BB"
   :asset/currency "USD"
@@ -552,7 +552,7 @@
   :asset/default-quote-account 2
   :asset/price-point 0.1M
   :asset/quantity-step 0.001M
-  :asset/bybit [:linear "BTCUSDT"]
+  :asset/bybit [:main :linear "BTCUSDT"]
  }
  {:asset/symbol "ETHUSDT.LF.BB"
   :asset/currency "USD"
@@ -564,7 +564,152 @@
   :asset/default-quote-account 2
   :asset/price-point 0.01M
   :asset/quantity-step 0.01M
-  :asset/bybit [:linear "ETHUSDT"]
+  :asset/bybit [:main :linear "ETHUSDT"]
+ }
+ {:asset/symbol "SOLUSDT.S.BB"
+  :asset/currency "USD"
+  :asset/name "Solana / Tether (Bybit spot)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 3
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.0001M
+  :asset/bybit [:main :spot "SOLUSDT"]
+ }
+ {:asset/symbol "XRPUSDT.S.BB"
+  :asset/currency "USD"
+  :asset/name "XRP / Tether (Bybit spot)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 3
+  :asset/price-point 0.0001M
+  :asset/quantity-step 0.01M
+  :asset/bybit [:main :spot "XRPUSDT"]
+ }
+ {:asset/symbol "SOLUSDT.LF.BB"
+  :asset/currency "USD"
+  :asset/name "Solana / Tether (Bybit linear perpetual)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 2
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.1M
+  :asset/bybit [:main :linear "SOLUSDT"]
+ }
+ {:asset/symbol "XRPUSDT.LF.BB"
+  :asset/currency "USD"
+  :asset/name "XRP / Tether (Bybit linear perpetual)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 2
+  :asset/price-point 0.0001M
+  :asset/quantity-step 0.1M
+  :asset/bybit [:main :linear "XRPUSDT"]
+ }
+ ;; crypto-assets (Bybit testnet) — :asset/bybit endpoint :test, symbol ends with .BBT
+ {:asset/symbol "BTCUSDT.S.BBT"
+  :asset/currency "USD"
+  :asset/name "Bitcoin / Tether (Bybit spot testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 7
+  :asset/price-point 0.1M
+  :asset/quantity-step 0.000001M
+  :asset/bybit [:test :spot "BTCUSDT"]
+ }
+ {:asset/symbol "ETHUSDT.S.BBT"
+  :asset/currency "USD"
+  :asset/name "Ethereum / Tether (Bybit spot testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 7
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.00001M
+  :asset/bybit [:test :spot "ETHUSDT"]
+ }
+ {:asset/symbol "BTCUSDT.LF.BBT"
+  :asset/currency "USD"
+  :asset/name "Bitcoin / Tether (Bybit linear perpetual testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 6
+  :asset/price-point 0.1M
+  :asset/quantity-step 0.001M
+  :asset/bybit [:test :linear "BTCUSDT"]
+ }
+ {:asset/symbol "ETHUSDT.LF.BBT"
+  :asset/currency "USD"
+  :asset/name "Ethereum / Tether (Bybit linear perpetual testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 6
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.01M
+  :asset/bybit [:test :linear "ETHUSDT"]
+ }
+ {:asset/symbol "SOLUSDT.S.BBT"
+  :asset/currency "USD"
+  :asset/name "Solana / Tether (Bybit spot testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 7
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.0001M
+  :asset/bybit [:test :spot "SOLUSDT"]
+ }
+ {:asset/symbol "XRPUSDT.S.BBT"
+  :asset/currency "USD"
+  :asset/name "XRP / Tether (Bybit spot testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 7
+  :asset/price-point 0.0001M
+  :asset/quantity-step 0.01M
+  :asset/bybit [:test :spot "XRPUSDT"]
+ }
+ {:asset/symbol "SOLUSDT.LF.BBT"
+  :asset/currency "USD"
+  :asset/name "Solana / Tether (Bybit linear perpetual testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 6
+  :asset/price-point 0.01M
+  :asset/quantity-step 0.1M
+  :asset/bybit [:test :linear "SOLUSDT"]
+ }
+ {:asset/symbol "XRPUSDT.LF.BBT"
+  :asset/currency "USD"
+  :asset/name "XRP / Tether (Bybit linear perpetual testnet)"
+  :asset/exchange "BYBIT"
+  :asset/category :crypto
+  :asset/market :crypto
+  :asset/margin 20
+  :asset/default-quote-account 6
+  :asset/price-point 0.0001M
+  :asset/quantity-step 0.1M
+  :asset/bybit [:test :linear "XRPUSDT"]
  }
  ;; futures
  {:asset/symbol "6B_USD"

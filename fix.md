@@ -18,6 +18,6 @@ TODO:
 
 2. run modify-order on bybit broker.
 
-3. make a quote-pre-subscriber that subscribes for 
-certain quotes. just so that we have them 
-always subscribed subscribed
+
+
+

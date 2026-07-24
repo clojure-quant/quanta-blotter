@@ -19,13 +19,13 @@
  {:account/id 2
   :account/api :bybit-quote
   :account/notes "bybit quotes linear"
-  :account/settings {:connection {:mode :test
+  :account/settings {:connection {:mode :main ; :test
                                   :category :linear}}}
 
  {:account/id 3
   :account/api :bybit-quote
   :account/notes "bybit quotes spot"
-  :account/settings {:connection {:mode :test
+  :account/settings {:connection {:mode :main ; :test
                                   :category :spot}}}
  ;; random
  {:account/id 4
@@ -37,6 +37,28 @@
                      :trend-change-prct 0.2
                      :trend-clamp-prct 0.4
                      :quote-tick-interval-ms 100}}
+
+ {:account/id 5
+  :account/name "random-quote-fast"
+  :account/api :random
+  :account/notes "fast random quotes"
+  :account/settings {:initial-price 100.0
+                     :random-change-prct 0.2
+                     :trend-change-prct 0.2
+                     :trend-clamp-prct 0.4
+                     :quote-tick-interval-ms 10}}
+
+ {:account/id 6
+  :account/api :bybit-quote
+  :account/notes "bybit quotes linear testnet"
+  :account/settings {:connection {:mode :test
+                                  :category :linear}}}
+
+ {:account/id 7
+  :account/api :bybit-quote
+  :account/notes "bybit quotes spot testnet"
+  :account/settings {:connection {:mode :test
+                                  :category :spot}}}
 
  ;
  ]

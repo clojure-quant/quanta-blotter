@@ -31,4 +31,8 @@
                  :account-log-dir "log-stresstest/quote"
                  :ns-require [quanta.market-sim.quote-random
                               fix-engine.quote.account
-                              quanta.bybit.quote.account]}}
+                              quanta.bybit.quote.account]}
+
+ :cache-quotes ["BTCUSDT.LF.BB" "USDCAD"
+                "XRPUSDT.LF.BB"
+                ]}

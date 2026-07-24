@@ -1,0 +1,2 @@
+{:lists/name "crypto-test"
+ :lists/asset ["BTCUSDT.S.BBT" "ETHUSDT.S.BBT" "BTCUSDT.LF.BBT" "ETHUSDT.LF.BBT"]}

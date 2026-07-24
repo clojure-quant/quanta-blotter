@@ -30,17 +30,17 @@
   (let [tx-vector (block->tx-vector block)]
     (info "db-transactor writing block of" (count block) "events")
     (db/process db state tx-vector)
-    (info "db-transactor wrote block of" (count block) "events")
-    ))
+    (info "db-transactor wrote block of" (count block) "events")))
 
 (defn transact-task
   "Missionary task that persists all OMS flows of `this` into `db`.
    Writes are buffered into time blocks and processed together."
-  [oms db]
+  [oms db cancel-rdv]
   (let [_ (assert (:trading-state oms) "start-db-transactor needs :trading-state")
         state (db/new-state)
         combined (apply util/mix (tagged-flows oms))
-        buffered (logger/time-buffered buffer-ms combined)
+        ; (logger/time-buffered buffer-ms combined)
+        buffered (logger/time-buffered-cancellable buffer-ms cancel-rdv combined)
         transacting-f (m/ap
                        (let [block (m/?> buffered)]
                          (m/? (m/via m/blk (write-block! db state block)))
@@ -55,12 +55,23 @@
   (assert oms "start-db-transactor needs the order-manager (oms)")
   (assert db "start-db-transactor needs a db connection")
   (info "starting db-transactor ..")
-  (let [dispose! ((transact-task oms db)
-                  #(info "db-transactor done" %)
-                  #(error "db-transactor error" %))]
-    {:dispose! dispose!
+  (let [cancel-rdv (m/rdv)
+        dispose-transactor! ((transact-task oms db cancel-rdv)
+                             #(info "db-transactor done" %)
+                             #(error "db-transactor error" %))
+        dispose! (fn []
+                   ((cancel-rdv ::end)
+                    (fn [_]
+                      (info "db transactor received the timeout signal.")
+                   )
+                    (fn [ex]
+                      (error "db transactor timeout signal ex: " ex))))]
+    {:dispose-transactor! dispose-transactor!
+     :dispose! dispose!
      :db db}))
 
 (defn stop-db-transactor [{:keys [dispose!]}]
   (info "stopping db-transactor ..")
-  (when dispose! (dispose!)))
+  (when dispose! (dispose!))
+     (Thread/sleep 100)
+  )

@@ -17,16 +17,16 @@
   :account/enabled true
   :account/balance 10000M
   :account/currency "USD"
-  :account/trader "arne"
-  :account/name "apaper-1fill"
-  :account/notes "always fills 100% of the order; timing is random"
+  :account/trader "florian"
+  :account/name "fpaper-1fill-fast"
+  :account/notes "very fast paper broker; always fills 100% of the order"
   :account/asset-list "test"
   :account/api :paper
   :account/settings {:reject-probability 0
                      :bad-orderupdate-probability 0
-                     :fill-probability 10
+                     :fill-probability 100
                      :fill-qty-prct [100]
-                     :ms-between-fills 5000}}
+                     :ms-between-fills 5}}
  {:account/id 3
   :account/enabled true
   :account/balance 10000M

@@ -22,7 +22,11 @@
    :quote-manager {:start (quanta.quote.core/create-quote-manager
                           (assoc (:quote-manager (clip/ref :config))
                                  :db (clip/ref :db)))}
-  
+
+  :quote-cacher {:start (quanta.quote.subscription-cache/start-cache
+                         (clip/ref :quote-manager)
+                         (:cache-quotes (clip/ref :config)))
+                 :stop (quanta.quote.subscription-cache/stop-cache this)}
 
   :oms-server {:start (quanta.blotter.oms.server/start-oms-server
                       (assoc (:oms-server (clip/ref :config))

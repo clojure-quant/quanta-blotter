@@ -41,6 +41,11 @@
                      :expect {:fill-qty 0.0M
                               :order-count 1 :active-order-count 0
                               :position-count 0 :open-position-qty 0M}}
+      :modify-order {:asset "BTCUSDT.LF.BBT" :qty 0.1M :offset-prct 20.0 :order-type :limit
+                     :modify-price-prct 5.0 :modify-qty-prct 30
+                     :expect {:fill-qty 0.0M
+                              :order-count 1 :active-order-count 0
+                              :position-count 0 :open-position-qty 0M}}
       :modify-order {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :order-type :limit
                      :modify-price-prct 5.0 :modify-qty-prct 30
                      :expect {:fill-qty 0.0M
@@ -51,31 +56,45 @@
                        :expect {:fill-qty 200.0M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}
-      :limit-buy-sell {:asset "__TEST2" :qty 100M :offset-prct -20.0
-                       :expect {:fill-qty 200.0M
-                                :order-count 2  :active-order-count 0
-                                :position-count 0 :open-position-qty 0M}}
       :limit-buy-sell {:asset "__TEST" :qty 100M :offset-prct -20.0
                        :expect {:fill-qty 200.0M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}
-      :limit-buy-sell {:asset "__TEST2" :qty 100M :offset-prct -20.0
-                       :expect {:fill-qty 200.0M
-                                :order-count 2  :active-order-count 0
-                                :position-count 0 :open-position-qty 0M}}
-       :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
-                        :expect {:fill-qty 0.2M
-                                 :order-count 2  :active-order-count 0
-                                 :position-count 0 :open-position-qty 0M}}
-       :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
+      :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
                        :expect {:fill-qty 0.2M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}
-       :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
-                        :expect {:fill-qty 0.2M
+      :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
+                       :expect {:fill-qty 0.2M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}
-      :limit-buy-sell {:asset "USDCAD" :qty 10000M :offset-prct -0.1
+      :limit-buy-sell {:asset "BTCUSDT.LF.BB" :qty 0.1M :offset-prct -20.0
+                       :expect {:fill-qty 0.2M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "BTCUSDT.LF.BBT" :qty 0.1M :offset-prct -20.0
+                       :expect {:fill-qty 0.2M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "BTCUSDT.LF.BBT" :qty 0.1M :offset-prct -20.0
+                       :expect {:fill-qty 0.2M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "BTCUSDT.LF.BBT" :qty 0.1M :offset-prct -20.0
+                       :expect {:fill-qty 0.2M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {; usdcad has quote subscription precached
+                       :asset "USDCAD" :qty 10000M :offset-prct -0.1
+                       :expect {:fill-qty 20000.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {; usdcad has quote subscription precached
+                       :asset "USDCAD" :qty 10000M :offset-prct -0.1
+                       :expect {:fill-qty 20000.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "EURUSD" :qty 10000M :offset-prct -0.1
                        :expect {:fill-qty 20000.0M
                                 :order-count 2  :active-order-count 0
                                 :position-count 0 :open-position-qty 0M}}
@@ -97,6 +116,15 @@
                         :expect {:fill-qty 20000.0M
                                  :order-count 2 :active-order-count 0
                                  :position-count 1 :open-position-qty 0M}}]
+   2 [; paper broker (fast 1-fill) with __TEST2 quotes
+      :limit-buy-sell {:asset "__TEST2" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}
+      :limit-buy-sell {:asset "__TEST2" :qty 100M :offset-prct -20.0
+                       :expect {:fill-qty 200.0M
+                                :order-count 2  :active-order-count 0
+                                :position-count 0 :open-position-qty 0M}}]
    1000 [:limit-near-market-open-cancel {:asset "EURUSD" :qty 10000M :offset-prct 0.1 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
@@ -106,11 +134,11 @@
                         :expect {:fill-qty 0.0M
                                  :order-count 1 :active-order-count 0
                                  :position-count 0 :open-position-qty 0M}}]
-   2000 [:limit-near-market-open-cancel {:asset "BTCUSDT.LF.BB" :qty 0.2M :offset-prct 5.0 :side :buy
+   2000 [:limit-near-market-open-cancel {:asset "BTCUSDT.LF.BBT" :qty 0.2M :offset-prct 5.0 :side :buy
                                          :expect {:fill-qty 0.0M
                                                   :order-count 1 :active-order-count 0
                                                   :position-count 0 :open-position-qty 0M}}
-         :modify-order {:asset "BTCUSDT.LF.BB" :qty 0.2M :offset-prct 5.0 :order-type :limit
+         :modify-order {:asset "BTCUSDT.LF.BBT" :qty 0.2M :offset-prct 5.0 :order-type :limit
                         :modify-price-prct 5.0 :modify-qty-prct 30
                         :expect {:fill-qty 0.0M
                                  :order-count 1 :active-order-count 0
