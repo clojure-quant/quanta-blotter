@@ -1,12 +1,20 @@
 (ns quanta.blotter.oms.print
   (:require
    [tick.core :as t]
-   [crockery.core :as crockery]))
+   [crockery.core :as crockery])
+  (:import
+   [java.time.temporal ChronoUnit]))
 
 (def default-table-max-width
   "Avoid crockery terminal-width rebalancing, which can shrink columns below
    ellipsis-safe widths and crash on narrow ttys."
   170)
+
+(defn format-ts-ms
+  "Format a timestamp as ISO-8601 with millisecond precision (e.g. 2026-07-24T16:47:14.593Z)."
+  [ts]
+  (when ts
+    (str (.truncatedTo (t/instant ts) ChronoUnit/MILLIS))))
 
 (defn- table-opts [{:keys [max-width] :as opts}]
   (merge {:max-width (or max-width default-table-max-width)} opts))
@@ -42,7 +50,7 @@
    (with-out-str
      (crockery/print-table
       (table-opts opts)
-      [{:name :date, :align :left :title "date" :key-fn :fill/date}
+      [{:name :date, :align :left :title "date" :key-fn #(format-ts-ms (:fill/date %))}
        {:name :account, :title "account" :align :left :key-fn :fill/account-id}
        {:name :campaign, :title "campaign" :align :left :key-fn :fill/campaign}
        {:name :label, :title "label" :align :left :key-fn :fill/label}
@@ -53,7 +61,6 @@
        {:name :price, :align :right :title "price" :key-fn :fill/price}
        {:name :fill-id, :align :right :title "fill-id" :key-fn :fill/id}]
       trades))))
-
 (defn open-positions-table
   ([open-positions]
    (open-positions-table open-positions {}))
@@ -75,7 +82,7 @@
       open-positions))))
 
 (defn timestamped-table [label table-str]
-  (str (t/instant) " " label "\r\n" table-str))
+  (str (format-ts-ms (t/instant)) " " label "\r\n" table-str))
 
 (defn trader-requests-table
   ([trader-requests]
@@ -84,7 +91,7 @@
    (with-out-str
      (crockery/print-table
       (table-opts opts)
-      [{:name :date, :align :left :title "date" :key-fn :date}
+      [{:name :date, :align :left :title "date" :key-fn #(format-ts-ms (:date %))}
        {:name :account, :title "account" :align :left :key-fn :account/id}
        {:name :campaign, :title "campaign" :align :left :key-fn :campaign}
        {:name :label, :title "label" :align :left :key-fn :label}
@@ -94,6 +101,5 @@
        {:name :side, :align :right :title "side" :key-fn :side}
        {:name :qty, :align :right :title "qty" :key-fn :qty}
        {:name :order-type, :align :right :title "order-type" :key-fn :order-type}
-       {:name :limit, :align :right :title "limit" :key-fn :limit}
-       ]
+       {:name :limit, :align :right :title "limit" :key-fn :limit}]
       trader-requests))))

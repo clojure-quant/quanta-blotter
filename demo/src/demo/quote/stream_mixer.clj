@@ -1,4 +1,4 @@
-(ns demo.quote-stream-mixer
+(ns demo.quote.stream-mixer
   (:require
    [missionary.core :as m]
    [clojure.pprint :refer [print-table]]

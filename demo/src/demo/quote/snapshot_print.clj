@@ -1,4 +1,4 @@
-(ns demo.quote-snapshot-print
+(ns demo.quote.snapshot-print
   (:require
    [clojure.pprint :refer [pprint]]
    [missionary.core :as m]

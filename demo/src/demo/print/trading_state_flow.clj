@@ -1,9 +1,9 @@
-(ns demo.print-wo-op
+(ns demo.print.trading-state-flow
   "Replay demo/data/combined.edn through a stubbed OMS and log working orders
    and open positions to log/print-demo.log.
 
   Run from the demo directory:
-    clojure -X:print-wo-op-demo"
+    clojure -X:print-trading-state-flow"
   (:require
    [clojure.string :as str]
    [missionary.core :as m]

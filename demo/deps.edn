@@ -11,20 +11,23 @@
           :main-opts  ["-m" "nrepl.cmdline"]}
   
   ;; quote
-  :quote-stream-print {:exec-fn demo.quote-stream-print/start-cli}
-  :quote-stream-mixer {:exec-fn demo.quote-stream-mixer/start-cli}
-  :quote-snapshot-print {:exec-fn demo.quote-snapshot-print/start-cli}
-  :quote-asset-list-print {:exec-fn demo.quote-asset-list-print/start-cli}
+  :quote-stream-print {:exec-fn demo.quote.stream-print/start-cli}
+  :quote-stream-mixer {:exec-fn demo.quote.stream-mixer/start-cli}
+  :quote-snapshot-print {:exec-fn demo.quote.snapshot-print/start-cli}
+  :quote-asset-list-print {:exec-fn demo.quote.asset-list-print/start-cli}
   :quote-snapshot-performance {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
                                :exec-fn modular.system/start!
                                :exec-args {:config ["config-quotes.edn"]
                                            :services "services-quotes.edn"
                                            :profile "default"
                                            :version "prod1"
-                                           :run demo.quote-snapshot-performance/run}}
+                                           :run demo.quote.snapshot-performance/run}}
   
+  ;; print 
+  :print-trading-state-flow {:exec-fn demo.print.trading-state-flow/run-demo!}
+
   ;; trade
-  :print-wo-op-demo {:exec-fn demo.print-wo-op/run-demo!}
+
   :cli-server {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
                :exec-fn modular.system/start!
                :exec-args {:config ["config.edn"]

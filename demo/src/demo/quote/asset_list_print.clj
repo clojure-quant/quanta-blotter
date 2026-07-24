@@ -1,4 +1,4 @@
-(ns demo.quote-asset-list-print
+(ns demo.quote.asset-list-print
   (:require
    [clojure.pprint :refer [print-table]]
    [missionary.core :as m]

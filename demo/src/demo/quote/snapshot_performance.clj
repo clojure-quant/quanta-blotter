@@ -1,4 +1,4 @@
-(ns demo.quote-snapshot-performance
+(ns demo.quote.snapshot-performance
   (:require
    [clojure.pprint :refer [print-table]]
    [missionary.core :as m]

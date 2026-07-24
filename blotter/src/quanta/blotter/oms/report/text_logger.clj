@@ -9,30 +9,31 @@
    [quanta.blotter.oms.print :as print]))
 
 (defn- print-state [{:keys [trader trade order position working-order open-position] :as _state}]
-  (let [s (str "\r\n trading-state as of " (t/instant) "\r\n")
+  (let [opts {:max-width 300}
+        s (str "\r\n trading-state as of " (print/format-ts-ms (t/instant)) "\r\n")
 
         s (if (empty? trader)
             s
-            (str s "\r\ntrader requests:\r\n" (print/trader-requests-table trader)))
+            (str s "\r\ntrader requests:\r\n" (print/trader-requests-table trader opts)))
 
         s (if (empty? trade)
             s
-            (str s "\r\ntrades:\r\n" (print/trades-table trade)))
+            (str s "\r\ntrades:\r\n" (print/trades-table trade opts)))
 
         s (if (empty? order)
             s
-            (str s "\r\nfinished orders:\r\n" (print/working-orders-table order {:max-width 300})))
+            (str s "\r\nfinished orders:\r\n" (print/working-orders-table order opts)))
 
         s (if (empty? position)
             s
-            (str s "\r\nfinished positions:\r\n" (print/open-positions-table position {:max-width 300})))
+            (str s "\r\nfinished positions:\r\n" (print/open-positions-table position opts)))
 
         s (if (some? working-order)
-            (str s "\r\nworking-order:\r\n" (print/working-orders-table (vals working-order) {:max-width 300}))
+            (str s "\r\nworking-order:\r\n" (print/working-orders-table (vals working-order) opts))
             s)
 
         s (if (some? open-position)
-            (str s "\r\nopen-position:\r\n" (print/open-positions-table (vals open-position) {:max-width 300}))
+            (str s "\r\nopen-position:\r\n" (print/open-positions-table (vals open-position) opts))
             s)]
     s))
 
