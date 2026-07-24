@@ -74,7 +74,7 @@
   (info "stopping db-transactor ..")
   (when dispose! 
     (dispose!)
-    (Thread/sleep 100)
+    (Thread/sleep 1000) ; give it time to finish flushing.
     )
     
   )
