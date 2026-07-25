@@ -8,11 +8,7 @@
    [quanta.blotter.oms.report.text-logger :refer [start-trading-state-logger!]]
    [quanta.blotter.oms.report.web-ui :as tsc]
    [quanta.blotter.oms.report.trader :as trader]
-   [quanta.blotter.oms.db-transactor :as db-transactor]
-   [quanta.util.datahike :as datahike]
-   ; side effects
-   [quanta.market-sim.broker-paper] ; side effect: brings in paper broker implementation
-   ))
+   [quanta.blotter.oms.db-transactor :as db-transactor]))
 
 (defn- require-config-namespaces! [ns-require]
   (when (seq ns-require)
