@@ -1,9 +1,8 @@
-(ns quanta.blotter.oms.flow.open-positions-test
+(ns quanta.blotter.oms.portfolio.open-position-test
   (:require
    [clojure.test :refer :all]
-   [missionary.core :as m]
-   [quanta.blotter.oms.flow.fill :as fill]
-   [quanta.blotter.oms.flow.open-positions :as op]))
+   [quanta.blotter.oms.portfolio :as portfolio]
+   [quanta.blotter.oms.portfolio.open-position :as op]))
 
 (defn- fill [account asset side qty price]
   {:type :broker/order-filled
@@ -13,11 +12,17 @@
    :qty qty
    :price price})
 
-(defn- emissions [fills-or-flow & [opts]]
-  (let [flow (if (sequential? fills-or-flow)
-               (m/seed fills-or-flow)
-               fills-or-flow)]
-    (m/? (m/reduce conj [] (op/position-change-flow (fill/fill-flow flow) opts)))))
+(defn- emissions [fills & [opts]]
+  (let [method (or (:position-method opts) (:method opts) :average)]
+    (second
+     (reduce
+      (fn [[state outs] msg]
+        (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
+          [state (cond-> outs
+                   (:position-change out-msg)
+                   (conj (:position-change out-msg)))]))
+      [(portfolio/empty-state {:position-method method}) []]
+      fills))))
 
 (defn- last-emission [fills & [opts]]
   (last (emissions fills opts)))
@@ -100,20 +105,18 @@
     (is (false? (:position/open (last ems))))))
 
 (deftest ignores-non-fill-messages
-  (let [flow (m/seed [{:type :trader/new-order :account/id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
-                      (fill 1 "X" :buy 1.0 5.0)])
-        ems (emissions flow)]
+  (let [ems (emissions [{:type :trader/new-order :account/id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
+                        (fill 1 "X" :buy 1.0 5.0)])]
     (is (= 1 (count ems)))
     (is (= :long (:position/side (first ems))))))
 
 (deftest channel-paper-fills
-  (let [flow (m/seed
-              [{:type :trader/new-order :account/id 2 :order-id 4 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
-               {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
-                :qty 0.001 :side :sell :price 100.0}
-               {:type :broker/order-filled :account/id 2 :order-id 3 :asset "ETHUSDT"
-                :qty 0.001 :side :sell :price 101.0}])
-        ems (emissions flow)
+  (let [ems (emissions
+             [{:type :trader/new-order :account/id 2 :order-id 4 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
+              {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
+               :qty 0.001 :side :sell :price 100.0}
+              {:type :broker/order-filled :account/id 2 :order-id 3 :asset "ETHUSDT"
+               :qty 0.001 :side :sell :price 101.0}])
         last-pos (last ems)]
     (is (= 2 (count ems)))
     (is (= :short (:position/side (first ems))))
@@ -130,4 +133,5 @@
         entry (:position/average-entry-price pos)
         exit (:position/avg-exit-price pos)
         pl (:position/realized-pl pos)]
-    (is (== pl (* max-qty (- exit entry))))))
+    (is (== pl (* max-qty (- exit entry))))
+    (is (some? (op/derive-avg-exit-price pos)))))

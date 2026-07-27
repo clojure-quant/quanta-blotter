@@ -1,7 +1,6 @@
-(ns quanta.blotter.oms.flow.fill
+(ns quanta.blotter.oms.portfolio.fill
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
-   [missionary.core :as m]))
+   [taoensso.timbre :refer [info]]))
 
 (defn fill?
   "A broker order-filled message represents a fill."
@@ -9,7 +8,7 @@
   (= :broker/order-filled (:type msg)))
 
 (defn ->fill
-  "Projects a :broker/order-filled message to a db-shaped fill record."
+  "Projects a :broker/order-filled message to a db-shaped fill/trade record."
   [msg]
   (info "fill orderupdate: " msg)
   (cond-> {:fill/id (:fill-id msg)
@@ -23,12 +22,3 @@
     (:campaign msg) (assoc :fill/campaign (:campaign msg))
     (:label msg) (assoc :fill/label (:label msg))
     (:position-id msg) (assoc :fill/position-id (:position-id msg))))
-
-(defn fill-flow
-  "Consumes a mixed channel flow; emits one fill record per :broker/order-filled
-   message."
-  [channel-flow]
-  (m/eduction
-   (filter fill?)
-   (map ->fill)
-   channel-flow))

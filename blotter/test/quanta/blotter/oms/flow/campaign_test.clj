@@ -6,7 +6,8 @@
    [ednx.edn :refer [read-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [missionary.core :as m]
-   [quanta.blotter.oms.flow.campaign :as campaign]))
+   [quanta.blotter.oms.flow.campaign :as campaign]
+   [quanta.blotter.oms.portfolio :as portfolio]))
 
 (add-tick-edn-handlers!)
 
@@ -82,21 +83,32 @@
 (defn- tagged-messages [channel-flow]
   (m/? (m/reduce conj [] (campaign/campaign-tagged-combined-flow channel-flow))))
 
-(defn- campaign-flows [channel-flow campaign-id]
-  (let [tagged (campaign/campaign-tagged-combined-flow channel-flow)]
-    (campaign/campaign-flows tagged campaign-id)))
+(defn- events-of [channel-flow-or-events]
+  (if (sequential? channel-flow-or-events)
+    channel-flow-or-events
+    (m/? (m/reduce conj [] channel-flow-or-events))))
 
-(defn- final-campaign-dict [channel-flow campaign-id]
-  (let [{:keys [working-order-dict-flow]} (campaign-flows channel-flow campaign-id)]
-    (last (m/? (m/reduce conj [] working-order-dict-flow)))))
+(defn- fold-campaign [events campaign-id]
+  (let [tagged (tagged-messages (m/seed events))
+        filtered (filter #(= (:campaign %) campaign-id) tagged)]
+    (reduce
+     (fn [[state outs] msg]
+       (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
+         [state (conj outs out-msg)]))
+     [(portfolio/empty-state) []]
+     filtered)))
 
-(defn- final-open-position-dict [channel-flow campaign-id]
-  (let [{:keys [open-position-dict-flow]} (campaign-flows channel-flow campaign-id)]
-    (last (m/? (m/reduce conj [] open-position-dict-flow)))))
+(defn- final-campaign-dict [channel-flow-or-events campaign-id]
+  (let [[state _] (fold-campaign (events-of channel-flow-or-events) campaign-id)]
+    (:working-order state)))
 
-(defn- campaign-fills [channel-flow campaign-id]
-  (let [{:keys [fill-flow]} (campaign-flows channel-flow campaign-id)]
-    (m/? (m/reduce conj [] fill-flow))))
+(defn- final-open-position-dict [channel-flow-or-events campaign-id]
+  (let [[state _] (fold-campaign (events-of channel-flow-or-events) campaign-id)]
+    (:open-position state)))
+
+(defn- campaign-fills [channel-flow-or-events campaign-id]
+  (let [[_ outs] (fold-campaign (events-of channel-flow-or-events) campaign-id)]
+    (into [] (keep :trade) outs)))
 
 (def ^:private expected-order-tags
   "Campaign/label from each order's :trader/new-order; propagated to all later messages."

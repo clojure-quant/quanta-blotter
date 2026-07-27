@@ -2,10 +2,7 @@
   (:require
    [missionary.core :as m]
    [tick.core :as t]
-   [quanta.missionary :refer [mix-tagged mix]]
-   [quanta.missionary.logger :as logger] 
-   [quanta.blotter.oms.flow.open-positions :as op]
-   [quanta.blotter.oms.flow.working-orders :as wo]
+   [quanta.missionary.logger :as logger]
    [quanta.blotter.oms.print :as print]))
 
 (defn- print-state [{:keys [trader trade order position working-order open-position] :as _state}]
@@ -37,44 +34,48 @@
             s)]
     s))
 
-(defn- acc-state [state [k v]]
-  (case k
-    :trader (update state :trader conj v)
-    :trade (update state :trade conj v)
-    :order (update state :order conj v)
-    :position (update state :position conj v)
-    :working-order (assoc state :working-order v)
-    :open-position (assoc state :open-position v)))
+(defn- acc-out-msg [state out-msg]
+  (cond-> state
+    (contains? out-msg :trader)
+    (update :trader conj (:trader out-msg))
 
-(defn trading-state-print-flow [{:keys [order-change-flow fill-flow position-change-flow
-                                        working-order-dict-flow open-position-dict-flow
-                                        trader-req-flow]
-                                 :as trading-state} interval-ms]
-  (assert (map? trading-state) "trading-state-print-flow trading-state needs to be a map")
-  (let [mixed-f (mix-tagged {:trade fill-flow
-                             ;:order order-change-flow
-                             :order (wo/closed-order-list-flow order-change-flow)
-                             ;:position position-change-flow
-                             :position (op/closed-position-list-flow position-change-flow)
-                             :working-order working-order-dict-flow
-                             :open-position open-position-dict-flow
-                             :trader trader-req-flow
-                             })
-        batched-combined-f (m/ap
-                            (let [[_ batch] (m/?> (m/group-by {} mixed-f))]
-                              (m/? (->> (m/ap (m/amb= (m/?> batch)
-                                                      (m/? (m/sleep interval-ms))))
-                                        (m/eduction (take-while some?))
-                                        (m/reduce acc-state {:trader []
-                                                             :trade [] :order [] :position []
-                                                             :working-order nil :open-position nil})))))]
+    (contains? out-msg :trade)
+    (update :trade conj (:trade out-msg))
+
+    (contains? out-msg :order)
+    (update :order conj (:order out-msg))
+
+    (and (contains? out-msg :position-change)
+         (false? (get-in out-msg [:position-change :position/open])))
+    (update :position conj (:position-change out-msg))
+
+    (contains? out-msg :working-order)
+    (assoc :working-order (:working-order out-msg))
+
+    (contains? out-msg :open-position)
+    (assoc :open-position (:open-position out-msg))))
+
+(defn portfolio-print-flow
+  "Batch portfolio :out-flow events every `interval-ms` and pretty-print."
+  [{:keys [out-flow] :as portfolio} interval-ms]
+  (assert (map? portfolio) "portfolio-print-flow needs a portfolio map")
+  (assert out-flow "portfolio-print-flow needs :out-flow")
+  (let [batched-f (m/ap
+                   (let [[_ batch] (m/?> (m/group-by {} out-flow))]
+                     (m/? (->> (m/ap (m/amb= (m/?> batch)
+                                             (m/? (m/sleep interval-ms))))
+                               (m/eduction (take-while some?))
+                               (m/reduce acc-out-msg {:trader []
+                                                      :trade [] :order [] :position []
+                                                      :working-order nil :open-position nil})))))]
     (m/ap
-     (print-state (m/?> batched-combined-f)))))
+     (print-state (m/?> batched-f)))))
 
-
-(defn start-trading-state-logger! [trading-state log-file interval-ms console?]
-  (assert trading-state "start-trading-state-logger! needs :trading-state") 
+(defn start-trading-state-logger!
+  "Start periodic logger for a portfolio (or legacy trading-state map with :out-flow)."
+  [portfolio log-file interval-ms console?]
+  (assert portfolio "start-trading-state-logger! needs portfolio")
   (let [l (logger/create-logger log-file console?)
-        log-f (trading-state-print-flow trading-state interval-ms)
+        log-f (portfolio-print-flow portfolio interval-ms)
         dispose! (logger/start-log-flow-to-logger l log-f)]
     dispose!))

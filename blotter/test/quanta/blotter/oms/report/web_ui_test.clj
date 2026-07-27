@@ -3,7 +3,7 @@
    [clojure.test :refer :all]
    [missionary.core :as m]
    [quanta.missionary.time-flow :refer [create-time-flow]]
-   [quanta.blotter.oms.flow.trading-state :as trading-state]
+   [quanta.blotter.oms.portfolio :as portfolio]
    [quanta.blotter.oms.report.web-ui :as tsc]
    [quanta.blotter.oms.print :as print]))
 
@@ -65,23 +65,26 @@
 
 (defn- with-recent-consumer! [time-flow recent-ms f]
   (let [channel-flow (m/stream time-flow)
-        ts (trading-state/create-trading-state! channel-flow)
-        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! ts recent-ms)
+        p (portfolio/portfolio-create nil channel-flow)
+        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! p recent-ms)
         acc (atom [])
-        dispose (start-collecting! snapshot-flow acc)]
+        dispose (start-collecting! snapshot-flow acc)
+        _ (portfolio/portfolio-start! p)]
     (try
       (f trading-state-a)
       (finally
-        (stop-collecting! dispose)))))
+        (stop-collecting! dispose)
+        (portfolio/portfolio-stop! p)))))
 
 (deftest two-snapshot-consumers-see-same-trading-state
   (let [channel-flow (m/stream channel-paper-time-flow)
-        ts (trading-state/create-trading-state! channel-flow)
-        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! ts 0)
+        p (portfolio/portfolio-create nil channel-flow)
+        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! p 0)
         acc1 (atom [])
         acc2 (atom [])
         dispose1 (start-collecting! snapshot-flow acc1)
-        dispose2 (start-collecting! snapshot-flow acc2)]
+        dispose2 (start-collecting! snapshot-flow acc2)
+        _ (portfolio/portfolio-start! p)]
     (try
       ;; 14 messages × 1ms + margin for positions and 250ms snapshot ticks
       (m/? (m/sleep 500))
@@ -104,7 +107,8 @@
         (println (print/open-positions-table (:open-positions final-a))))
       (finally
         (stop-collecting! dispose1)
-        (stop-collecting! dispose2)))))
+        (stop-collecting! dispose2)
+        (portfolio/portfolio-stop! p)))))
 
 (deftest recent-ms-keeps-rejected-order-visible
   (with-recent-consumer! recent-reject-order-time-flow 2000

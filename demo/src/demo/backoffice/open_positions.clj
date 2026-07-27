@@ -3,9 +3,7 @@
    [clojure.pprint :refer [print-table]]
    [ednx.edn :refer [slurp-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
-   [missionary.core :as m]
-   [quanta.blotter.oms.flow.fill :as fill]
-   [quanta.blotter.oms.flow.open-positions :as op]))
+   [quanta.blotter.oms.portfolio :as portfolio]))
 
 (add-tick-edn-handlers!)
 
@@ -46,43 +44,24 @@
   (print-positions-table! "Closed positions:" @closed-positions)
   (println))
 
-(def channel-flow (m/seed (load-channel-paper)))
-
 (defn run-demo!
   "Reads channel-paper.edn; after each position change prints all positions.
-
-  Optional opts passed to quanta.blotter.oms.flow.open-positions/position-change-flow,
-  e.g. {:method :fifo}."
+  Optional opts e.g. {:position-method :fifo}."
   [opts]
-  (let [position-change-flow (op/position-change-flow (fill/fill-flow channel-flow) opts)
-        closed-positions (atom [])]
-    (m/? (m/reduce
-          (fn [positions-by-key position]
-            (let [k [(:position/account position) (:position/asset position)]
-                  positions-by-key (if (false? (:position/open position))
-                                     (do (swap! closed-positions conj position)
-                                         (dissoc positions-by-key k))
-                                     (assoc positions-by-key k position))]
-              (print-all-tables! positions-by-key closed-positions)
-              positions-by-key))
-          {}
-          position-change-flow))))
-
-(def dispose!
-  (let [pos-change-f (op/position-change-flow (fill/fill-flow channel-flow) {:method :fifo})
-        open-pos-list-f (op/open-position-list-flow pos-change-f)
-        t (m/reduce
-           (fn [_ positions]
-             (print-positions-table! "open positions" positions)
-             nil)
-           nil
-           open-pos-list-f)]
-    (t #(println "success:  " %) #(println "error:  " %))))
-
-(dispose!)
+  (let [msgs (load-channel-paper)
+        closed-positions (atom [])
+        method (or (:position-method opts) (:method opts) :fifo)]
+    (reduce
+     (fn [state msg]
+       (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
+         (when-let [p (:position-change out-msg)]
+           (when (false? (:position/open p))
+             (swap! closed-positions conj p))
+           (print-all-tables! (:open-position state) closed-positions))
+         state))
+     (portfolio/empty-state {:position-method method})
+     msgs)
+    nil))
 
 (comment
-  (run-demo! {:method :fifo})
-
-  ;
-  )
+  (run-demo! {:position-method :fifo}))

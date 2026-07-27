@@ -2,12 +2,9 @@
   (:require
    [clojure.test :refer [deftest is testing]]
    [datahike.api :as d]
-   [missionary.core :as m]
-   [quanta.blotter.util :as util]
    [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.flow.fill :as fill]
-   [quanta.blotter.oms.flow.open-positions :as op]
-   [quanta.blotter.oms.flow.working-orders :as wo]
+   [quanta.blotter.oms.db-transactor :as db-transactor]
+   [quanta.blotter.oms.portfolio :as portfolio]
    [quanta.util.datahike :as datahike]))
 
 (def channel-events
@@ -19,16 +16,13 @@
    {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f-2" :asset "BTCUSDT" :side :buy :qty 0.001 :price 10000.0}])
 
 (defn- seed->tx-vector [events]
-  (let [flow (m/seed events)
-        fill-flow (fill/fill-flow flow)
-        combined (util/mix
-                  (m/eduction (map (fn [v] {:msg v})) flow)
-                  (m/eduction (map (fn [v] {:order v})) (wo/order-change-flow flow))
-                  (m/eduction (map (fn [v] {:fill v})) fill-flow)
-                  (m/eduction (map (fn [v] {:position v}))
-                              (op/position-change-flow fill-flow {:method :fifo})))
-        block (m/? (m/reduce conj [] combined))]
-    (into [] (mapcat (fn [m] (first (seq m))) block))))
+  (second
+   (reduce
+    (fn [[state tx] msg]
+      (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
+        [state (into tx (db-transactor/out-msg->tx-vector out-msg))]))
+    [(portfolio/empty-state) []]
+    events)))
 
 (defn- ref-eid [v]
   (if (map? v) (:db/id v) v))

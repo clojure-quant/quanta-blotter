@@ -1,9 +1,7 @@
-(ns quanta.blotter.oms.flow.open-positions
+(ns quanta.blotter.oms.portfolio.open-position
   (:require
-   [missionary.core :as m]
    [quanta.blotter.precision :as precision]
-   [tick.core :as t]
-   [taoensso.timbre :refer [info]])
+   [tick.core :as t])
   (:import [java.math BigDecimal]))
 
 (defn- num-abs [n]
@@ -31,7 +29,7 @@
          :short (- entry (precision/div pl max-qty scale))
          nil)))))
 
-(defn- initial-state []
+(defn initial-acc []
   {:net-qty 0M
    :avg-entry-price 0M
    :lots []
@@ -47,8 +45,13 @@
    :closed-emitted false
    :last-view nil})
 
-(defn- position-key [fill]
-  [(:fill/account-id fill) (:fill/asset fill)])
+(defn position-key
+  "Key for a fill or position view: [account asset]."
+  [x]
+  (or (when (and (:fill/account-id x) (:fill/asset x))
+        [(:fill/account-id x) (:fill/asset x)])
+      (when (and (:position/account x) (:position/asset x))
+        [(:position/account x) (:position/asset x)])))
 
 (defn- signed-trade-qty [fill]
   (let [q (or (:fill/qty fill) 0M)]
@@ -81,15 +84,15 @@
       (lots->avg-entry lots (or price-scale 0))
       avg-entry-price)))
 
-(defn- to-position-view
-  [state]
+(defn to-position-view
+  [acc]
   (let [{:keys [account asset net-qty realized-pl max-qty date-open date-close
-                last-side last-avg-entry]} state
+                last-side last-avg-entry]} acc
         open? (not (zero? net-qty))
         long? (pos? net-qty)
         side (if open? (if long? :long :short) last-side)
         qty-open (if open? (num-abs net-qty) 0M)
-        avg (current-avg-entry state)
+        avg (current-avg-entry acc)
         entry (or avg last-avg-entry)
         view (cond-> {:position/account account
                       :position/asset asset
@@ -103,37 +106,37 @@
                (not open?) (assoc :position/date-close (some-> date-close t/inst)))]
     (assoc view :position/avg-exit-price (derive-avg-exit-price view))))
 
-(defn- view-changed? [state]
-  (not= (to-position-view state) (:last-view state)))
+(defn- view-changed? [acc]
+  (not= (to-position-view acc) (:last-view acc)))
 
-(defn- should-emit? [state]
-  (let [view (to-position-view state)]
-    (and (view-changed? state)
+(defn- should-emit? [acc]
+  (let [view (to-position-view acc)]
+    (and (view-changed? acc)
          (not (and (false? (:position/open view))
-                   (:closed-emitted state))))))
+                   (:closed-emitted acc))))))
 
-(defn- record-emit [state]
-  (let [view (to-position-view state)]
-    (assoc state
+(defn- record-emit [acc]
+  (let [view (to-position-view acc)]
+    (assoc acc
            :last-view view
            :closed-emitted (false? (:position/open view)))))
 
-(defn- stamp-ids [state fill]
-  (assoc state
-         :account (or (:account state) (:fill/account-id fill))
-         :asset (or (:asset state) (:fill/asset fill))
-         :price-scale (max (or (:price-scale state) 0)
+(defn- stamp-ids [acc fill]
+  (assoc acc
+         :account (or (:account acc) (:fill/account-id fill))
+         :asset (or (:asset acc) (:fill/asset fill))
+         :price-scale (max (or (:price-scale acc) 0)
                            (if-let [p (:fill/price fill)]
                              (.scale ^BigDecimal p)
                              0))))
 
-(defn- finalize-after-fill [state fill prev-net]
-  (let [net (or (:net-qty state) 0M)
+(defn- finalize-after-fill [acc fill prev-net]
+  (let [net (or (:net-qty acc) 0M)
         abs-net (num-abs net)
         event-date (or (some-> (:fill/date fill) t/inst) (t/instant))
-        avg (current-avg-entry state)
-        max-q (max (or (:max-qty state) 0M) abs-net)]
-    (cond-> (assoc state :max-qty max-q)
+        avg (current-avg-entry acc)
+        max-q (max (or (:max-qty acc) 0M) abs-net)]
+    (cond-> (assoc acc :max-qty max-q)
       (and (zero? prev-net) (not (zero? net)))
       (assoc :date-open event-date)
 
@@ -145,12 +148,12 @@
           (assoc :last-avg-entry avg)))))
 
 (defn- apply-fill-average
-  [state fill]
+  [acc fill]
   (let [trade (signed-trade-qty fill)
-        net (or (:net-qty state) 0M)
-        avg (or (:avg-entry-price state) 0M)
-        realized (or (:realized-pl state) 0M)
-        scale (or (:price-scale state) 0)
+        net (or (:net-qty acc) 0M)
+        avg (or (:avg-entry-price acc) 0M)
+        realized (or (:realized-pl acc) 0M)
+        scale (or (:price-scale acc) 0)
         price (:fill/price fill)
         new-net (+ net trade)]
     (cond
@@ -161,7 +164,7 @@
             new-avg (if (zero? net)
                       price
                       (precision/div (+ (* abs-old avg) (* abs-trade price)) abs-new scale))]
-        (assoc state
+        (assoc acc
                :net-qty new-net
                :avg-entry-price new-avg
                :realized-pl realized
@@ -177,21 +180,21 @@
             remainder-net new-net]
         (cond
           (zero? remainder-net)
-          (assoc state
+          (assoc acc
                  :net-qty 0M
                  :avg-entry-price 0M
                  :realized-pl new-realized
                  :closed-emitted false)
 
           (not (same-direction? net remainder-net))
-          (assoc state
+          (assoc acc
                  :net-qty remainder-net
                  :avg-entry-price price
                  :realized-pl new-realized
                  :closed-emitted false)
 
           :else
-          (assoc state
+          (assoc acc
                  :net-qty remainder-net
                  :avg-entry-price avg
                  :realized-pl new-realized
@@ -226,25 +229,25 @@
         (recur lots rem pl)))))
 
 (defn- apply-fill-fifo
-  [state fill]
+  [acc fill]
   (let [trade (signed-trade-qty fill)
-        net (or (:net-qty state) 0M)
-        lots (or (:lots state) [])
-        realized (or (:realized-pl state) 0M)
-        scale (or (:price-scale state) 0)
+        net (or (:net-qty acc) 0M)
+        lots (or (:lots acc) [])
+        realized (or (:realized-pl acc) 0M)
+        scale (or (:price-scale acc) 0)
         price (:fill/price fill)
         trade-qty (num-abs trade)
         new-net (+ net trade)]
     (cond
       (zero? net)
-      (assoc state
+      (assoc acc
              :net-qty new-net
              :lots [{:qty trade-qty :price price}]
              :realized-pl realized
              :closed-emitted false)
 
       (same-direction? net trade)
-      (assoc state
+      (assoc acc
              :net-qty new-net
              :lots (conj lots {:qty trade-qty :price price})
              :realized-pl realized
@@ -259,7 +262,7 @@
             open-qty (- trade-qty close-qty)]
         (cond
           (zero? new-net)
-          (assoc state
+          (assoc acc
                  :net-qty 0M
                  :lots []
                  :avg-entry-price 0M
@@ -267,7 +270,7 @@
                  :closed-emitted false)
 
           (pos? open-qty)
-          (assoc state
+          (assoc acc
                  :net-qty new-net
                  :lots [{:qty open-qty :price price}]
                  :avg-entry-price price
@@ -275,77 +278,38 @@
                  :closed-emitted false)
 
           :else
-          (assoc state
+          (assoc acc
                  :net-qty new-net
                  :lots lots
                  :avg-entry-price (lots->avg-entry lots scale)
                  :realized-pl new-realized
                  :closed-emitted false))))))
 
-(defn- process-fill
-  [state fill {:keys [method]}]
-  (let [prev-net (or (:net-qty state) 0M)
-        state (stamp-ids state fill)
-        state (case method
-                :fifo (apply-fill-fifo state fill)
-                :average (apply-fill-average state fill))]
-    (finalize-after-fill state fill prev-net)))
+(defn process-fill
+  [acc fill {:keys [method]}]
+  (let [prev-net (or (:net-qty acc) 0M)
+        acc (stamp-ids acc fill)
+        acc (case method
+              :fifo (apply-fill-fifo acc fill)
+              :average (apply-fill-average acc fill))]
+    (finalize-after-fill acc fill prev-net)))
 
-(defn- step [[state _] fill opts]
-  (let [state (process-fill state fill opts)]
-    (if (should-emit? state)
-      [(record-emit state) (to-position-view state)]
-      [state nil])))
+(defn step
+  "Synchronous per-position step.
+   Returns {:acc new-acc :position-change view-or-nil}."
+  [acc fill opts]
+  (let [acc (process-fill acc fill opts)]
+    (if (should-emit? acc)
+      (let [acc (record-emit acc)]
+        {:acc acc
+         :position-change (to-position-view acc)})
+      {:acc acc
+       :position-change nil})))
 
-(defn- per-position-view-flow [fill-flow opts]
-  (m/eduction
-   (map second)
-   (filter some?)
-   (m/reductions (fn [acc fill] (step acc fill opts))
-                 [(initial-state) nil]
-                 fill-flow)))
-
-(defn position-change-flow
-  "Consumes a flow of fills (see quanta.blotter.oms.flow.fill/fill-flow); emits
-   {:position/...} maps when a fill changes the open position for
-   [account asset].
-
-   Options:
-   - :method — :average (default) or :fifo"
-  ([fill-flow]
-   (position-change-flow fill-flow {}))
-  ([fill-flow {:keys [method] :or {method :average}}]
-   (let [opts {:method method}]
-     (m/ap
-      (let [[k fills] (m/?> ##Inf (m/group-by position-key fill-flow))
-            _ (info "open-position flow for" k)
-            position (m/?> 1 (per-position-view-flow fills opts))]
-        position)))))
-
-(defn open-position-dict-flow [position-change-f]
-  (m/reductions
-   (fn [acc position]
-     (let [k [(:position/account position) (:position/asset position)]
-           acc (if (false? (:position/open position))
-                 (dissoc acc k)
-                 (assoc acc k position))]
-       acc))
-   {}
-   position-change-f))
-
-(defn open-position-list-flow [position-change-f]
-  (m/eduction
-   (map vals)
-   (open-position-dict-flow position-change-f)))
-
-(defn open-position-list-from-dict-flow
-  "Emits a vector of open positions from a shared dict flow."
-  [dict-flow]
-  (m/eduction
-   (map vals)
-   dict-flow))
-
-(defn closed-position-list-flow [position-change-f]
-  (m/eduction
-   (remove #(:position/open %))
-   position-change-f))
+(defn update-open-position-dict
+  "Apply a position-change view to the live open-position dictionary."
+  [dict position]
+  (let [k [(:position/account position) (:position/asset position)]]
+    (if (false? (:position/open position))
+      (dissoc dict k)
+      (assoc dict k position))))

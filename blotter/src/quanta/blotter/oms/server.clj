@@ -5,6 +5,7 @@
    [modular.require :refer [require-namespaces]]
    [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager!]]
    [quanta.blotter.account-manager :refer [add-enabled-db-accounts]]
+   [quanta.blotter.oms.portfolio :as portfolio]
    [quanta.blotter.oms.report.text-logger :refer [start-trading-state-logger!]]
    [quanta.blotter.oms.report.web-ui :as tsc]
    [quanta.blotter.oms.report.trader :as trader]
@@ -25,11 +26,13 @@
                  calculate-trading-state-trader
                  ns-require
                  web-ui text-logger
+                 position-method
                  ctx]
           :or {validate? true
                tag? true
                db-enabled false
                calculate-trading-state-trader false
+               position-method :fifo
                web-ui {}
                text-logger {}}} config
          {:keys [calculate-enabled history-recent-ms]
@@ -50,18 +53,24 @@
                                       :tag? tag?
                                       :ctx ctx})
            _ (add-enabled-db-accounts (:account-manager oms) trade-db)
+           portfolio (portfolio/portfolio-create trade-db (:combined-flow oms)
+                                                 {:position-method position-method})
+           ;; attach consumers before portfolio-start!
            tsc (when calculate-enabled
-                 (tsc/create-trading-state-consumer! (:trading-state oms) history-recent-ms))
+                 (tsc/create-trading-state-consumer! portfolio history-recent-ms))
            _ (when tsc (tsc/start! tsc))
            trader-tagger (when (and calculate-trading-state-trader tsc)
                            (trader/start-trader-tagger trade-db (:trading-state-a tsc)))
-           oms (start-order-manager! oms)
-
            dispose-wo-op-logger (when print-enabled
-                                  (start-trading-state-logger! (:trading-state oms) log-file interval-ms false))
+                                  (start-trading-state-logger! portfolio log-file interval-ms false))
+           ;; oms map carries :portfolio for db-transactor
+           oms (assoc oms :portfolio portfolio)
            db-transactor (when db-enabled
                            (db-transactor/start-db-transactor oms trade-db))
+           _ (portfolio/portfolio-start! portfolio)
+           oms (start-order-manager! oms)
            oms-server {:oms oms
+                       :portfolio portfolio
                        :internal {:tsc tsc
                                   :trader-tagger trader-tagger
                                   :dispose-wo-op-logger dispose-wo-op-logger
@@ -70,14 +79,16 @@
        (assert (get-in oms [:combined-flow]) "oms :combined-flow is required")
        oms-server))))
 
-(defn stop-oms-server [{:keys [oms internal]}]
+(defn stop-oms-server [{:keys [oms portfolio internal]}]
   (let [{:keys [dispose-wo-op-logger db-transactor tsc trader-tagger]} internal]
     (when db-transactor
       (db-transactor/stop-db-transactor db-transactor))
     (when-let [dispose! (:dispose! trader-tagger)] (dispose!))
     (stop-order-manager! oms)
     (when tsc (tsc/stop! tsc))
-    (when dispose-wo-op-logger (dispose-wo-op-logger))))
+    (when dispose-wo-op-logger (dispose-wo-op-logger))
+    (when portfolio
+      (portfolio/portfolio-stop! portfolio))))
 
 (defn snapshot-flow [state]
   (get-in state [:internal :tsc :snapshot-flow]))

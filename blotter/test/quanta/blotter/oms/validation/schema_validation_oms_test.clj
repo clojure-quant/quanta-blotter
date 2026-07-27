@@ -50,7 +50,7 @@
                                      :ctx {:quote-manager ::test-quote-manager}})
           combined-events (atom [])]
       (try
-        (start-order-manager! oms) ; returns oms with :trading-state
+        (start-order-manager! oms)
         (start-combined-collector! oms combined-events)
         (add-account (:account-manager oms)
                      {:account/id account-id

@@ -1,13 +1,13 @@
 (ns quanta.stresstest.runner
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info error]]
    [missionary.core :as m]
-   [quanta.blotter.oms.flow.campaign :as campaign]))
+   [quanta.blotter.oms.flow.campaign :as campaign]
+   [quanta.blotter.oms.portfolio :as portfolio]))
 
 (defn- start-consumer! [state flow update-state]
   (let [state-setter-flow (m/ap (let [v (m/?> flow)]
-                                  (swap! state update-state v)         
-                                  )) 
+                                  (swap! state update-state v)))
         task (m/reduce (fn [_ _] nil) nil state-setter-flow)]
     (task (fn [_])
           #(swap! state assoc :error %))))
@@ -34,15 +34,24 @@
 
        :else result))))
 
-
-
 (defn- update-working-orders [state working-orders]
   (-> state
       (assoc :working-orders working-orders)
       (update :orders-seen (fnil into #{}) (keys working-orders))))
 
+(defn- apply-out-msg [state out-msg]
+  (cond-> state
+    (contains? out-msg :working-order)
+    (update-working-orders (:working-order out-msg))
+
+    (contains? out-msg :open-position)
+    (assoc :open-positions (:open-position out-msg))
+
+    (contains? out-msg :trade)
+    (update :fills conj (:trade out-msg))))
+
 (defn start-runner
-  "Starts campaign-scoped flow consumers and returns a runner map.
+  "Starts campaign-scoped portfolio consumers and returns a runner map.
 
    Uses OMS `:combined-flow` (already campaign-tagged); only filters by
    campaign-id. Tests receive `:oms`, `:campaign`, a live `:state` atom,
@@ -52,31 +61,29 @@
   (let [combined-flow (:combined-flow oms)]
     (when-not combined-flow
       (throw (ex-info "OMS has no combined flow" {:oms oms})))
-    (let [{:keys [working-order-dict-flow fill-flow open-position-dict-flow]}
-          (campaign/campaign-flows combined-flow campaign-id)
+    (let [camp (campaign/campaign-portfolio combined-flow campaign-id)
           state (atom {:working-orders {}
                        :open-positions {}
                        :fills []})
-          disposers [(start-consumer! state working-order-dict-flow update-working-orders)
-                     (start-consumer! state fill-flow
-                                      #(update %1 :fills conj %2))
-                     (start-consumer! state open-position-dict-flow
-                                      #(assoc %1 :open-positions %2))]]
+          disposers [(start-consumer! state (:out-flow camp) apply-out-msg)
+                     ;; also stop campaign portfolio on runner stop
+                     (:dispose! camp)]
+          _ (portfolio/portfolio-start! camp)]
       {:oms oms
        :test-timeout-ms test-timeout-ms
        :quote-timeout-ms quote-timeout-ms
        :state state
        :campaign campaign-id
+       :portfolio camp
        :disposers disposers})))
 
-
-(defn stop-runner [{:keys [disposers campaign] :as this}]
+(defn stop-runner [{:keys [disposers campaign] :as _this}]
   (info "stopping runner" campaign)
   (doseq [dispose! disposers]
-    (dispose!))
+    (when dispose! (dispose!)))
   (info "stopping runner" campaign "done!"))
 
-(defn calc-result-stats [{:keys [state] :as this}]
+(defn calc-result-stats [{:keys [state] :as _this}]
   (info "calculating result stats..")
   (let [{:keys [working-orders open-positions fills orders-seen]} @state
         working-orders (or working-orders {})
@@ -96,8 +103,7 @@
      nil
      (catch Exception e
        (error "exception running test task " (ex-message e))
-       [::exception (ex-message e)]
-       ))))
+       [::exception (ex-message e)]))))
 
 (defn run [oms runner-opts test-fn test-opts]
   (m/sp
@@ -130,6 +136,3 @@
                        :runtime-ms runtime-ms})))]
      (stop-runner this)
      result)))
-
-
-

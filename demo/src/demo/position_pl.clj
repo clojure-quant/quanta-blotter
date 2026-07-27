@@ -5,9 +5,7 @@
     clojure -M -e \"(require 'demo.position-pl) (demo.position-pl/run-demo!)\""
   (:require
    [clojure.pprint :refer [print-table]]
-   [missionary.core :as m]
-   [quanta.blotter.oms.flow.fill :as fill]
-   [quanta.blotter.oms.flow.open-positions :as op]))
+   [quanta.blotter.oms.portfolio :as portfolio]))
 
 (defn- fill-msg [account asset side qty price]
   {:type :broker/order-filled
@@ -18,8 +16,16 @@
    :price price})
 
 (defn- emissions [fills method]
-  (let [flow (m/seed (map (partial apply fill-msg) fills))]
-    (m/? (m/reduce conj [] (op/position-change-flow (fill/fill-flow flow) {:method method})))))
+  (let [msgs (map (partial apply fill-msg) fills)]
+    (second
+     (reduce
+      (fn [[state outs] msg]
+        (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
+          [state (cond-> outs
+                   (:position-change out-msg)
+                   (conj (:position-change out-msg)))]))
+      [(portfolio/empty-state {:position-method method}) []]
+      msgs))))
 
 (defn- row [scenario method step pos]
   (let [side (:position/side pos)
