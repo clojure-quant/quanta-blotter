@@ -88,42 +88,37 @@
                               (:order/history order)
                               []))))
 
+(defn- strip-position-db-fields [position]
+  (dissoc position :db/id :position/account-db))
+
 (defn- hydrate-from-db
-  "Rebuild portfolio state from persisted orders/fills.
-   FIFO internals are rebuilt by replaying fills in date order; working orders
-   are hydrated from open order rows."
-  [db {:keys [position-method] :as opts}]
+  "Rebuild portfolio state from persisted open orders and open positions.
+   Only open positions are loaded into `:open-position`."
+  [db opts]
   (let [state (empty-state opts)
-        orders (when db (db/query-orders db))
-        fills (when db
-                (->> (db/query-fills db)
-                     (map #(dissoc % :db/id :fill/order :fill/account-db))
-                     (sort-by (fn [f] (or (:fill/date f) #inst "1970-01-01")))))
+        open-orders (when db (or (db/query-open-orders db) []))
+        open-positions (when db (or (db/query-open-positions db) []))
         state (reduce
-               (fn [st f]
-                 (let [k (op/position-key f)
-                       acc (get-in st [:position-accs k] (op/initial-acc))
-                       {:keys [acc position-change]} (op/step acc f {:method position-method})
-                       st (assoc-in st [:position-accs k] acc)]
-                   (if position-change
-                     (assoc st :open-position
-                            (op/update-open-position-dict (:open-position st) position-change))
-                     st)))
+               (fn [st order]
+                 (let [view (strip-order-db-fields order)
+                       oid (:order/id view)
+                       acc (wo/hydrate-acc-from-order view)]
+                   (-> st
+                       (assoc-in [:order-accs oid] acc)
+                       (assoc-in [:working-order oid] view))))
                state
-               (or fills []))
-        open-orders (filter (fn [o]
-                              (not (contains? wo/closed-statuses (:order/status o))))
-                            (or orders []))]
+               open-orders)]
     (reduce
-     (fn [st order]
-       (let [view (strip-order-db-fields order)
-             oid (:order/id view)
-             acc (wo/hydrate-acc-from-order view)]
+     (fn [st position]
+       (let [view (strip-position-db-fields position)
+             k (op/position-key view)
+             acc (op/hydrate-acc-from-position view)
+             view (or (:last-view acc) view)]
          (-> st
-             (assoc-in [:order-accs oid] acc)
-             (assoc-in [:working-order oid] view))))
+             (assoc-in [:position-accs k] acc)
+             (assoc-in [:open-position k] view))))
      state
-     open-orders)))
+     open-positions)))
 
 (defn portfolio-create
   "Build portfolio folding over `channel-flow` (does not start consuming).

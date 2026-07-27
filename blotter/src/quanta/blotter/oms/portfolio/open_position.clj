@@ -313,3 +313,41 @@
     (if (false? (:position/open position))
       (dissoc dict k)
       (assoc dict k position))))
+
+(defn hydrate-acc-from-position
+  "Build a per-position accumulator from a persisted open position row.
+   FIFO lot history is approximated as a single lot at average entry."
+  [position]
+  (let [account (:position/account position)
+        asset (:position/asset position)
+        side (:position/side position)
+        qty-open (or (:position/qty-open position) 0M)
+        qty-open (bigdec qty-open)
+        entry (some-> (:position/average-entry-price position) bigdec)
+        realized (or (:position/realized-pl position) 0M)
+        max-qty (or (:position/qty position) qty-open)
+        net-qty (case side
+                  :long qty-open
+                  :short (- qty-open)
+                  0M)
+        price-scale (if entry (.scale ^BigDecimal entry) 0)
+        view (-> position
+                 (dissoc :db/id :position/account-db)
+                 (cond-> (nil? (:position/avg-exit-price position))
+                   (assoc :position/avg-exit-price (derive-avg-exit-price position))))]
+    {:net-qty net-qty
+     :avg-entry-price (or entry 0M)
+     :lots (if (and entry (pos? qty-open))
+             [{:qty qty-open :price entry}]
+             [])
+     :realized-pl (bigdec realized)
+     :price-scale price-scale
+     :max-qty (bigdec max-qty)
+     :date-open (:position/date-open position)
+     :date-close nil
+     :last-side side
+     :last-avg-entry entry
+     :account account
+     :asset asset
+     :closed-emitted false
+     :last-view view}))

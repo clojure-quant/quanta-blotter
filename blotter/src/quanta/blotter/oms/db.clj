@@ -512,6 +512,15 @@
          :where [?e :order/id _]]
        @conn))
 
+(defn query-open-orders
+  "Orders currently working (not filled/cancelled/rejected/expired)."
+  [conn]
+  (d/q '[:find [(pull ?e [*]) ...]
+         :where
+         [?e :order/id _]
+         [?e :order/status :working]]
+       @conn))
+
 (defn query-fills [conn]
   (d/q '[:find [(pull ?e [*]) ...]
          :where [?e :fill/id _]]
@@ -520,6 +529,15 @@
 (defn query-positions [conn]
   (d/q '[:find [(pull ?e [*]) ...]
          :where [?e :position/account _]]
+       @conn))
+
+(defn query-open-positions
+  "Positions with :position/open true."
+  [conn]
+  (d/q '[:find [(pull ?e [*]) ...]
+         :where
+         [?e :position/account _]
+         [?e :position/open true]]
        @conn))
 
 (defn print-orders [conn]

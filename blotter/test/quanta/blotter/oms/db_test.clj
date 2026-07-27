@@ -115,3 +115,39 @@
       (is (= "fx-q2" (:order/campaign stored)))
       (is (= :hedge (:order/label stored))))
     (datahike/db-stop conn)))
+
+(def closed-order
+  {:order/id 5 :order/account-id 2 :order/asset "BTCUSDT" :order/side :buy
+   :order/type :market :order/status :filled :order/qty 1.0M :order/qty-filled 1.0M
+   :order/qty-working 0.0M :order/avg-price 100.0M :order/date (t/instant)
+   :order/history []})
+
+(def closed-position
+  {:position/account 1 :position/asset "BTCUSDT" :position/side :long
+   :position/open false :position/qty-open 0.0M :position/qty 1.0M
+   :position/average-entry-price 100.0M :position/realized-pl 10.0M
+   :position/avg-exit-price 110.0M})
+
+(deftest query-open-orders-and-open-positions
+  (let [conn (fresh-db)
+        state (db/new-state)]
+    (db/process conn state [:order demo-order
+                            :order closed-order
+                            :position demo-position
+                            :position closed-position])
+    (testing "query-open-orders returns only :working orders"
+      (let [open (db/query-open-orders conn)]
+        (is (= 1 (count open)))
+        (is (= #{"4"} (set (map :order/id open))))
+        (is (every? #(= :working (:order/status %)) open))))
+    (testing "query-orders still returns all orders"
+      (is (= 2 (count (db/query-orders conn)))))
+    (testing "query-open-positions returns only open positions"
+      (let [open (db/query-open-positions conn)]
+        (is (= 1 (count open)))
+        (is (= #{[2 "ETHUSDT"]}
+               (set (map (juxt :position/account :position/asset) open))))
+        (is (every? #(true? (:position/open %)) open))))
+    (testing "query-positions still returns all positions"
+      (is (= 2 (count (db/query-positions conn)))))
+    (datahike/db-stop conn)))
