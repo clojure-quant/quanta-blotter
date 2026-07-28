@@ -16,8 +16,6 @@
   ([{:keys [position-method] :or {position-method :fifo}}]
    {:working-order {}
     :open-position {}
-    :order-accs {}
-    :position-accs {}
     :position-method position-method}))
 
 (defn- public-state
@@ -45,36 +43,40 @@
 
         ;; working order
         order-id (:order-id msg)
-        order-acc (when order-id
-                    (get-in state [:order-accs order-id] (wo/initial-acc)))
-        order-step (when order-acc (wo/step order-acc msg))
+        known-order (when order-id (get-in state [:working-order order-id]))
+        unknown? (and order-id
+                      (nil? known-order)
+                      (not= :trader/new-order (:type msg)))
+        out (cond-> out
+              unknown? (assoc :update-for-unknown msg))
+        order-step (when (and order-id (not unknown?))
+                     (wo/step known-order msg))
         order-change (when order-step (:order-change order-step))
         out (cond-> out
               order-change (assoc :order-change order-change)
               (and order-change (wo/order-done? order-change))
-              (assoc :order order-change))
+              (assoc :order-closed order-change))
         state (if order-step
-                (cond-> (assoc-in state [:order-accs order-id] (:acc order-step))
-                  order-change
-                  (assoc :working-order
-                         (wo/update-working-order-dict (:working-order state) order-change)))
+                (assoc state :working-order
+                       (wo/update-working-order-dict (:working-order state)
+                                                     (:order order-step)))
                 state)
         out (cond-> out
               order-change (assoc :working-order (:working-order state)))
 
         ;; open position (from trade)
         pos-key (when trade (op/position-key trade))
-        pos-acc (when pos-key
-                  (get-in state [:position-accs pos-key] (op/initial-acc)))
-        pos-step (when pos-acc (op/step pos-acc trade {:method method}))
+        known-pos (when pos-key (get-in state [:open-position pos-key]))
+        pos-step (when pos-key (op/step known-pos trade {:method method}))
         position-change (when pos-step (:position-change pos-step))
         out (cond-> out
-              position-change (assoc :position-change position-change))
+              position-change (assoc :position-change position-change)
+              (and position-change (false? (:position/open position-change)))
+              (assoc :position-closed position-change))
         state (if pos-step
-                (cond-> (assoc-in state [:position-accs pos-key] (:acc pos-step))
-                  position-change
-                  (assoc :open-position
-                         (op/update-open-position-dict (:open-position state) position-change)))
+                (assoc state :open-position
+                       (op/update-open-position-dict (:open-position state)
+                                                     (:position pos-step)))
                 state)
         out (cond-> out
               position-change (assoc :open-position (:open-position state)))]
@@ -102,21 +104,16 @@
                (fn [st order]
                  (let [view (strip-order-db-fields order)
                        oid (:order/id view)
-                       acc (wo/hydrate-acc-from-order view)]
-                   (-> st
-                       (assoc-in [:order-accs oid] acc)
-                       (assoc-in [:working-order oid] view))))
+                       hydrated (wo/hydrate-order view)]
+                   (assoc-in st [:working-order oid] hydrated)))
                state
                open-orders)]
     (reduce
      (fn [st position]
        (let [view (strip-position-db-fields position)
              k (op/position-key view)
-             acc (op/hydrate-acc-from-position view)
-             view (or (:last-view acc) view)]
-         (-> st
-             (assoc-in [:position-accs k] acc)
-             (assoc-in [:open-position k] view))))
+             hydrated (op/hydrate-position view)]
+         (assoc-in st [:open-position k] hydrated)))
      state
      open-positions)))
 

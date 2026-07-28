@@ -1,6 +1,4 @@
-(ns quanta.blotter.oms.portfolio.fill
-  (:require
-   [taoensso.timbre :refer [info]]))
+(ns quanta.blotter.oms.portfolio.fill)
 
 (defn fill?
   "A broker order-filled message represents a fill."
@@ -8,9 +6,8 @@
   (= :broker/order-filled (:type msg)))
 
 (defn ->fill
-  "Projects a :broker/order-filled message to a db-shaped fill/trade record."
+  "Projects a :broker/order-filled message to a db-shaped fill record."
   [msg]
-  (info "fill orderupdate: " msg)
   (cond-> {:fill/id (:fill-id msg)
            :fill/order-id (:order-id msg)
            :fill/account-id (:account/id msg)

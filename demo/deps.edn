@@ -23,11 +23,18 @@
                                            :version "prod1"
                                            :run demo.quote.snapshot-performance/run}}
   
-  ;; print 
-  :print-trading-state-flow {:exec-fn demo.print.trading-state-flow/run-demo!}
+  ;; portfolio
+  :portfolio-log-flow {:exec-fn demo.portfolio.log-flow/run-demo!}
+  :portfolio-position-pl {:exec-fn demo.portfolio.position-pl/run-demo!}
+  :portfolio-working-order {:exec-fn demo.portfolio.working-order/run-demo!}
+  :portfolio-open-positions {:exec-fn demo.portfolio.open-positions/run-demo!
+                             :exec-args {:position-method :fifo}}
+  
+  ;; backoffice 
+  :backoffice {:exec-fn demo.backoffice.fill/print-trades!}
 
   ;; trade
-
+  
   :cli-server {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
                :exec-fn modular.system/start!
                :exec-args {:config ["config.edn"]
@@ -43,12 +50,12 @@
                            :version "prod1"
                            :run demo.stresstest/run}}
 
- 
+  
 
-  :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
+  
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
 
-  :backoffice {:exec-fn demo.backoffice/print-trades!}
+  
 
   :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.05.25"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src" "deps.edn" "--fail-level" "error"]}

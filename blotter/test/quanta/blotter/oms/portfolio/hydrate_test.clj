@@ -35,12 +35,17 @@
     (let [hydrated (#'portfolio/hydrate-from-db conn {:position-method :fifo})]
       (testing "working-order dict has only open orders"
         (is (= #{"wo-1"} (set (keys (:working-order hydrated)))))
-        (is (= :working (get-in hydrated [:working-order "wo-1" :order/status]))))
+        (is (= :working (get-in hydrated [:working-order "wo-1" :order/status])))
+        (is (contains? (get-in hydrated [:working-order "wo-1"]) :fill-notional))
+        (is (contains? (get-in hydrated [:working-order "wo-1"]) :price-scale)))
+      (testing "no parallel order-accs"
+        (is (nil? (:order-accs hydrated))))
       (testing "open-position dict has only open positions"
         (is (= #{[1 "EURUSD"]} (set (keys (:open-position hydrated)))))
         (is (true? (get-in hydrated [:open-position [1 "EURUSD"] :position/open])))
-        (is (== 500.0M (get-in hydrated [:open-position [1 "EURUSD"] :position/qty-open]))))
-      (testing "position accumulator seeded for open position"
-        (is (some? (get-in hydrated [:position-accs [1 "EURUSD"]])))
-        (is (== 500.0M (get-in hydrated [:position-accs [1 "EURUSD"] :net-qty])))))
+        (is (== 500.0M (get-in hydrated [:open-position [1 "EURUSD"] :position/qty-open])))
+        (is (contains? (get-in hydrated [:open-position [1 "EURUSD"]]) :lots))
+        (is (contains? (get-in hydrated [:open-position [1 "EURUSD"]]) :price-scale)))
+      (testing "no parallel position-accs"
+        (is (nil? (:position-accs hydrated)))))
     (datahike/db-stop conn)))

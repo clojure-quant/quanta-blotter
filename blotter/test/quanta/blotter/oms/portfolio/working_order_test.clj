@@ -163,3 +163,24 @@
     (is (= "OCCXCB9t" (:order/id (first cancelled))))
     (is (== 58901.0M (:order/limit (first cancelled))))
     (is (some #(= :broker/order-canceled (:type %)) (:order/history (first cancelled))))))
+
+(deftest late-msg-after-close-emits-update-for-unknown
+  (let [msgs [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X"
+               :side :buy :order-type :market :qty 1.0M}
+              {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f1"
+               :asset "X" :side :buy :qty 1.0M :price 10.0M}
+              {:type :broker/order-canceled :account/id 1 :order-id 1
+               :date #inst "2026-06-01T12:00:00.000Z"}]
+        [state outs] (reduce
+                      (fn [[st outs] msg]
+                        (let [{:keys [state out-msg]} (portfolio/process-message st msg)]
+                          [state (conj outs out-msg)]))
+                      [(portfolio/empty-state) []]
+                      msgs)
+        late (last outs)]
+    (is (empty? (:working-order state)))
+    (is (some? (:order-closed (second outs))))
+    (is (= :broker/order-canceled (:type (:update-for-unknown late))))
+    (is (= 1 (:order-id (:update-for-unknown late))))
+    (is (nil? (:order-change late)))
+    (is (nil? (get-in state [:working-order 1])))))

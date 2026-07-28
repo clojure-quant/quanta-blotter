@@ -1,4 +1,4 @@
-(ns demo.print.trading-state-flow
+(ns demo.portfolio.log-flow
   "Replay demo/data/combined.edn through portfolio and log working orders
    and open positions to log/print-demo.log.
 
@@ -32,7 +32,7 @@
 
 (defn run-demo!
   "Read combined.edn, start portfolio + wo/op logger, replay messages."
-  [& _]
+  [_]
   (let [channel-flow (create-combined-flow)
         portfolio (portfolio/portfolio-create nil channel-flow)
         dispose-logger! (start-trading-state-logger! portfolio "log/print-demo.log" 1000 true)
@@ -41,7 +41,9 @@
       (m/? (m/sleep 50000))
       (finally
         (dispose-logger!)
-        (portfolio/portfolio-stop! portfolio)))))
+        (portfolio/portfolio-stop! portfolio)
+        (println "see log in log/print-demo.log")
+        ))))
 
 (comment
-  (run-demo!))
+  (run-demo! {}))

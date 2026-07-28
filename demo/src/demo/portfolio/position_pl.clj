@@ -1,8 +1,8 @@
-(ns demo.position-pl
+(ns demo.portfolio.position-pl
   "Compare FIFO vs average position P/L and derived :position/avg-exit-price.
 
   Run from the demo directory:
-    clojure -M -e \"(require 'demo.position-pl) (demo.position-pl/run-demo!)\""
+    clojure -M -e \"(require 'demo.portfolio.position-pl) (demo.portfolio.position-pl/run-demo!)\""
   (:require
    [clojure.pprint :refer [print-table]]
    [quanta.blotter.oms.portfolio :as portfolio]))

@@ -135,3 +135,29 @@
         pl (:position/realized-pl pos)]
     (is (== pl (* max-qty (- exit entry))))
     (is (some? (op/derive-avg-exit-price pos)))))
+
+(deftest position-closed-and-dict-cleared
+  (let [fills [(fill 1 "X" :buy 10.0 1.0)
+               (fill 1 "X" :sell 10.0 2.0)]
+        [state outs] (reduce
+                      (fn [[st outs] msg]
+                        (let [{:keys [state out-msg]} (portfolio/process-message st msg)]
+                          [state (conj outs out-msg)]))
+                      [(portfolio/empty-state {:position-method :average}) []]
+                      fills)
+        closed-out (last outs)]
+    (is (some? (:position-closed closed-out)))
+    (is (false? (:position/open (:position-closed closed-out))))
+    (is (empty? (:open-position state)))))
+
+(deftest reopen-after-close-starts-fresh
+  (let [fills [(fill 1 "X" :buy 10.0 1.0)
+               (fill 1 "X" :sell 10.0 2.0)
+               (fill 1 "X" :buy 5.0 3.0)]
+        ems (emissions fills {:method :average})
+        reopened (last ems)]
+    (is (= 3 (count ems)))
+    (is (true? (:position/open reopened)))
+    (is (== 5.0 (:position/qty-open reopened)))
+    (is (== 0.0 (:position/realized-pl reopened)))
+    (is (== 5.0 (:position/qty reopened)))))

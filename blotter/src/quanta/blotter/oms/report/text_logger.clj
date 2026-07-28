@@ -5,7 +5,7 @@
    [quanta.missionary.logger :as logger]
    [quanta.blotter.oms.print :as print]))
 
-(defn- print-state [{:keys [trader trade order position working-order open-position] :as _state}]
+(defn- print-state [{:keys [trader trade order-closed position-closed working-order open-position] :as _state}]
   (let [opts {:max-width 300}
         s (str "\r\n trading-state as of " (print/format-ts-ms (t/instant)) "\r\n")
 
@@ -17,13 +17,13 @@
             s
             (str s "\r\ntrades:\r\n" (print/trades-table trade opts)))
 
-        s (if (empty? order)
+        s (if (empty? order-closed)
             s
-            (str s "\r\nfinished orders:\r\n" (print/working-orders-table order opts)))
+            (str s "\r\nfinished orders:\r\n" (print/working-orders-table order-closed opts)))
 
-        s (if (empty? position)
+        s (if (empty? position-closed)
             s
-            (str s "\r\nfinished positions:\r\n" (print/open-positions-table position opts)))
+            (str s "\r\nfinished positions:\r\n" (print/open-positions-table position-closed opts)))
 
         s (if (some? working-order)
             (str s "\r\nworking-order:\r\n" (print/working-orders-table (vals working-order) opts))
@@ -42,12 +42,11 @@
     (contains? out-msg :trade)
     (update :trade conj (:trade out-msg))
 
-    (contains? out-msg :order)
-    (update :order conj (:order out-msg))
+    (contains? out-msg :order-closed)
+    (update :order-closed conj (:order-closed out-msg))
 
-    (and (contains? out-msg :position-change)
-         (false? (get-in out-msg [:position-change :position/open])))
-    (update :position conj (:position-change out-msg))
+    (contains? out-msg :position-closed)
+    (update :position-closed conj (:position-closed out-msg))
 
     (contains? out-msg :working-order)
     (assoc :working-order (:working-order out-msg))
@@ -66,7 +65,7 @@
                                              (m/? (m/sleep interval-ms))))
                                (m/eduction (take-while some?))
                                (m/reduce acc-out-msg {:trader []
-                                                      :trade [] :order [] :position []
+                                                      :trade [] :order-closed [] :position-closed []
                                                       :working-order nil :open-position nil})))))]
     (m/ap
      (print-state (m/?> batched-f)))))

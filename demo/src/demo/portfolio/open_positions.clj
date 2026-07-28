@@ -1,4 +1,4 @@
-(ns demo.backoffice.open-positions
+(ns demo.portfolio.open-positions
   (:require
    [clojure.pprint :refer [print-table]]
    [ednx.edn :refer [slurp-edn]]

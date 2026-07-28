@@ -4,8 +4,7 @@
    [missionary.core :as m]
    [quanta.blotter.util :as util]
    [quanta.blotter.flow.sample :as sample]
-   [quanta.blotter.oms.flow.recent :as recent]
-   [quanta.blotter.oms.portfolio.working-order :as wo]))
+   [quanta.blotter.oms.flow.recent :as recent]))
 
 (defn- dict->vals [dict]
   (vec (vals (or dict {}))))
@@ -30,14 +29,10 @@
   [portfolio trading-state-a recent-ms]
   (let [out-flow (:out-flow portfolio)
         closed-order-f (m/eduction
-                        (keep (fn [out]
-                                (when-let [o (:order out)]
-                                  (when (wo/order-done? o) o))))
+                        (keep :order-closed)
                         out-flow)
         closed-position-f (m/eduction
-                           (keep (fn [out]
-                                   (when-let [p (:position-change out)]
-                                     (when (false? (:position/open p)) p))))
+                           (keep :position-closed)
                            out-flow)
         recent-order-dict-flow (recent/recent-flow closed-order-f recent-ms :order/id)
         pos-key-fn (fn [position] [(:position/account position) (:position/asset position)])

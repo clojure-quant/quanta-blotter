@@ -1,4 +1,4 @@
-(ns demo.backoffice
+(ns demo.backoffice.fill
   "Read and print trades from the datahike trade-db, then derive positions
    via the portfolio reducer."
   (:require

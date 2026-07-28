@@ -1,4 +1,4 @@
-(ns demo.print.db
+(ns demo.backoffice.print
   "Print orders and positions stored in the datahike trade-db, reusing the
    table formatting from quanta.blotter.oms.print."
   (:require

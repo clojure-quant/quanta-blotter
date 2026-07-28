@@ -1,9 +1,8 @@
-(ns demo.backoffice.working-order
+(ns demo.portfolio.working-order
   (:require
    [clojure.pprint :refer [print-table]]
    [ednx.edn :refer [slurp-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
-   [missionary.core :as m]
    [quanta.blotter.oms.portfolio :as portfolio]))
 
 (add-tick-edn-handlers!)
@@ -39,13 +38,13 @@
 
 (defn run-demo!
   "Reads channel-paper.edn; after each channel message prints a table of all orders."
-  []
+  [_]
   (let [msgs (load-channel-paper)
         closed-orders (atom [])]
     (reduce
      (fn [state msg]
        (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
-         (when-let [order (:order out-msg)]
+         (when-let [order (:order-closed out-msg)]
            (swap! closed-orders conj order)
            (println "Closed Orders:")
            (print-table table-cols (->> @closed-orders (map order->row) (sort-by :order-id)))
