@@ -160,7 +160,7 @@
         order-change (when emit?
                        (cond-> order
                          (nil? (:order/date order))
-                         (assoc :order/date (t/inst (t/instant)))))]
+                         (assoc :order/date (t/inst))))]
     {:order order
      :order-change order-change}))
 

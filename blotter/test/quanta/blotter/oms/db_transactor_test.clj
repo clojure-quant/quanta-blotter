@@ -30,7 +30,7 @@
 (deftest transactor-persists-channel-flow
   (let [conn (datahike/db-start-mem db/schema)
         state (db/new-state)]
-    (db/process conn state (seed->tx-vector channel-events))
+    (db/persist-block conn state (seed->tx-vector channel-events))
     (testing "messages persisted"
       (is (= (count channel-events) (count (db/query-messages conn)))))
     (testing "orders persisted (one per order-id)"
@@ -56,7 +56,7 @@
         state (db/new-state)]
     (db/create-account conn {:account/id 1 :account/trader "a" :account/api :paper})
     (db/create-account conn {:account/id 2 :account/trader "b" :account/api :paper})
-    (db/process conn state (seed->tx-vector channel-events))
+    (db/persist-block conn state (seed->tx-vector channel-events))
     (let [account-1-eid (:db/id (db/account-by-id conn 1))
           account-2-eid (:db/id (db/account-by-id conn 2))
           order-by-id (fn [id] (first (filter #(= id (:order/id %)) (db/query-orders conn))))

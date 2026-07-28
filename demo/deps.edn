@@ -6,10 +6,7 @@
         io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.15"}
         }
  :aliases
- {:nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
-                       cider/cider-nrepl {:mvn/version "0.28.3"}}
-          :main-opts  ["-m" "nrepl.cmdline"]}
-  
+ {
   ;; quote
   :quote-stream-print {:exec-fn demo.quote.stream-print/start-cli}
   :quote-stream-mixer {:exec-fn demo.quote.stream-mixer/start-cli}
@@ -49,14 +46,15 @@
                            :profile "default"
                            :version "prod1"
                            :run demo.stresstest/run}}
-
-  
-
   
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
 
+  ;; dev tools 
   
-
+  :nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
+                       cider/cider-nrepl {:mvn/version "0.28.3"}}
+          :main-opts  ["-m" "nrepl.cmdline"]}
+  
   :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.05.25"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src" "deps.edn" "--fail-level" "error"]}
 

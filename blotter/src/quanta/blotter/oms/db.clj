@@ -177,6 +177,9 @@
    {:db/ident :position/date-close
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
+   {:db/ident :position/position-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one}
    
    ;; account (created once, then updated)
    {:db/ident :account/id
@@ -296,8 +299,8 @@
     (if (decimal? v) v (bigdec v))))
 
 (defn- as-date
-  "Datahike :db.type/instant requires a java.util.Date. tick / the #time/instant
-   reader produce java.time.Instant, so coerce to a Date (millisecond precision)."
+  "Normalize to java.util.Date for Datahike :db.type/instant.
+   Channel/portfolio dates are already Date; this remains a defensive coerce."
   [v]
   (when (some? v) (t/inst v)))
 
@@ -370,7 +373,8 @@
     (some? (:position/avg-exit-price position))
     (assoc :position/avg-exit-price (as-bigdec (:position/avg-exit-price position)))
     (:position/date-open position) (assoc :position/date-open (as-date (:position/date-open position)))
-    (:position/date-close position) (assoc :position/date-close (as-date (:position/date-close position)))))
+    (:position/date-close position) (assoc :position/date-close (as-date (:position/date-close position)))
+    (:position/position-id position) (assoc :position/position-id (:position/position-id position))))
 
 ;; ---------------------------------------------------------------------------
 ;; process a block
@@ -465,7 +469,7 @@
     (get tempids eid eid)
     eid))
 
-(defn process
+(defn persist-block
   "Persists a block to datahike.
    - conn:  datahike connection
    - state: atom created with (new-state)

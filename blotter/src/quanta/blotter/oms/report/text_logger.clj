@@ -7,7 +7,7 @@
 
 (defn- print-state [{:keys [trader trade order-closed position-closed working-order open-position] :as _state}]
   (let [opts {:max-width 300}
-        s (str "\r\n trading-state as of " (print/format-ts-ms (t/instant)) "\r\n")
+        s (str "\r\n trading-state as of " (print/format-ts-ms (t/inst)) "\r\n")
 
         s (if (empty? trader)
             s

@@ -34,7 +34,7 @@
                            {:asset "BTCUSDT"
                             :bid bid
                             :ask (+ bid 0.01M)
-                            :ts (t/instant)}))))
+                            :ts (t/inst)}))))
 
 (deftest reject-reason-accepts-when-zero
   (is (every? nil? (repeatedly 200 #(broker/reject-reason 0))))
@@ -155,7 +155,7 @@
       {:asset test1-asset
        :bid bid
        :ask (+ bid 0.01M)
-       :ts (t/instant)}))))
+       :ts (t/inst)}))))
 
 (defn- in-range? [price lo hi]
   (and (some? price) (<= lo price hi)))

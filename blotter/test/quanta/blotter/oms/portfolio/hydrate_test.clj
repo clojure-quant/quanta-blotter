@@ -15,12 +15,12 @@
         open-order {:order/id "wo-1" :order/account-id 1 :order/asset "EURUSD"
                     :order/side :buy :order/type :limit :order/status :working
                     :order/qty 1000.0M :order/qty-filled 0.0M :order/qty-working 1000.0M
-                    :order/avg-price nil :order/limit 1.10M :order/date (t/instant)
+                    :order/avg-price nil :order/limit 1.10M :order/date (t/inst)
                     :order/history []}
         filled-order {:order/id "cl-1" :order/account-id 1 :order/asset "EURUSD"
                       :order/side :buy :order/type :market :order/status :filled
                       :order/qty 500.0M :order/qty-filled 500.0M :order/qty-working 0.0M
-                      :order/avg-price 1.09M :order/date (t/instant)
+                      :order/avg-price 1.09M :order/date (t/inst)
                       :order/history []}
         open-pos {:position/account 1 :position/asset "EURUSD" :position/side :long
                   :position/open true :position/qty-open 500.0M :position/qty 500.0M
@@ -28,7 +28,7 @@
         closed-pos {:position/account 2 :position/asset "GBPUSD" :position/side :short
                     :position/open false :position/qty-open 0.0M :position/qty 100.0M
                     :position/average-entry-price 1.25M :position/realized-pl 5.0M}]
-    (db/process conn state [:order open-order
+    (db/persist-block conn state [:order open-order
                             :order filled-order
                             :position open-pos
                             :position closed-pos])

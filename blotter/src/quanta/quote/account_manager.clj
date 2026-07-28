@@ -70,7 +70,7 @@
       #_(m/with-lock (:lock feed))
       (try
         (let [q (m/?> quote-flow)]
-          (assoc q :ts (t/instant)))
+          (assoc q :ts (t/inst)))
 
         (catch Cancelled ex
           ;(println "quotes: removing asset from subscription-a" asset)

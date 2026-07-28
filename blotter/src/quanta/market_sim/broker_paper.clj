@@ -23,7 +23,7 @@
   [action reason]
   (assoc action
          :type :broker/order-rejected
-         :date (t/instant)
+         :date (t/inst)
          :message reason))
 
 (defn bad-orderupdate?
@@ -114,7 +114,7 @@
            :side (:side action)
            :qty (:qty action)
            :order-type (:order-type action)
-           :date (t/instant)}
+           :date (t/inst)}
     (#{:limit :stop} (:order-type action)) (assoc :limit (:limit action))
     (some? (:campaign action)) (assoc :campaign (:campaign action))
     (some? (:label action)) (assoc :label (:label action))))

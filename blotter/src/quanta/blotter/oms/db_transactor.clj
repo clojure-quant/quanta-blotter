@@ -9,7 +9,7 @@
 
 (defn out-msg->tx-vector
   "Project one portfolio out-msg to the flat [:msg m :order o ...] vector
-   expected by db/process."
+   expected by db/persist-block."
   [out-msg]
   (cond-> []
     (contains? out-msg :msg) (conj :msg (:msg out-msg))
@@ -25,7 +25,7 @@
 (defn- write-block! [db state block]
   (let [tx-vector (block->tx-vector block)]
     (info "db-transactor writing block of" (count block) "events")
-    (db/process db state tx-vector)
+    (db/persist-block db state tx-vector)
     (info "db-transactor wrote block of" (count block) "events")))
 
 (defn transact-task

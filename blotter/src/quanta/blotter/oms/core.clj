@@ -101,7 +101,7 @@
              :dispose-consolidator! dispose-consolidator!
              :dispose-account-manager! dispose-account-manager!})
     (when log-transaction
-      (log log-transaction {:type :oms/started :date (t/instant)}))
+      (log log-transaction {:type :oms/started :date (t/inst)}))
     this))
 
 (defn stop-order-manager! [{:keys [internal] :as this}]
@@ -127,7 +127,7 @@
    (let [order-rdv (get-in this [:internal :order-rdv])]
      (assert order-rdv "this (oms) needs to have an order-rdv")
      (if (validate-trader-message message)
-       (let [message (assoc message :date (t/instant))]
+       (let [message (assoc message :date (t/inst))]
          (m/? (m/via m/blk (info "[OMS send-trader-message]: " message)))
          (m/? (order-rdv message))
          (m/? (m/via m/blk (info "[OMS send-trader-message] success: " message)))

@@ -147,7 +147,7 @@
 (defn- finalize-after-fill [position fill prev-net]
   (let [net (net-qty position)
         abs-net (num-abs net)
-        event-date (or (some-> (:fill/date fill) t/inst) (t/instant))
+        event-date (or (some-> (:fill/date fill) t/inst) (t/inst))
         avg (current-avg-entry position)
         max-q (max (or (:position/qty position) 0M) abs-net)]
     (cond-> (assoc position :position/qty max-q)

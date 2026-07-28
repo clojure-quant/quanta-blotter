@@ -6,19 +6,19 @@
 
 (def channel-paper-msgs
   [{:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
-   {:date #inst "2026-06-01T20:10:07.740265349Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
+   {:date #inst "2026-06-01T20:10:07.740Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
    {:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
-   {:date #inst "2026-06-01T20:10:09.740517009Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+   {:date #inst "2026-06-01T20:10:09.740Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
    {:type :trader/cancel-order, :account/id 2, :order-id 2, :asset "ETHUSDT"}
    {:type :broker/cancel-confirmed, :account/id 2, :order-id 2}
-   {:order-id 2, :date #inst "2026-06-01T20:10:12.740853585Z", :type :broker/order-canceled}
+   {:order-id 2, :date #inst "2026-06-01T20:10:12.740Z", :type :broker/order-canceled}
    {:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
-   {:date #inst "2026-06-01T20:10:17.741032902Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+   {:date #inst "2026-06-01T20:10:17.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
    {:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
-   {:date #inst "2026-06-01T20:10:24.741005992Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
-   {:type :broker/order-filled, :order-id 4, :fill-id "m-9By0", :date #inst "2026-06-01T20:10:29.741914267Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 100.0}
-   {:type :broker/order-filled, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742482333Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
-   {:type :broker/order-filled, :order-id 1, :fill-id "KKEY9v", :date #inst "2026-06-01T20:10:52.742779027Z", :asset "BTCUSDT", :qty 0.001, :side :buy, :price 10000.0}])
+   {:date #inst "2026-06-01T20:10:24.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+   {:type :broker/order-filled, :order-id 4, :fill-id "m-9By0", :date #inst "2026-06-01T20:10:29.741Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 100.0}
+   {:type :broker/order-filled, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
+   {:type :broker/order-filled, :order-id 1, :fill-id "KKEY9v", :date #inst "2026-06-01T20:10:52.742Z", :asset "BTCUSDT", :qty 0.001, :side :buy, :price 10000.0}])
 
 (defn- collect [msgs]
   (second
@@ -66,7 +66,7 @@
     (is (== 0.0 (:order/qty-filled last-2)))
     (is (nil? (:order/avg-price last-2)))
     (is (some #(= :broker/order-canceled (:type %)) (:order/history last-2)))
-    (is (= #inst "2026-06-01T20:10:09.740517009Z" (:order/date last-2)))))
+    (is (= #inst "2026-06-01T20:10:09.740Z" (:order/date last-2)))))
 
 (deftest order-4-filled
   (let [last-4 (final-for-order (collect channel-paper-msgs) 4)]
@@ -135,7 +135,7 @@
 (def duplicate-cancel-msgs
   [{:type :trader/new-order, :account/id 2000, :order-id "OCCXCB9t", :asset "BTCUSDT.S.BB",
     :side :buy, :order-type :limit, :limit 58900.0M, :qty 0.001M}
-   {:order-type :limit, :date #inst "2026-06-26T22:43:50.268562705Z", :limit 58900.0M,
+   {:order-type :limit, :date #inst "2026-06-26T22:43:50.268Z", :limit 58900.0M,
     :account/id 2000, :type :broker/order-confirmed, :order-id "OCCXCB9t", :side :buy,
     :qty 0.001M, :asset "BTCUSDT.S.BB", :message ""}
    {:order-type :limit, :date #inst "2026-06-26T22:43:50.112Z", :limit 58900.0M,

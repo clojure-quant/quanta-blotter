@@ -42,7 +42,7 @@
                                            {:asset "BTCUSDT"
                                             :bid 100.0M
                                             :ask 100.01M
-                                            :ts (t/instant)}))))]
+                                            :ts (t/inst)}))))]
     (let [tx-file (temp-file "oms-validation-tx-")
           oms (create-order-manager {:transaction-log-file tx-file
                                      :validate? true

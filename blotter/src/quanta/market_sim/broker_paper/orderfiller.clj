@@ -59,7 +59,7 @@
    :account/id (:account/id order)
    :order-id order-id
    :fill-id (nano-id 6)
-   :date (or date (t/instant))
+   :date (or date (t/inst))
    :asset asset
    :qty slice-qty
    :side side
@@ -106,7 +106,7 @@
                            (take-while (fn [_] (seq @remaining-slices)))
                            quote-f))
               bid (quote-price quote)
-              quote-ts (or (:ts quote) (t/instant))
+              quote-ts (or (:ts quote) (t/inst))
               order-type* (if (and (= :stop @current-type)
                                    (stop-triggered? side limit bid))
                             (do (log-fn {:message "stop triggered → market"
@@ -124,8 +124,8 @@
               (log-fn fill)
               fill)))
         (catch Cancelled _
-          (log-fn {:message "cancelled (eventually cancel order)" :date (t/instant)})
+          (log-fn {:message "cancelled (eventually cancel order)" :date (t/inst)})
           (when (seq @remaining-slices)
             {:type :broker/order-canceled
              :order-id order-id
-             :date (t/instant)})))))))
+             :date (t/inst)})))))))

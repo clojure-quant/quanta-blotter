@@ -19,7 +19,7 @@
 (def poll-interval-ms (* 120 1000))
 
 (defn- print-cookie! [conn n]
-  (println (str "#" (inc n) " " (java.time.Instant/now))
+  (println (str "#" (inc n) " " (java.util.Date.))
            (client/request-sync! conn get-cookie-fn)))
 
 (defn cookie-poller!

@@ -31,7 +31,7 @@
    :order-type :limit
    :qty 0.001M
    :limit 100.0M
-   :date (t/instant)})
+   :date (t/inst)})
 
 (defn- bad-order [base]
   (case (rand-int 3)
@@ -52,12 +52,12 @@
                    :order-type :limit
                    :qty 0.001M
                    :limit 100.0M
-                   :date (t/instant)}
+                   :date (t/inst)}
         filled {:type :broker/order-filled
                 :account/id account-id
                 :order-id 99
                 :fill-id "f-1"
-                :date (t/instant)
+                :date (t/inst)
                 :asset "BTCUSDT"
                 :qty 0.001M
                 :side :buy
@@ -128,7 +128,7 @@
                                              {:asset "BTCUSDT"
                                               :bid 100.0M
                                               :ask 100.01M
-                                              :ts (t/instant)}))))]
+                                              :ts (t/inst)}))))]
       (let [order-in (create-rdv "test/order-in")
             orderupdate-in (create-rdv "test/orderupdate-in")
             validator (vc/create-validation-channel {:order order-in
@@ -165,7 +165,7 @@
                    :order-type :limit
                    :qty 0.001M
                    :limit 100.0M
-                   :date (t/instant)}]
+                   :date (t/inst)}]
     (is (s/validate-message confirmed))
     (dotimes [_ 30]
       (is (not (s/validate-message (broker/corrupt-message confirmed)))

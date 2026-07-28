@@ -8,7 +8,7 @@
 
 (defn- fresh-request? [req]
   (let [ts (:ts req)]
-    (and ts (<= (- (System/currentTimeMillis) (.toEpochMilli ^java.time.Instant ts))
+    (and ts (<= (- (System/currentTimeMillis) (.getTime ^java.util.Date ts))
                 max-req-age-ms))))
 
 (defn- request-loop

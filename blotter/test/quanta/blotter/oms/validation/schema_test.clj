@@ -12,10 +12,10 @@
 (add-tick-edn-handlers!)
 
 (deftest decimal-test
-  (is (not (m/validate s/Decimal 100.3 {:registry s/r})))
-  (is (m/validate s/Decimal 100.3M {:registry s/r}))
+  (is (not (m/validate s/Decimal 100.3)))
+  (is (m/validate s/Decimal 100.3M))
   (is (= ["must be a decimal"]
-         (me/humanize (m/explain s/Decimal 100.3 {:registry s/r})))))
+         (me/humanize (m/explain s/Decimal 100.3)))))
 
 (def ^:private channel-paper-edn
   (io/file ".." "demo" "data" "channel-paper.edn"))
@@ -123,7 +123,7 @@
         :order-type :limit
         :qty 0.001M
         :limit 100.0M
-        :date (t/instant)
+        :date (t/inst)
         :campaign "fx-q2"
         :label :hedge})))
 
@@ -145,13 +145,13 @@
         :account/id 2
         :order-id 4
         :fill-id "m-9By0"
-        :date (t/instant)
+        :date (t/inst)
         :asset "ETHUSDT"
         :qty 0.001M
         :side :sell
         :price 100.0M}))
   (testing "double price/qty are rejected with a clear decimal error"
-    (let [msg {:date (t/instant "2026-07-14T14:29:09.019689207Z")
+    (let [msg {:date (t/inst "2026-07-14T14:29:09.019Z")
                :account/id 1
                :type :broker/order-filled
                :fill-id "8tXmcV"
@@ -163,7 +163,7 @@
       (is (not (s/validate-message msg)))
       (is (= {:price ["must be a decimal"]}
              (s/human-error-message msg))))
-    (let [msg {:date (t/instant "2026-07-14T14:29:09.019689207Z")
+    (let [msg {:date (t/inst "2026-07-14T14:29:09.019Z")
                :account/id 1
                :type :broker/order-filled
                :fill-id "8tXmcV"
@@ -181,7 +181,7 @@
        {:type :broker/order-rejected
         :account/id 3
         :order-id 7
-        :date (t/instant)
+        :date (t/inst)
         :message "market-closed"}))
   (is (s/validate-message
        {:type :broker/order-rejected
@@ -390,7 +390,7 @@
                   :account/id 1
                   :order-id 1
                   :fill-id "f-1"
-                  :date (t/instant)
+                  :date (t/inst)
                   :asset "BTCUSDT"
                   :qty 0.001M
                   :side :buy
