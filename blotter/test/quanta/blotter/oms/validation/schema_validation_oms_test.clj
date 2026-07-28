@@ -19,7 +19,8 @@
    :side :buy
    :order-type :limit
    :limit 100.0M
-   :qty 0.001M})
+   :qty 0.001M
+   :date (t/inst)})
 
 (defn- bad-order [base]
   (dissoc base :qty))

@@ -126,15 +126,17 @@
    (assert (map? this) "this (oms) needs to be a map")
    (let [order-rdv (get-in this [:internal :order-rdv])]
      (assert order-rdv "this (oms) needs to have an order-rdv")
-     (if (validate-trader-message message)
-       (let [message (assoc message :date (t/inst))]
-         (m/? (m/via m/blk (info "[OMS send-trader-message]: " message)))
-         (m/? (order-rdv message))
-         (m/? (m/via m/blk (info "[OMS send-trader-message] success: " message)))
-         message)
-       (throw (ex-info "Invalid trader message"
-                       {:message message
-                        :errors (human-error-trader-message message)}))))))
+     (let [message (cond-> message
+                     (nil? (:date message)) (assoc :date (t/inst)))]
+       (if (validate-trader-message message)
+         (do
+           (m/? (m/via m/blk (info "[OMS send-trader-message]: " message)))
+           (m/? (order-rdv message))
+           (m/? (m/via m/blk (info "[OMS send-trader-message] success: " message)))
+           message)
+         (throw (ex-info "Invalid trader message"
+                         {:message message
+                          :errors (human-error-trader-message message)})))))))
 
 (defn create-order
   "Create an order and push it on the OMS order channel.

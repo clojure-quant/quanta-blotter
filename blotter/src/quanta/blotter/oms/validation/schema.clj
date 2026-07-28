@@ -44,6 +44,7 @@
     [:side Side]
     [:qty PositiveDecimal]
     [:order-type OrderType]
+    [:date Date]
     [:limit {:optional true} PositiveDecimal]
     [:campaign {:optional true} :string]
     [:label {:optional true} :keyword]
@@ -56,7 +57,8 @@
    [:type [:= :trader/cancel-order]]
    [:account/id AccountId]
    [:order-id OrderId]
-   [:asset :string]])
+   [:asset :string]
+   [:date Date]])
 
 (def TraderModifyOrder
   [:and
@@ -65,6 +67,7 @@
     [:account/id AccountId]
     [:order-id OrderId]
     [:asset :string]
+    [:date Date]
     ; [:side {:optional true} Side] ; side may not be modified
     [:qty {:optional true} PositiveDecimal]
     ; [:order-type {:optional true} OrderType] ; order-type may not be modified
@@ -111,7 +114,7 @@
    [:type [:= :broker/order-rejected]]
    [:account/id AccountId]
    [:order-id OrderId]
-   [:date {:optional true} Date]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerOrderupdateSchemaError
@@ -119,7 +122,7 @@
    [:type [:= :broker/orderupdate-schema-error]]
    [:account/id AccountId]
    [:order-id OrderId]
-   [:date {:optional true} Date]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerCancelConfirmed
@@ -127,6 +130,7 @@
    [:type [:= :broker/cancel-confirmed]]
    [:account/id AccountId]
    [:order-id OrderId]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerCancelRejected
@@ -134,6 +138,7 @@
    [:type [:= :broker/cancel-rejected]]
    [:account/id AccountId]
    [:order-id OrderId]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerOrderModified
@@ -142,6 +147,7 @@
    [:account/id AccountId]
    [:order-id OrderId]
    [:asset :string]
+   [:date Date]
    [:qty {:optional true} PositiveDecimal]
    [:limit {:optional true} PositiveDecimal]
    [:message {:optional true} :string]])
@@ -151,6 +157,7 @@
    [:type [:= :broker/modify-rejected]]
    [:account/id AccountId]
    [:order-id OrderId]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerOrderCanceled

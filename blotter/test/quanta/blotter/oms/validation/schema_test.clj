@@ -26,6 +26,7 @@
 (deftest trader-new-order-test
   (is (s/validate-message
        {:type :trader/new-order
+        :date (t/inst)
         :account/id 1
         :order-id 1
         :asset "BTCUSDT"
@@ -35,6 +36,7 @@
         :limit 100.0M}))
   (is (s/validate-message
        {:type :trader/new-order
+        :date (t/inst)
         :account/id 1
         :order-id "abc"
         :asset "BTCUSDT"
@@ -43,6 +45,7 @@
         :qty 0.001M}))
   (is (not (s/validate-message
             {:type :trader/new-order
+             :date (t/inst)
              :account/id 1
              :order-id 1
              :asset "BTCUSDT"
@@ -51,6 +54,7 @@
              :qty 0.001})))
   (is (not (s/validate-message
             {:type :trader/new-order
+             :date (t/inst)
              :account/id 1
              :order-id 1
              :asset "BTCUSDT"
@@ -60,6 +64,7 @@
       "limit order without :limit is invalid")
   (is (not (s/validate-message
             {:type :trader/new-order
+             :date (t/inst)
              :account/id 1
              :order-id 1
              :asset "BTCUSDT"
@@ -70,6 +75,7 @@
       "market order with :limit is invalid")
   (is (not (s/validate-message
             {:type :trader/new-order
+             :date (t/inst)
              :account/id 1
              :order-id 1
              :asset "BTCUSDT"
@@ -81,6 +87,7 @@
 (deftest trader-new-order-campaign-and-label-test
   (is (s/validate-message
        {:type :trader/new-order
+        :date (t/inst)
         :account/id 1
         :order-id 1
         :asset "BTCUSDT"
@@ -92,6 +99,7 @@
         :label :hedge}))
   (is (not (s/validate-message
             {:type :trader/new-order
+             :date (t/inst)
              :account/id 1
              :order-id 1
              :asset "BTCUSDT"
@@ -103,6 +111,7 @@
       "campaign must be a string")
   (is (not (s/validate-message
             {:type :trader/new-order
+             :date (t/inst)
              :account/id 1
              :order-id 1
              :asset "BTCUSDT"
@@ -130,11 +139,13 @@
 (deftest trader-cancel-order-test
   (is (s/validate-message
        {:type :trader/cancel-order
+        :date (t/inst)
         :account/id 2
         :order-id 2
         :asset "ETHUSDT"}))
   (is (not (s/validate-message
             {:type :trader/cancel-order
+             :date (t/inst)
              :account/id 2
              :order-id 2}))
       "cancel-order without :asset is invalid"))
@@ -185,29 +196,39 @@
         :message "market-closed"}))
   (is (s/validate-message
        {:type :broker/order-rejected
+        :date (t/inst)
         :account/id 3
         :order-id 7})
-      "date/message are optional"))
+      "message is optional")
+  (is (not (s/validate-message
+            {:type :broker/order-rejected
+             :account/id 3
+             :order-id 7}))
+      "date is required"))
 
 (deftest broker-cancel-rejected-test
   (is (s/validate-message
        {:type :broker/cancel-rejected
+        :date (t/inst)
         :account/id 2
         :order-id 2
         :message "unknown order"}))
   (is (s/validate-message
        {:type :broker/cancel-rejected
+        :date (t/inst)
         :account/id 2
         :order-id 2})
       "message is optional")
   (is (not (s/validate-message
             {:type :broker/cancel-rejected
+             :date (t/inst)
              :account/id 2
              :message "missing order-id"}))))
 
 (deftest broker-order-modified-test
   (is (s/validate-message
        {:type :broker/order-modified
+        :date (t/inst)
         :account/id 2000
         :order-id "LB0xoBQe"
         :asset "BTCUSDT.S.BB"
@@ -215,18 +236,21 @@
         :message "modify accepted"}))
   (is (s/validate-message
        {:type :broker/order-modified
+        :date (t/inst)
         :account/id 1
         :order-id 1
         :asset "BTCUSDT"
         :limit 110M}))
   (is (s/validate-message
        {:type :broker/order-modified
+        :date (t/inst)
         :account/id 1
         :order-id 1
         :asset "BTCUSDT"
         :qty 0.5M}))
   (is (not (s/validate-message
             {:type :broker/order-modified
+             :date (t/inst)
              :account/id 1
              :order-id 1
              :message "missing asset and modify fields"}))))
@@ -234,22 +258,26 @@
 (deftest broker-modify-rejected-test
   (is (s/validate-message
        {:type :broker/modify-rejected
+        :date (t/inst)
         :account/id 2
         :order-id 2
         :message "order not modifiable"}))
   (is (s/validate-message
        {:type :broker/modify-rejected
+        :date (t/inst)
         :account/id 2
         :order-id 2})
       "message is optional")
   (is (not (s/validate-message
             {:type :broker/modify-rejected
+             :date (t/inst)
              :account/id 2
              :message "missing order-id"}))))
 
 (deftest validate-trader-message-test
   (testing "valid new-orders"
     (doseq [msg [{:type :trader/new-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
@@ -258,6 +286,7 @@
                   :qty 0.001M
                   :limit 100.0M}
                  {:type :trader/new-order
+                  :date (t/inst)
                   :account/id 2
                   :order-id "ord-42"
                   :asset "ETHUSDT"
@@ -265,6 +294,7 @@
                   :order-type :market
                   :qty 1.5M}
                  {:type :trader/new-order
+                  :date (t/inst)
                   :account/id 3
                   :order-id 7
                   :asset "BTCUSDT"
@@ -278,6 +308,7 @@
 
   (testing "invalid new-orders"
     (doseq [msg [{:type :trader/new-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
@@ -285,6 +316,7 @@
                   :order-type :limit
                   :qty 0.001M}
                  {:type :trader/new-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
@@ -293,6 +325,7 @@
                   :qty 0.001M
                   :limit 100.0M}
                  {:type :trader/new-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
@@ -301,6 +334,7 @@
                   :qty 0.001M
                   :limit 100.0M}
                  {:type :trader/new-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
@@ -309,6 +343,7 @@
                   :qty 0.001
                   :limit 100.0M}
                  {:type :trader/new-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
@@ -320,10 +355,12 @@
 
   (testing "valid cancel-orders"
     (doseq [msg [{:type :trader/cancel-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"}
                  {:type :trader/cancel-order
+                  :date (t/inst)
                   :account/id 2
                   :order-id "ord-42"
                   :asset "ETHUSDT"}]]
@@ -331,15 +368,19 @@
 
   (testing "invalid cancel-orders"
     (doseq [msg [{:type :trader/cancel-order
+                  :date (t/inst)
                   :order-id 1
                   :asset "BTCUSDT"}
                  {:type :trader/cancel-order
+                  :date (t/inst)
                   :account/id 1
                   :asset "BTCUSDT"}
                  {:type :trader/cancel-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1}
                  {:type :trader/cancel-order
+                  :date (t/inst)
                   :account/id "not-an-int"
                   :order-id 1
                   :asset "BTCUSDT"}]]
@@ -347,16 +388,19 @@
 
   (testing "valid modify-orders"
     (doseq [msg [{:type :trader/modify-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
                   :qty 0.002M}
                  {:type :trader/modify-order
+                  :date (t/inst)
                   :account/id 2
                   :order-id "ord-42"
                   :asset "ETHUSDT"
                   :limit 99.5M}
                  {:type :trader/modify-order
+                  :date (t/inst)
                   :account/id 3
                   :order-id 7
                   :asset "BTCUSDT"
@@ -366,19 +410,23 @@
 
   (testing "invalid modify-orders"
     (doseq [msg [{:type :trader/modify-order
+                  :date (t/inst)
                   :order-id 1
                   :asset "BTCUSDT"
                   :qty 0.002M}
                  {:type :trader/modify-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :qty 0.002M}
                  {:type :trader/modify-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
                   :qty 0.0M}
                  {:type :trader/modify-order
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1
                   :asset "BTCUSDT"
@@ -396,6 +444,7 @@
                   :side :buy
                   :price 100.0M}
                  {:type :broker/order-rejected
+                  :date (t/inst)
                   :account/id 1
                   :order-id 1}]]
       (is (not (s/validate-trader-message msg))

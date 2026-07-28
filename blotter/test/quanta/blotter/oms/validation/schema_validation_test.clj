@@ -20,7 +20,8 @@
    :side :buy
    :order-type :limit
    :limit 100.0M
-   :qty 0.001M})
+   :qty 0.001M
+   :date (t/inst)})
 
 (def valid-orderupdate
   {:type :broker/order-confirmed
@@ -86,8 +87,9 @@
       (finally
         (vc/stop-validation-channel! validator)))))
 
-(defn- take-until-timeout [rdv timeout-ms]
+(defn- take-until-timeout 
   "Takes from `rdv` until timeout; returns collected values."
+  [rdv timeout-ms] 
   (m/sp
    (loop [acc []]
      (let [v (m/? (m/race rdv (m/sleep timeout-ms ::timeout)))]
