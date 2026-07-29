@@ -115,9 +115,7 @@
                              :price 10.1M}])
         avg (:order/avg-price (last emissions))]
     (is (= 10.1117M avg))
-    (is (= 4 (.scale ^BigDecimal avg)))
-    (is (not-any? #(contains? % :price-scale) emissions))
-    (is (not-any? #(contains? % :fill-notional) emissions))))
+    (is (= 4 (.scale ^BigDecimal avg)))))
 
 (deftest hydrate-order-preserves-avg-price
   (let [hydrated (wo/hydrate-order
@@ -125,13 +123,9 @@
                    :order/qty 2M
                    :order/qty-filled 1M
                    :order/avg-price 10.1234M
-                   :order/history []
-                   :price-scale 9
-                   :fill-notional 10.1234M})]
+                   :order/history []})]
     (is (= 10.1234M (:order/avg-price hydrated)))
-    (is (= 4 (.scale ^BigDecimal (:order/avg-price hydrated))))
-    (is (not (contains? hydrated :price-scale)))
-    (is (not (contains? hydrated :fill-notional)))))
+    (is (= 4 (.scale ^BigDecimal (:order/avg-price hydrated))))))
 
 (deftest order-1-working-until-final-fill
   (let [order-1 (chronological-for-order (collect channel-paper-msgs) 1)]

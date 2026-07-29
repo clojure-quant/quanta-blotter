@@ -175,7 +175,7 @@
         history (let [h (:order/history order)]
                   (if (sequential? h) (vec h) []))]
     (-> order
-        (dissoc :db/id :order/account-db :price-scale :fill-notional)
+        (dissoc :db/id :order/account-db)
         (assoc :order/qty qty
                :order/qty-filled qty-filled
                :order/history history)

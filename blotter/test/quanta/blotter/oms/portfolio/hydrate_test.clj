@@ -35,9 +35,7 @@
     (let [hydrated (#'portfolio/hydrate-from-db conn {:position-method :fifo})]
       (testing "working-order dict has only open orders"
         (is (= #{"wo-1"} (set (keys (:working-order hydrated)))))
-        (is (= :working (get-in hydrated [:working-order "wo-1" :order/status])))
-        (is (not (contains? (get-in hydrated [:working-order "wo-1"]) :fill-notional)))
-        (is (not (contains? (get-in hydrated [:working-order "wo-1"]) :price-scale))))
+        (is (= :working (get-in hydrated [:working-order "wo-1" :order/status]))))
       (testing "no parallel order-accs"
         (is (nil? (:order-accs hydrated))))
       (testing "open-position dict has only open positions"
