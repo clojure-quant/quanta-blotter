@@ -42,27 +42,12 @@
         out (cond-> out trade (assoc :trade trade))
 
         ;; working order
-        order-id (:order-id msg)
-        known-order (when order-id (get-in state [:working-order order-id]))
-        unknown? (and order-id
-                      (nil? known-order)
-                      (not= :trader/new-order (:type msg)))
-        out (cond-> out
-              unknown? (assoc :update-for-unknown msg))
-        order-step (when (and order-id (not unknown?))
-                     (wo/step known-order msg))
-        order-change (when order-step (:order-change order-step))
-        out (cond-> out
-              order-change (assoc :order-change order-change)
-              (and order-change (wo/order-done? order-change))
-              (assoc :order-closed order-change))
-        state (if order-step
-                (assoc state :working-order
-                       (wo/update-working-order-dict (:working-order state)
-                                                     (:order order-step)))
+        {:keys [working-order] :as out-wo} (wo/process-order-orderupdate-message (:working-order state) msg)
+        out (merge out out-wo)
+        state (if working-order 
+                (assoc state :working-order working-order)
                 state)
-        out (cond-> out
-              order-change (assoc :working-order (:working-order state)))
+        
 
         ;; open position (from trade)
         pos-key (when trade (op/position-key trade))

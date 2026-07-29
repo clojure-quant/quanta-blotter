@@ -36,8 +36,8 @@
       (testing "working-order dict has only open orders"
         (is (= #{"wo-1"} (set (keys (:working-order hydrated)))))
         (is (= :working (get-in hydrated [:working-order "wo-1" :order/status])))
-        (is (contains? (get-in hydrated [:working-order "wo-1"]) :fill-notional))
-        (is (contains? (get-in hydrated [:working-order "wo-1"]) :price-scale)))
+        (is (not (contains? (get-in hydrated [:working-order "wo-1"]) :fill-notional)))
+        (is (not (contains? (get-in hydrated [:working-order "wo-1"]) :price-scale))))
       (testing "no parallel order-accs"
         (is (nil? (:order-accs hydrated))))
       (testing "open-position dict has only open positions"

@@ -5,16 +5,16 @@
    [quanta.blotter.oms.portfolio.working-order :as wo]))
 
 (def channel-paper-msgs
-  [{:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
+  [{:type :trader/new-order, :date #inst "2026-06-01T20:10:07.740Z", :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
    {:date #inst "2026-06-01T20:10:07.740Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
-   {:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:09.740Z", :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
    {:date #inst "2026-06-01T20:10:09.740Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
    {:type :trader/cancel-order, :account/id 2, :order-id 2, :asset "ETHUSDT"}
    {:type :broker/cancel-confirmed, :account/id 2, :order-id 2}
    {:order-id 2, :date #inst "2026-06-01T20:10:12.740Z", :type :broker/order-canceled}
-   {:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:17.741Z", :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
    {:date #inst "2026-06-01T20:10:17.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
-   {:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:24.741Z", :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
    {:date #inst "2026-06-01T20:10:24.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
    {:type :broker/order-filled, :order-id 4, :fill-id "m-9By0", :date #inst "2026-06-01T20:10:29.741Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 100.0}
    {:type :broker/order-filled, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
@@ -43,8 +43,9 @@
     (is (every? #(contains? % :order/id) emissions))
     (is (every? #(instance? java.util.Date (:order/date %)) emissions))))
 
-(deftest order-date-from-first-dated-channel-message
-  (let [msgs [{:type :trader/new-order :account/id 1 :order-id 9 :asset "BTC" :side :buy :order-type :limit :qty 0.001M :limit 100M}
+(deftest order-date-from-new-order-message
+  (let [msgs [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+               :account/id 1 :order-id 9 :asset "BTC" :side :buy :order-type :limit :qty 0.001M :limit 100M}
               {:type :broker/order-confirmed :account/id 1 :order-id 9 :asset "BTC"
                :side :buy :order-type :limit :qty 0.001M :limit 100M :date #inst "2026-06-01T12:00:00.000Z"}]
         state (reduce (fn [st msg] (:state (portfolio/process-message st msg)))
@@ -83,13 +84,15 @@
 
 (deftest market-order-has-no-limit-in-view
   (let [order (final-for-order
-               (collect [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy :order-type :market :qty 1.0}])
+               (collect [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+                          :account/id 1 :order-id 1 :asset "X" :side :buy :order-type :market :qty 1.0}])
                1)]
     (is (nil? (:order/limit order)))))
 
 (deftest modify-updates-limit-in-view
   (let [order (final-for-order
-               (collect [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy
+               (collect [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+                          :account/id 1 :order-id 1 :asset "X" :side :buy
                           :order-type :limit :qty 1.0M :limit 100M}
                          {:type :broker/order-modified :account/id 1 :order-id 1 :limit 110M}])
                1)]
@@ -98,6 +101,37 @@
 (deftest avg-price-nil-before-fill
   (let [first-4 (first (chronological-for-order (collect channel-paper-msgs) 4))]
     (is (nil? (:order/avg-price first-4)))))
+
+(deftest avg-price-keeps-max-current-and-last-fill-scale
+  (let [emissions (collect [{:type :trader/new-order
+                             :date #inst "2026-06-01T12:00:00.000Z"
+                             :account/id 1 :order-id 1 :asset "X"
+                             :side :buy :order-type :market :qty 2M}
+                            {:type :broker/order-filled :account/id 1 :order-id 1
+                             :fill-id "f1" :asset "X" :side :buy :qty 1M
+                             :price 10.1234M}
+                            {:type :broker/order-filled :account/id 1 :order-id 1
+                             :fill-id "f2" :asset "X" :side :buy :qty 1M
+                             :price 10.1M}])
+        avg (:order/avg-price (last emissions))]
+    (is (= 10.1117M avg))
+    (is (= 4 (.scale ^BigDecimal avg)))
+    (is (not-any? #(contains? % :price-scale) emissions))
+    (is (not-any? #(contains? % :fill-notional) emissions))))
+
+(deftest hydrate-order-preserves-avg-price
+  (let [hydrated (wo/hydrate-order
+                  {:order/id 1
+                   :order/qty 2M
+                   :order/qty-filled 1M
+                   :order/avg-price 10.1234M
+                   :order/history []
+                   :price-scale 9
+                   :fill-notional 10.1234M})]
+    (is (= 10.1234M (:order/avg-price hydrated)))
+    (is (= 4 (.scale ^BigDecimal (:order/avg-price hydrated))))
+    (is (not (contains? hydrated :price-scale)))
+    (is (not (contains? hydrated :fill-notional)))))
 
 (deftest order-1-working-until-final-fill
   (let [order-1 (chronological-for-order (collect channel-paper-msgs) 1)]
@@ -108,7 +142,7 @@
 (deftest working-order-dict-keeps-open-orders-only
   (let [state (reduce (fn [st msg] (:state (portfolio/process-message st msg)))
                       (portfolio/empty-state)
-                      [{:type :trader/new-order, :account/id 1, :order-id 9
+                      [{:type :trader/new-order, :date #inst "2026-06-01T12:00:00.000Z", :account/id 1, :order-id 9
                         :asset "BTCUSDT", :side :buy, :order-type :market, :qty 0.001}])]
     (is (= 1 (count (:working-order state))))
     (is (= 9 (:order/id (get-in state [:working-order 9]))))
@@ -116,7 +150,8 @@
 
 (deftest rejected-order-has-text
   (let [order (final-for-order
-               (collect [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
+               (collect [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+                          :account/id 1 :order-id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
                          {:type :broker/order-rejected :account/id 1 :order-id 1 :message "market-closed"}])
                1)]
     (is (= :rejected (:order/status order)))
@@ -125,7 +160,8 @@
 
 (deftest campaign-and-label-in-order-view
   (let [order (final-for-order
-               (collect [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X"
+               (collect [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+                          :account/id 1 :order-id 1 :asset "X"
                           :side :buy :order-type :market :qty 1.0M
                           :campaign "fx-q2" :label :hedge}])
                1)]
@@ -133,7 +169,7 @@
     (is (= :hedge (:order/label order)))))
 
 (def duplicate-cancel-msgs
-  [{:type :trader/new-order, :account/id 2000, :order-id "OCCXCB9t", :asset "BTCUSDT.S.BB",
+  [{:type :trader/new-order, :date #inst "2026-06-26T22:43:50.268Z", :account/id 2000, :order-id "OCCXCB9t", :asset "BTCUSDT.S.BB",
     :side :buy, :order-type :limit, :limit 58900.0M, :qty 0.001M}
    {:order-type :limit, :date #inst "2026-06-26T22:43:50.268Z", :limit 58900.0M,
     :account/id 2000, :type :broker/order-confirmed, :order-id "OCCXCB9t", :side :buy,
@@ -166,9 +202,11 @@
 
 (deftest late-msg-after-close-emits-update-for-unknown
   (let [msgs [{:type :trader/new-order :account/id 1 :order-id 1 :asset "X"
-               :side :buy :order-type :market :qty 1.0M}
+               :side :buy :order-type :market :qty 1.0M
+               :date #inst "2026-06-01T11:00:00.000Z"}
               {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f1"
-               :asset "X" :side :buy :qty 1.0M :price 10.0M}
+               :asset "X" :side :buy :qty 1.0M :price 10.0M
+               :date #inst "2026-06-01T11:30:00.000Z"}
               {:type :broker/order-canceled :account/id 1 :order-id 1
                :date #inst "2026-06-01T12:00:00.000Z"}]
         [state outs] (reduce
@@ -178,6 +216,7 @@
                       [(portfolio/empty-state) []]
                       msgs)
         late (last outs)]
+    (println "late: " late)
     (is (empty? (:working-order state)))
     (is (some? (:order-closed (second outs))))
     (is (= :broker/order-canceled (:type (:update-for-unknown late))))

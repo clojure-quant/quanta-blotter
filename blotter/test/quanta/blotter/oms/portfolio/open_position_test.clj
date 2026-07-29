@@ -105,14 +105,16 @@
     (is (false? (:position/open (last ems))))))
 
 (deftest ignores-non-fill-messages
-  (let [ems (emissions [{:type :trader/new-order :account/id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
+  (let [ems (emissions [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+                         :account/id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
                         (fill 1 "X" :buy 1.0 5.0)])]
     (is (= 1 (count ems)))
     (is (= :long (:position/side (first ems))))))
 
 (deftest channel-paper-fills
   (let [ems (emissions
-             [{:type :trader/new-order :account/id 2 :order-id 4 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
+             [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+               :account/id 2 :order-id 4 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
               {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
                :qty 0.001 :side :sell :price 100.0}
               {:type :broker/order-filled :account/id 2 :order-id 3 :asset "ETHUSDT"

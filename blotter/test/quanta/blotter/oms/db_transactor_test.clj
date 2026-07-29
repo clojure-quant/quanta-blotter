@@ -9,9 +9,9 @@
 
 (def channel-events
   "A small channel flow (orders + broker messages) similar to channel-paper.edn."
-  [{:type :trader/new-order :account/id 1 :order-id 1 :asset "BTCUSDT" :side :buy :order-type :limit :limit 100.0 :qty 0.001}
+  [{:type :trader/new-order :date #inst "2026-06-01T20:10:07.740Z" :account/id 1 :order-id 1 :asset "BTCUSDT" :side :buy :order-type :limit :limit 100.0 :qty 0.001}
    {:type :broker/order-confirmed :account/id 1 :order-id 1 :asset "BTCUSDT" :side :buy :order-type :limit :limit 100.0 :qty 0.001}
-   {:type :trader/new-order :account/id 2 :order-id 2 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
+   {:type :trader/new-order :date #inst "2026-06-01T20:10:09.740Z" :account/id 2 :order-id 2 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
    {:type :broker/order-filled :account/id 2 :order-id 2 :fill-id "f-1" :asset "ETHUSDT" :side :sell :qty 0.001 :price 100.0}
    {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f-2" :asset "BTCUSDT" :side :buy :qty 0.001 :price 10000.0}])
 

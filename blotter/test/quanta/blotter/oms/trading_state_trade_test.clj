@@ -7,6 +7,7 @@
 
 (defn- new-order [oid asset side qty campaign]
   {:type :trader/new-order
+   :date #inst "2026-06-01T12:00:00.000Z"
    :account/id 1
    :order-id oid
    :asset asset

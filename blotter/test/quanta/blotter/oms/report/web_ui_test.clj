@@ -9,16 +9,16 @@
 
 (def channel-paper-time-flow
   (create-time-flow
-   [1 {:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
+   [1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:07.740Z", :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
     1 {:date #inst "2026-06-01T20:10:07.740Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
-    1 {:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:09.740Z", :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
     1 {:date #inst "2026-06-01T20:10:09.740Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
     1 {:type :trader/cancel-order, :account/id 2, :order-id 2, :asset "ETHUSDT"}
     1 {:type :broker/cancel-confirmed, :account/id 2, :order-id 2}
     1 {:order-id 2, :date #inst "2026-06-01T20:10:12.740Z", :type :broker/order-canceled}
-    1 {:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:17.741Z", :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
     1 {:date #inst "2026-06-01T20:10:17.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
-    1 {:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:24.741Z", :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
     1 {:date #inst "2026-06-01T20:10:24.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
     1 {:type :broker/order-filled, :account/id 2, :order-id 4, :fill-id "m-9By0", :date #inst "2026-06-01T20:10:29.741Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 100.0}
     1 {:type :broker/order-filled, :account/id 2, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
@@ -26,7 +26,7 @@
 
 (def recent-reject-order-time-flow
   (create-time-flow
-   [1 {:type :trader/new-order :account/id 1 :order-id 1 :asset "BTCUSDT"
+   [1 {:type :trader/new-order :date #inst "2026-06-01T20:10:07.740Z" :account/id 1 :order-id 1 :asset "BTCUSDT"
        :side :buy :order-type :limit :limit 100.0 :qty 0.001}
     1 {:type :broker/order-rejected :account/id 1 :order-id 1 :message "immediate"}]))
 

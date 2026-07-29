@@ -109,7 +109,9 @@
 (deftest order-history-stored-as-string
   (let [conn (fresh-db)
         state (db/new-state)
-        order (assoc demo-order :order/history [{:type :trader/new-order :order-id 4}])]
+        order (assoc demo-order :order/history [{:type :trader/new-order
+                                                 :date #inst "2026-06-01T20:10:07.740Z"
+                                                 :order-id 4}])]
     (db/persist-block conn state [:order order])
     (let [stored (:order/history (first (db/query-orders conn)))]
       (is (string? stored))

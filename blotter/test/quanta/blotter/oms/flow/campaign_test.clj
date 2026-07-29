@@ -26,7 +26,7 @@
 
 (def channel-paper-events
   [;; scalp-1 :open — filled (closed, not in wo-dict)
-   {:type :trader/new-order, :account/id 1, :order-id 101, :asset "BTCUSDT", :side :buy
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:07.740Z", :account/id 1, :order-id 101, :asset "BTCUSDT", :side :buy
     :order-type :limit, :limit 100.0, :qty 0.001, :campaign "scalp-1", :label :open}
    {:date #inst "2026-06-01T20:10:07.740Z", :order-type :limit, :limit 100.0, :account/id 1
     :type :broker/order-confirmed, :order-id 101, :side :buy, :qty 0.001, :asset "BTCUSDT"}
@@ -34,13 +34,13 @@
     :asset "BTCUSDT", :qty 0.001, :side :buy, :price 100.0}
 
    ;; scalp-1 :close — working (stays in wo-dict)
-   {:type :trader/new-order, :account/id 1, :order-id 102, :asset "ETHUSDT", :side :sell
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:09.740Z", :account/id 1, :order-id 102, :asset "ETHUSDT", :side :sell
     :order-type :limit, :limit 100.0, :qty 0.002, :campaign "scalp-1", :label :close}
    {:date #inst "2026-06-01T20:10:09.740Z", :order-type :limit, :limit 100.0, :account/id 1
     :type :broker/order-confirmed, :order-id 102, :side :sell, :qty 0.002, :asset "ETHUSDT"}
 
    ;; scalp-1 :open — cancelled (closed, not in wo-dict)
-   {:type :trader/new-order, :account/id 1, :order-id 103, :asset "SOLUSDT", :side :buy
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:11.740Z", :account/id 1, :order-id 103, :asset "SOLUSDT", :side :buy
     :order-type :limit, :limit 50.0, :qty 1.0, :campaign "scalp-1", :label :open}
    {:date #inst "2026-06-01T20:10:11.740Z", :order-type :limit, :limit 50.0, :account/id 1
     :type :broker/order-confirmed, :order-id 103, :side :buy, :qty 1.0, :asset "SOLUSDT"}
@@ -49,13 +49,13 @@
    {:order-id 103, :date #inst "2026-06-01T20:10:12.740Z", :type :broker/order-canceled}
 
    ;; portfolio-reallocation — no label, working
-   {:type :trader/new-order, :account/id 2, :order-id 201, :asset "SPY", :side :buy
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:17.741Z", :account/id 2, :order-id 201, :asset "SPY", :side :buy
     :order-type :limit, :limit 500.0, :qty 10.0, :campaign "portfolio-reallocation"}
    {:date #inst "2026-06-01T20:10:17.741Z", :order-type :limit, :limit 500.0, :account/id 2
     :type :broker/order-confirmed, :order-id 201, :side :buy, :qty 10.0, :asset "SPY"}
 
    ;; portfolio-reallocation — no label, filled (closed, not in wo-dict)
-   {:type :trader/new-order, :account/id 2, :order-id 202, :asset "QQQ", :side :sell
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:24.741Z", :account/id 2, :order-id 202, :asset "QQQ", :side :sell
     :order-type :limit, :limit 400.0, :qty 5.0, :campaign "portfolio-reallocation"}
    {:date #inst "2026-06-01T20:10:24.741Z", :order-type :limit, :limit 400.0, :account/id 2
     :type :broker/order-confirmed, :order-id 202, :side :sell, :qty 5.0, :asset "QQQ"}
@@ -63,7 +63,7 @@
     :asset "QQQ", :qty 5.0, :side :sell, :price 400.0}
 
    ;; external campaign — working, must not appear in target campaign flows
-   {:type :trader/new-order, :account/id 3, :order-id 301, :asset "XRPUSDT", :side :buy
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:40.742Z", :account/id 3, :order-id 301, :asset "XRPUSDT", :side :buy
     :order-type :limit, :limit 1.0, :qty 100.0, :campaign "external"}
    {:date #inst "2026-06-01T20:10:40.742Z", :order-type :limit, :limit 1.0, :account/id 3
     :type :broker/order-confirmed, :order-id 301, :side :buy, :qty 100.0, :asset "XRPUSDT"}
@@ -71,7 +71,7 @@
     :asset "XRPUSDT", :qty 100.0, :side :buy, :price 1.0}
 
    ;; no campaign — working, must not appear in target campaign flows
-   {:type :trader/new-order, :account/id 3, :order-id 401, :asset "DOGEUSDT", :side :buy
+   {:type :trader/new-order, :date #inst "2026-06-01T20:10:45.742Z", :account/id 3, :order-id 401, :asset "DOGEUSDT", :side :buy
     :order-type :limit, :limit 0.1, :qty 1000.0}
    {:date #inst "2026-06-01T20:10:45.742Z", :order-type :limit, :limit 0.1, :account/id 3
     :type :broker/order-confirmed, :order-id 401, :side :buy, :qty 1000.0, :asset "DOGEUSDT"}
