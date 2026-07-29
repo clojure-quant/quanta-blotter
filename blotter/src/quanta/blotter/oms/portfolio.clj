@@ -4,7 +4,6 @@
    [missionary.core :as m]
    [taoensso.timbre :refer [info error]]
    [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.portfolio.fill :as fill]
    [quanta.blotter.oms.portfolio.trader :as trader]
    [quanta.blotter.oms.portfolio.working-order :as wo]
    [quanta.blotter.oms.portfolio.open-position :as op]))
@@ -37,12 +36,9 @@
         out (cond-> out
               (trader/trader? msg) (assoc :trader msg))
 
-        ;; trade / fill projection
-        trade (when (fill/fill? msg) (fill/->fill msg))
-        out (cond-> out trade (assoc :trade trade))
-
         ;; working order
-        {:keys [working-order] :as out-wo} (wo/process-order-orderupdate-message (:working-order state) msg)
+        {:keys [working-order trade] :as out-wo}
+        (wo/process-order-orderupdate-message (:working-order state) msg)
         out (merge out out-wo)
         state (if working-order 
                 (assoc state :working-order working-order)

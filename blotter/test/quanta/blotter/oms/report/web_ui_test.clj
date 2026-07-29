@@ -32,8 +32,14 @@
 
 (def recent-close-position-time-flow
   (create-time-flow
-   [1 {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f1"
+   [1 {:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+       :account/id 1 :order-id 1 :asset "BTCUSDT"
+       :side :buy :order-type :market :qty 100.0}
+    1 {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f1"
        :asset "BTCUSDT" :side :buy :qty 100.0 :price 10.0}
+    1 {:type :trader/new-order :date #inst "2026-06-01T12:00:01.000Z"
+       :account/id 1 :order-id 2 :asset "BTCUSDT"
+       :side :sell :order-type :market :qty 100.0}
     1 {:type :broker/order-filled :account/id 1 :order-id 2 :fill-id "f2"
        :asset "BTCUSDT" :side :sell :qty 100.0 :price 11.0}]))
 

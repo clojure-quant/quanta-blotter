@@ -1,6 +1,7 @@
 (ns quanta.blotter.oms.portfolio.working-order
   (:require
-   [quanta.blotter.precision :as precision]))
+   [quanta.blotter.precision :as precision]
+   [quanta.blotter.oms.portfolio.fill :as fill]))
 
 (def closed-statuses
   "Order statuses that mean the order is no longer open."
@@ -145,13 +146,15 @@
       (if known-order
         ; valid order-update
         (let [order (process-orderupdate-msg known-order msg)
-              done? (order-done? order)]
-          (if done?
-            {:order-closed order
-             :order-change order
-             :working-order (dissoc working-order order-id)}
-            {:order-change order
-             :working-order (assoc working-order order-id order)}))
+              done? (order-done? order)
+              result (if done?
+                       {:order-closed order
+                        :order-change order
+                        :working-order (dissoc working-order order-id)}
+                       {:order-change order
+                        :working-order (assoc working-order order-id order)})]
+          (cond-> result
+            (fill/fill? msg) (assoc :trade (fill/->fill msg))))
         ; order-update unknown order 
         {:update-for-unknown msg}))))
 

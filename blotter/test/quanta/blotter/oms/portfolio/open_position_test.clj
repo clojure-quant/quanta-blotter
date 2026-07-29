@@ -12,7 +12,42 @@
    :qty qty
    :price price})
 
-(defn- emissions [fills & [opts]]
+(defn- new-order-for-fill [order-id msg]
+  {:type :trader/new-order
+   :date (or (:date msg) #inst "2026-06-01T12:00:00.000Z")
+   :account/id (:account/id msg)
+   :order-id order-id
+   :asset (:asset msg)
+   :side (:side msg)
+   :order-type :market
+   :qty (:qty msg)})
+
+(defn- ensure-known-orders [events]
+  (:events
+   (reduce-kv
+    (fn [{:keys [known] :as acc} idx msg]
+      (let [order-id (:order-id msg)]
+        (cond
+          (= :trader/new-order (:type msg))
+          (-> acc
+              (update :events conj msg)
+              (cond-> order-id (update :known conj order-id)))
+
+          (= :broker/order-filled (:type msg))
+          (if (contains? known order-id)
+            (-> acc
+                (update :events conj msg)
+                (update :known disj order-id))
+            (let [order-id (or order-id (str "position-test-order-" idx))
+                  msg (assoc msg :order-id order-id)]
+              (update acc :events into [(new-order-for-fill order-id msg) msg])))
+
+          :else
+          (update acc :events conj msg))))
+    {:events [] :known #{}}
+    (vec events))))
+
+(defn- emissions [events & [opts]]
   (let [method (or (:position-method opts) (:method opts) :average)]
     (second
      (reduce
@@ -22,7 +57,7 @@
                    (:position-change out-msg)
                    (conj (:position-change out-msg)))]))
       [(portfolio/empty-state {:position-method method}) []]
-      fills))))
+      (ensure-known-orders events)))))
 
 (defn- last-emission [fills & [opts]]
   (last (emissions fills opts)))
@@ -146,7 +181,7 @@
                         (let [{:keys [state out-msg]} (portfolio/process-message st msg)]
                           [state (conj outs out-msg)]))
                       [(portfolio/empty-state {:position-method :average}) []]
-                      fills)
+                      (ensure-known-orders fills))
         closed-out (last outs)]
     (is (some? (:position-closed closed-out)))
     (is (false? (:position/open (:position-closed closed-out))))

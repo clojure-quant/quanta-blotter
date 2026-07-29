@@ -213,7 +213,20 @@
     (println "late: " late)
     (is (empty? (:working-order state)))
     (is (some? (:order-closed (second outs))))
+    (is (some? (:trade (second outs))))
     (is (= :broker/order-canceled (:type (:update-for-unknown late))))
     (is (= 1 (:order-id (:update-for-unknown late))))
     (is (nil? (:order-change late)))
     (is (nil? (get-in state [:working-order 1])))))
+
+(deftest fill-for-unknown-order-does-not-emit-trade
+  (let [msg {:type :broker/order-filled
+             :date #inst "2026-06-01T12:00:00.000Z"
+             :account/id 1 :order-id 99 :fill-id "unknown-fill"
+             :asset "X" :side :buy :qty 1M :price 10M}
+        {:keys [state out-msg]} (portfolio/process-message
+                                 (portfolio/empty-state)
+                                 msg)]
+    (is (= msg (:update-for-unknown out-msg)))
+    (is (nil? (:trade out-msg)))
+    (is (empty? (:open-position state)))))
