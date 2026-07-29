@@ -36,31 +36,21 @@
         out (cond-> out
               (trader/trader? msg) (assoc :trader msg))
 
-        ;; working order
+        ;; working order (order/orderupdate)
         {:keys [working-order trade] :as out-wo}
         (wo/process-order-orderupdate-message (:working-order state) msg)
         out (merge out out-wo)
         state (if working-order 
                 (assoc state :working-order working-order)
                 state)
-        
 
         ;; open position (from trade)
-        pos-key (when trade (op/position-key trade))
-        known-pos (when pos-key (get-in state [:open-position pos-key]))
-        pos-step (when pos-key (op/step known-pos trade {:method method}))
-        position-change (when pos-step (:position-change pos-step))
-        out (cond-> out
-              position-change (assoc :position-change position-change)
-              (and position-change (false? (:position/open position-change)))
-              (assoc :position-closed position-change))
-        state (if pos-step
-                (assoc state :open-position
-                       (op/update-open-position-dict (:open-position state)
-                                                     (:position pos-step)))
-                state)
-        out (cond-> out
-              position-change (assoc :open-position (:open-position state)))]
+        {:keys [open-position] :as out-op}
+        (op/process-trade (:open-position state) trade {:method method})
+        out (merge out out-op)
+        state (if open-position
+                (assoc state :open-position open-position)
+                state)]
     {:state state
      :out-msg out}))
 

@@ -330,6 +330,23 @@
       (dissoc dict k)
       (assoc dict k position))))
 
+(defn process-trade
+  "Apply a trade to the open-position dictionary and return its sparse outputs."
+  ([open-position trade]
+   (process-trade open-position trade {:method :fifo}))
+  ([open-position trade opts]
+   (if trade
+     (let [pos-key (position-key trade)
+           known-pos (get open-position pos-key)
+           {:keys [position position-change]} (step known-pos trade opts)
+           open-position (update-open-position-dict open-position position)]
+       (cond-> {:open-position open-position
+                :position position
+                :position-change position-change}
+         (and position-change (false? (:position/open position-change)))
+         (assoc :position-closed position-change)))
+     {})))
+
 (defn hydrate-position
   "Build a DB-shaped open-position entry from a persisted open position row.
    FIFO lot history is approximated as a single lot at average entry."
