@@ -10,8 +10,7 @@
    [quanta.blotter.oms.validation.channel :refer [create-validation-channel start-validation-channel! stop-validation-channel!]]
    [quanta.blotter.oms.validation.schema :refer [validate-trader-message human-error-trader-message]]
    [quanta.blotter.account-manager :refer [create-account-manager start-account-manager add-edn-account add-edn-accounts]]
-   [quanta.blotter.util-rdv :refer [create-rdv]]
-   [quanta.blotter.oms.flow.trading-state :as trading-state]))
+   [quanta.blotter.util-rdv :refer [create-rdv]]))
 
 
 (defn- create-validated-channel-stack
@@ -42,8 +41,7 @@
                              :or {validate? true
                                   tag? true
                                   transaction-log-file nil
-                                  account-log-dir nil
-                                  }}]
+                                  account-log-dir nil}}]
   (let [order-rdv (create-rdv "oms/order")
         orderupdate-rdv (create-rdv "oms/orderupdate")
         log-transaction (when transaction-log-file
@@ -74,10 +72,7 @@
                 :orderupdate-rdv orderupdate-rdv}
      :ctx ctx ; quote lookup
      :account-manager account-manager
-     :combined-flow combined-flow
-     :trading-state (trading-state/create-trading-state! combined-flow)
-     ;; todo: move this to oms. 1. oms has db, so we can init from db state 2. om (order multiplexer) does no care about this functionality.
-     }))
+     :combined-flow combined-flow}))
 
 (defn consume-orderupdate [r]
   (m/sp
@@ -87,7 +82,7 @@
 
 (defn start-order-manager!
   "Start paper trade-account 1 fed by simulated orderflow for that account."
-  [{:keys [account-manager combined-flow _trading-state internal] :as this}]
+  [{:keys [account-manager combined-flow internal] :as this}]
   (info "start-order-manager!")
   (let [{:keys [log-transaction dispose-a validator consolidator orderupdate-rdv]} internal
         dispose-transaction-logger (when log-transaction
@@ -106,7 +101,7 @@
              :dispose-consolidator! dispose-consolidator!
              :dispose-account-manager! dispose-account-manager!})
     (when log-transaction
-      (log log-transaction {:type :oms/started :date (t/instant)}))
+      (log log-transaction {:type :oms/started :date (t/inst)}))
     this))
 
 (defn stop-order-manager! [{:keys [internal] :as this}]
@@ -122,7 +117,7 @@
         (dispose-tx))
 
       (reset! dispose-a nil))
-    (dissoc this :trading-state)))
+    this))
 
 (defn send-message
   "push a message on the OMS order channel. "
@@ -131,15 +126,17 @@
    (assert (map? this) "this (oms) needs to be a map")
    (let [order-rdv (get-in this [:internal :order-rdv])]
      (assert order-rdv "this (oms) needs to have an order-rdv")
-     (if (validate-trader-message message)
-       (let [message (assoc message :date (t/instant))]
-         (m/? (m/via m/blk (info "[OMS send-trader-message]: " message)))
-         (m/? (order-rdv message))
-         (m/? (m/via m/blk (info "[OMS send-trader-message] success: " message)))
-         message)
-       (throw (ex-info "Invalid trader message"
-                       {:message message
-                        :errors (human-error-trader-message message)}))))))
+     (let [message (cond-> message
+                     (nil? (:date message)) (assoc :date (t/inst)))]
+       (if (validate-trader-message message)
+         (do
+           (m/? (m/via m/blk (info "[OMS send-trader-message]: " message)))
+           (m/? (order-rdv message))
+           (m/? (m/via m/blk (info "[OMS send-trader-message] success: " message)))
+           message)
+         (throw (ex-info "Invalid trader message"
+                         {:message message
+                          :errors (human-error-trader-message message)})))))))
 
 (defn create-order
   "Create an order and push it on the OMS order channel.

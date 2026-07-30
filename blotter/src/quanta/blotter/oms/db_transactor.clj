@@ -3,44 +3,44 @@
    [missionary.core :as m]
    [taoensso.timbre :refer [info error]]
    [quanta.missionary.logger :as logger]
-   [quanta.blotter.util :as util]
    [quanta.blotter.oms.db :as db]))
 
 (def ^:private buffer-ms 500)
 
-(defn- tag [k flow]
-  (m/eduction (map (fn [v] {k v})) flow))
-
-(defn- tagged-flows
-  "Builds the four tagged flows from shared trading-state flows."
-  [{:keys [combined-flow trading-state] :as oms}]
-  (let [{:keys [order-change-flow fill-flow position-change-flow]} trading-state]
-    [(tag :msg combined-flow)
-     (tag :order order-change-flow)
-     (tag :fill fill-flow)
-     (tag :position position-change-flow)]))
+(defn out-msg->tx-vector
+  "Project one portfolio out-msg to the flat [:msg m :order o ...] vector
+   expected by db/persist-block."
+  [out-msg]
+  (let [positions-change (:positions-change out-msg)]
+    (cond-> []
+      (contains? out-msg :msg) (conj :msg (:msg out-msg))
+      (contains? out-msg :order-change) (conj :order (:order-change out-msg))
+      (contains? out-msg :trade) (conj :fill (:trade out-msg))
+      (seq positions-change)
+      (into (mapcat (fn [position] [:position position])
+                    positions-change)))))
 
 (defn- block->tx-vector
-  "Turns a buffered block (vector of single-entry tagged maps like {:msg m})
-   into the flat [:msg m :order o ...] vector expected by db/process."
+  "Turns a buffered block of portfolio out-msg maps into one flat tx vector."
   [block]
-  (into [] (mapcat (fn [m] (first (seq m))) block)))
+  (into [] (mapcat out-msg->tx-vector) block))
 
 (defn- write-block! [db state block]
   (let [tx-vector (block->tx-vector block)]
     (info "db-transactor writing block of" (count block) "events")
-    (db/process db state tx-vector)
+    (db/persist-block db state tx-vector)
     (info "db-transactor wrote block of" (count block) "events")))
 
 (defn transact-task
-  "Missionary task that persists all OMS flows of `this` into `db`.
+  "Missionary task that persists OMS portfolio out-flow of `this` into `db`.
    Writes are buffered into time blocks and processed together."
   [oms db cancel-rdv]
-  (let [_ (assert (:trading-state oms) "start-db-transactor needs :trading-state")
+  (let [portfolio (:portfolio oms)
+        _ (assert portfolio "start-db-transactor needs :portfolio")
+        out-flow (:out-flow portfolio)
+        _ (assert out-flow "start-db-transactor needs portfolio :out-flow")
         state (db/new-state)
-        combined (apply util/mix (tagged-flows oms))
-        ; (logger/time-buffered buffer-ms combined)
-        buffered (logger/time-buffered-cancellable buffer-ms cancel-rdv combined)
+        buffered (logger/time-buffered-cancellable buffer-ms cancel-rdv out-flow)
         transacting-f (m/ap
                        (let [block (m/?> buffered)]
                          (m/? (m/via m/blk (write-block! db state block)))
@@ -48,8 +48,7 @@
     (m/reduce (fn [_r _v] nil) nil transacting-f)))
 
 (defn start-db-transactor
-  "Starts persisting the OMS flows of `this` (from create-order-manager) into
-   `db` (a datahike connection from quanta.util.datahike/db-start).
+  "Starts persisting the OMS portfolio of `this` into `db`.
    Returns a map with a :dispose! fn."
   [oms db]
   (assert oms "start-db-transactor needs the order-manager (oms)")
@@ -62,8 +61,7 @@
         dispose! (fn []
                    ((cancel-rdv :quanta.missionary.logger/end)
                     (fn [_]
-                      (info "db transactor received the timeout signal.")
-                   )
+                      (info "db transactor received the timeout signal."))
                     (fn [ex]
                       (error "db transactor timeout signal ex: " ex))))]
     {:dispose-transactor! dispose-transactor!
@@ -72,9 +70,7 @@
 
 (defn stop-db-transactor [{:keys [dispose!]}]
   (info "stopping db-transactor ..")
-  (when dispose! 
+  (when dispose!
     (dispose!)
     (Thread/sleep 1000) ; give it time to finish flushing.
-    )
-    
-  )
+    ))

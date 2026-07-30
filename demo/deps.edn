@@ -2,14 +2,11 @@
  :deps {org.clojure/clojure    {:mvn/version "1.11.1"} 
         io.github.clojure-quant/blotter {:local/root "../blotter" :deps/manifest :deps}
         io.github.clojure-quant/blotter-cli {:local/root "../blotter-cli" :deps/manifest :deps}
-        io.github.clojure-quant/fix-engine {:mvn/version "0.1.77"}
+       io.github.clojure-quant/fix-engine {:mvn/version "0.1.78"}
         io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.15"}
         }
  :aliases
- {:nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
-                       cider/cider-nrepl {:mvn/version "0.28.3"}}
-          :main-opts  ["-m" "nrepl.cmdline"]}
-  
+ {
   ;; quote
   :quote-stream-print {:exec-fn demo.quote.stream-print/start-cli}
   :quote-stream-mixer {:exec-fn demo.quote.stream-mixer/start-cli}
@@ -23,11 +20,17 @@
                                            :version "prod1"
                                            :run demo.quote.snapshot-performance/run}}
   
-  ;; print 
-  :print-trading-state-flow {:exec-fn demo.print.trading-state-flow/run-demo!}
+  ;; portfolio
+  :portfolio-log-flow {:exec-fn demo.portfolio.log-flow/run-demo!}
+  :portfolio-position-pl {:exec-fn demo.portfolio.position-pl/run-demo!}
+  :portfolio-working-order {:exec-fn demo.portfolio.working-order/run-demo!}
+  :portfolio-open-positions {:exec-fn demo.portfolio.open-positions/run-demo!}
+  
+  ;; backoffice 
+  :backoffice {:exec-fn demo.backoffice.fill/print-trades!}
 
   ;; trade
-
+  
   :cli-server {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
                :exec-fn modular.system/start!
                :exec-args {:config ["config.edn"]
@@ -42,14 +45,15 @@
                            :profile "default"
                            :version "prod1"
                            :run demo.stresstest/run}}
-
- 
-
-  :position-pl-demo {:exec-fn demo.position-pl/run-demo!}
+  
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
 
-  :backoffice {:exec-fn demo.backoffice/print-trades!}
-
+  ;; dev tools 
+  
+  :nrepl {:extra-deps {nrepl/nrepl {:mvn/version "0.9.0"}
+                       cider/cider-nrepl {:mvn/version "0.28.3"}}
+          :main-opts  ["-m" "nrepl.cmdline"]}
+  
   :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.05.25"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src" "deps.edn" "--fail-level" "error"]}
 

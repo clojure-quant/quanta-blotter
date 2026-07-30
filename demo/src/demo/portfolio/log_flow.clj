@@ -1,5 +1,5 @@
-(ns demo.print.trading-state-flow
-  "Replay demo/data/combined.edn through a stubbed OMS and log working orders
+(ns demo.portfolio.log-flow
+  "Replay demo/data/combined.edn through portfolio and log working orders
    and open positions to log/print-demo.log.
 
   Run from the demo directory:
@@ -10,7 +10,7 @@
    [ednx.edn :refer [read-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
    [quanta.blotter.oms.flow.campaign :as campaign]
-   [quanta.blotter.oms.flow.trading-state :as trading-state]
+   [quanta.blotter.oms.portfolio :as portfolio]
    [quanta.blotter.oms.report.text-logger :refer [start-trading-state-logger!]]))
 
 (add-tick-edn-handlers!)
@@ -23,7 +23,7 @@
        (remove str/blank?)
        (mapv read-edn)))
 
-(defn create-combined-flow  []
+(defn create-combined-flow []
   (let [messages (load-combined-edn)
         immediate-flow (m/seed messages)
         tagged-flow (campaign/campaign-tagged-combined-flow immediate-flow)]
@@ -31,15 +31,19 @@
             (m/? (m/sleep 100 v))))))
 
 (defn run-demo!
-  "Read combined.edn, start trading-state + wo/op logger, replay messages."
-  [& _]
+  "Read combined.edn, start portfolio + wo/op logger, replay messages."
+  [_]
   (let [channel-flow (create-combined-flow)
-        trading-state (trading-state/create-trading-state! channel-flow)
-        dispose! (start-trading-state-logger! trading-state "log/print-demo.log" 1000 true)]
+        portfolio (portfolio/portfolio-create channel-flow)
+        dispose-logger! (start-trading-state-logger! portfolio "log/print-demo.log" 1000 true)
+        _ (portfolio/portfolio-start! portfolio)]
     (try
       (m/? (m/sleep 50000))
       (finally
-        (dispose!)))))
+        (dispose-logger!)
+        (portfolio/portfolio-stop! portfolio)
+        (println "see log in log/print-demo.log")
+        ))))
 
 (comment
-  (run-demo!))
+  (run-demo! {}))

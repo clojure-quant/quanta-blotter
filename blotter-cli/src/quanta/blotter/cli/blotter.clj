@@ -7,6 +7,7 @@
    [clojure.string :as str]
    [charm.core :as charm]
    [charm.components.paginator :as pag]
+   [quanta.blotter.oms.portfolio.open-position :as open-position]
    [quanta.blotter.oms.print :as print]
    [quanta.blotter.cli.client :as client]))
 
@@ -32,13 +33,6 @@
 
 (defn- working? [o]
   (contains? working-statuses (:order/status o)))
-
-(defn- position-open?
-  [p]
-  (if (contains? p :position/open)
-    (true? (:position/open p))
-    (let [q (or (:position/qty-open p) (:position/qty p))]
-      (boolean (and q (not (zero? q)))))))
 
 (def order-filter-cycle {:working :closed, :closed :all, :all :working})
 (def position-filter-cycle {:open :closed, :closed :all, :all :open})
@@ -215,8 +209,8 @@
     :trades (->> raw-rows (sort-by :fill/date) vec)
     :positions (->> raw-rows
                     (filter (case position-filter
-                              :open position-open?
-                              :closed (complement position-open?)
+                              :open open-position/position-open?
+                              :closed (complement open-position/position-open?)
                               :all (constantly true)))
                     (sort-by (juxt :position/account :position/asset))
                     vec)))

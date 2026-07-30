@@ -20,7 +20,8 @@
    :side :buy
    :order-type :limit
    :limit 100.0M
-   :qty 0.001M})
+   :qty 0.001M
+   :date (t/inst)})
 
 (def valid-orderupdate
   {:type :broker/order-confirmed
@@ -31,7 +32,7 @@
    :order-type :limit
    :qty 0.001M
    :limit 100.0M
-   :date (t/instant)})
+   :date (t/inst)})
 
 (defn- bad-order [base]
   (case (rand-int 3)
@@ -52,12 +53,12 @@
                    :order-type :limit
                    :qty 0.001M
                    :limit 100.0M
-                   :date (t/instant)}
+                   :date (t/inst)}
         filled {:type :broker/order-filled
                 :account/id account-id
                 :order-id 99
                 :fill-id "f-1"
-                :date (t/instant)
+                :date (t/inst)
                 :asset "BTCUSDT"
                 :qty 0.001M
                 :side :buy
@@ -86,8 +87,9 @@
       (finally
         (vc/stop-validation-channel! validator)))))
 
-(defn- take-until-timeout [rdv timeout-ms]
+(defn- take-until-timeout 
   "Takes from `rdv` until timeout; returns collected values."
+  [rdv timeout-ms] 
   (m/sp
    (loop [acc []]
      (let [v (m/? (m/race rdv (m/sleep timeout-ms ::timeout)))]
@@ -128,7 +130,7 @@
                                              {:asset "BTCUSDT"
                                               :bid 100.0M
                                               :ask 100.01M
-                                              :ts (t/instant)}))))]
+                                              :ts (t/inst)}))))]
       (let [order-in (create-rdv "test/order-in")
             orderupdate-in (create-rdv "test/orderupdate-in")
             validator (vc/create-validation-channel {:order order-in
@@ -165,7 +167,7 @@
                    :order-type :limit
                    :qty 0.001M
                    :limit 100.0M
-                   :date (t/instant)}]
+                   :date (t/inst)}]
     (is (s/validate-message confirmed))
     (dotimes [_ 30]
       (is (not (s/validate-message (broker/corrupt-message confirmed)))

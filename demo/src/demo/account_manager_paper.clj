@@ -15,7 +15,7 @@
   []
   (let [;; logger
         l (create-logger "log/paper-account-manager.txt" false)
-        _ (log l {:type :paper/started :date (t/instant)})
+        _ (log l {:type :paper/started :date (t/inst)})
         log-fn (partial log l)
         ; setup rdvs
         order-rdv (m/rdv)
@@ -27,7 +27,7 @@
         {:keys [order orderupdate]} (:channel consolidator)
         {:keys [combined-flow]} consolidator
         l-channel (create-logger "log/paper-account-manager-order-orderupdate.txt" false)
-        _ (log l-channel {:type :consolidator/started :date (t/instant)})
+        _ (log l-channel {:type :consolidator/started :date (t/inst)})
         dispose-flow-logger (start-log-flow-to-logger l-channel combined-flow)
         ;; account-manager
         am (create-account-manager {:quote-manager ::test-quote-manager}

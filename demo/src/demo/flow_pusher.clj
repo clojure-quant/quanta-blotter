@@ -38,7 +38,7 @@
                           (sample/tick-flow 250)))
         limited (m/eduction (take 6) snap-f)]
     (m/? (m/reduce (fn [_ v]
-                     (println (t/instant) "emit:" (pr-str v))
+                     (println (t/inst) "emit:" (pr-str v))
                      nil)
                    nil
                    limited))

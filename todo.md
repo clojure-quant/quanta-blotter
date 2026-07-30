@@ -64,3 +64,4 @@ IB code	Meaning
 1100	Connectivity between TWS/Gateway and IB servers was lost
 1101	Connectivity restored, but market-data subscriptions were lost
 1102	Connectivity restored and subscriptions were maintained
+

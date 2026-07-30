@@ -103,12 +103,12 @@
   p/quote-messaging
   (subscribe-msg [_ sub]
                  (swap! state-a add-new-assets sub initial-price)
-                 (log {:date (t/instant) :account (:account/id account) 
+                 (log {:date (t/inst) :account (:account/id account) 
                        :type :subscribe :assets sub})
                  nil)
   (unsubscribe-msg [_ unsub]
     ;; keep last simulated state in state-a for later re-subscribe
-    (log {:date (t/instant) :account (:account/id account) 
+    (log {:date (t/inst) :account (:account/id account) 
           :type :unsubscribe :assets unsub})
     nil)
   (read-quote [_ _conn-msg-in]

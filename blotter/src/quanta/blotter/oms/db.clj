@@ -153,13 +153,16 @@
    {:db/ident :position/side
     :db/valueType :db.type/keyword
     :db/cardinality :db.cardinality/one}
-   {:db/ident :position/qty
+   {:db/ident :position/qty-entry
+    :db/valueType :db.type/bigdec
+    :db/cardinality :db.cardinality/one}
+   {:db/ident :position/qty-exit
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/qty-open
     :db/valueType :db.type/bigdec
     :db/cardinality :db.cardinality/one}
-   {:db/ident :position/open
+   {:db/ident :position/hedge
     :db/valueType :db.type/boolean
     :db/cardinality :db.cardinality/one}
    {:db/ident :position/average-entry-price
@@ -177,6 +180,10 @@
    {:db/ident :position/date-close
     :db/valueType :db.type/instant
     :db/cardinality :db.cardinality/one}
+   {:db/ident :position/position-id
+    :db/valueType :db.type/string
+    :db/cardinality :db.cardinality/one
+    :db/unique :db.unique/identity}
    
    ;; account (created once, then updated)
    {:db/ident :account/id
@@ -284,7 +291,7 @@
 
 (defn new-state []
   (atom {:order-id->eid {}
-         :pos-key->eid {}
+         :position-id->eid {}
          :seen-fills #{}
          :account-id->eid {}}))
 
@@ -296,8 +303,8 @@
     (if (decimal? v) v (bigdec v))))
 
 (defn- as-date
-  "Datahike :db.type/instant requires a java.util.Date. tick / the #time/instant
-   reader produce java.time.Instant, so coerce to a Date (millisecond precision)."
+  "Normalize to java.util.Date for Datahike :db.type/instant.
+   Channel/portfolio dates are already Date; this remains a defensive coerce."
   [v]
   (when (some? v) (t/inst v)))
 
@@ -360,10 +367,14 @@
            :position/account (:position/account position)
            :position/asset (:position/asset position)
            :position/side (:position/side position)
-           :position/open (:position/open position)
+           :position/hedge (:position/hedge position)
+           :position/position-id (:position/position-id position)
            :position/realized-pl (as-bigdec (or (:position/realized-pl position) 0M))}
     account-ref (assoc :position/account-db account-ref)
-    (some? (:position/qty position)) (assoc :position/qty (as-bigdec (:position/qty position)))
+    (some? (:position/qty-entry position))
+    (assoc :position/qty-entry (as-bigdec (:position/qty-entry position)))
+    (some? (:position/qty-exit position))
+    (assoc :position/qty-exit (as-bigdec (:position/qty-exit position)))
     (some? (:position/qty-open position)) (assoc :position/qty-open (as-bigdec (:position/qty-open position)))
     (some? (:position/average-entry-price position))
     (assoc :position/average-entry-price (as-bigdec (:position/average-entry-price position)))
@@ -387,11 +398,11 @@
         tmp)))
 
 (defn- pos-eid
-  [state block-tempids pos-key]
-  (or (get (:pos-key->eid state) pos-key)
-      (get @block-tempids [:position pos-key])
+  [state block-tempids position-id]
+  (or (get (:position-id->eid state) position-id)
+      (get @block-tempids [:position position-id])
       (let [tmp (- (- (count @block-tempids)) 1)]
-        (swap! block-tempids assoc [:position pos-key] tmp)
+        (swap! block-tempids assoc [:position position-id] tmp)
         tmp)))
 
 (defn- msg-eid [block-tempids]
@@ -419,7 +430,7 @@
         orders (reduce (fn [m o] (update m (as-str (:order/id o)) merge o))
                        (array-map) (of-kind :order))
         positions (reduce (fn [m p]
-                            (update m [(:position/account p) (:position/asset p)] merge p))
+                            (update m (:position/position-id p) merge p))
                           (array-map) (of-kind :position))
         msgs (of-kind :msg)
         fills (of-kind :fill)
@@ -435,8 +446,8 @@
                          (order->entity (order-eid snapshot block-tempids oid) o
                                         (resolve-account! (:order/account-id o))))
                        orders)
-        position-tx (mapv (fn [[k p]]
-                            (position->entity (pos-eid snapshot block-tempids k) p
+        position-tx (mapv (fn [[position-id p]]
+                            (position->entity (pos-eid snapshot block-tempids position-id) p
                                               (resolve-account! (:position/account p))))
                           positions)
         msg-tx (mapv (fn [m] (message->entity (msg-eid block-tempids) m)) msgs)
@@ -465,7 +476,7 @@
     (get tempids eid eid)
     eid))
 
-(defn process
+(defn persist-block
   "Persists a block to datahike.
    - conn:  datahike connection
    - state: atom created with (new-state)
@@ -487,7 +498,7 @@
                     (let [eid (resolve-eid tempids tmp)]
                       (case kind
                         :order (assoc-in s [:order-id->eid k] eid)
-                        :position (assoc-in s [:pos-key->eid k] eid)
+                        :position (assoc-in s [:position-id->eid k] eid)
                         :fill (update s :seen-fills conj k)
                         s)))
                   (update s :account-id->eid merge account-id->eid)
@@ -512,6 +523,15 @@
          :where [?e :order/id _]]
        @conn))
 
+(defn query-open-orders
+  "Orders currently working (not filled/cancelled/rejected/expired)."
+  [conn]
+  (d/q '[:find [(pull ?e [*]) ...]
+         :where
+         [?e :order/id _]
+         [?e :order/status :working]]
+       @conn))
+
 (defn query-fills [conn]
   (d/q '[:find [(pull ?e [*]) ...]
          :where [?e :fill/id _]]
@@ -520,6 +540,16 @@
 (defn query-positions [conn]
   (d/q '[:find [(pull ?e [*]) ...]
          :where [?e :position/account _]]
+       @conn))
+
+(defn query-open-positions
+  "Positions with a positive open quantity."
+  [conn]
+  (d/q '[:find [(pull ?e [*]) ...]
+         :where
+         [?e :position/account _]
+         [?e :position/qty-open ?qty]
+         [(> ?qty 0)]]
        @conn))
 
 (defn print-orders [conn]

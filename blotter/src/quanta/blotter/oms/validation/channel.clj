@@ -2,6 +2,7 @@
   (:require
    [taoensso.timbre :as timbre :refer [debug info warn error]]
    [missionary.core :as m]
+   [tick.core :as t]
    [quanta.blotter.util-rdv :refer [create-rdv]]
    [quanta.blotter.oms.validation.schema :as s]))
 
@@ -10,12 +11,14 @@
 
 (defn- order-rejection [order]
   (cond-> {:type :broker/order-rejected
+           :date (or (:date order) (t/inst))
            :message (spec-error-text order)}
     (:account/id order) (assoc :account/id (:account/id order))
     (:order-id order) (assoc :order-id (:order-id order))))
 
 (defn- orderupdate-schema-error [orderupdate]
   (cond-> {:type :broker/orderupdate-schema-error
+           :date (or (:date orderupdate) (t/inst))
            :message (spec-error-text orderupdate)}
     (:account/id orderupdate) (assoc :account/id (:account/id orderupdate))
     (:order-id orderupdate) (assoc :order-id (:order-id orderupdate))))

@@ -10,6 +10,7 @@
 
 (def new-order
   {:type :trader/new-order
+   :date #inst "2026-06-01T12:00:00.000Z"
    :account/id 3
    :order-id 1
    :asset "BTCUSDT"
@@ -20,6 +21,7 @@
 
 (def market-order
   {:type :trader/new-order
+   :date #inst "2026-06-01T12:00:00.000Z"
    :account/id 3
    :order-id 2
    :asset "BTCUSDT"
@@ -34,7 +36,7 @@
                            {:asset "BTCUSDT"
                             :bid bid
                             :ask (+ bid 0.01M)
-                            :ts (t/instant)}))))
+                            :ts (t/inst)}))))
 
 (deftest reject-reason-accepts-when-zero
   (is (every? nil? (repeatedly 200 #(broker/reject-reason 0))))
@@ -155,7 +157,7 @@
       {:asset test1-asset
        :bid bid
        :ask (+ bid 0.01M)
-       :ts (t/instant)}))))
+       :ts (t/inst)}))))
 
 (defn- in-range? [price lo hi]
   (and (some? price) (<= lo price hi)))
@@ -171,6 +173,7 @@
                     :fill-qty-prct [100]
                     :ms-between-fills 0}
           market {:type :trader/new-order
+                  :date #inst "2026-06-01T12:00:00.000Z"
                   :account/id 3
                   :order-id 1
                   :asset test1-asset
@@ -178,6 +181,7 @@
                   :order-type :market
                   :qty 100M}
           limit {:type :trader/new-order
+                 :date #inst "2026-06-01T12:00:01.000Z"
                  :account/id 3
                  :order-id 2
                  :asset test1-asset
@@ -186,6 +190,7 @@
                  :limit 80.0M
                  :qty 100M}
           stop {:type :trader/new-order
+                :date #inst "2026-06-01T12:00:02.000Z"
                 :account/id 3
                 :order-id 3
                 :asset test1-asset

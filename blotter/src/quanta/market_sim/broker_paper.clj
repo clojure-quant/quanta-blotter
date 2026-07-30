@@ -23,7 +23,7 @@
   [action reason]
   (assoc action
          :type :broker/order-rejected
-         :date (t/instant)
+         :date (t/inst)
          :message reason))
 
 (defn bad-orderupdate?
@@ -114,7 +114,7 @@
            :side (:side action)
            :qty (:qty action)
            :order-type (:order-type action)
-           :date (t/instant)}
+           :date (t/inst)}
     (#{:limit :stop} (:order-type action)) (assoc :limit (:limit action))
     (some? (:campaign action)) (assoc :campaign (:campaign action))
     (some? (:label action)) (assoc :label (:label action))))
@@ -144,11 +144,13 @@
              (do (dispose)
                  (swap! orders dissoc order-id)
                  (m/? (push-update settings push (assoc action
-                                                        :type :broker/cancel-confirmed))))
+                                                        :type :broker/cancel-confirmed
+                                                        :date (or (:date action) (t/inst))))))
              (do
                (log {:paper/cancel-reject (str "cancel-rejected, unknown order-id " order-id)})
                (m/? (push-update settings push (assoc action
                                                       :type :broker/cancel-rejected
+                                                      :date (or (:date action) (t/inst))
                                                       :message "unknown order")))))
 
            :trader/modify-order
@@ -157,6 +159,7 @@
                                      :account/id (:account/id action)
                                      :order-id order-id
                                      :asset (or (:asset action) (:asset order-details))
+                                     :date (or (:date action) (t/inst))
                                      :message "modify accepted"}
                               (some? (:qty action)) (assoc :qty (:qty action))
                               (some? (:limit action)) (assoc :limit (:limit action)))]
@@ -166,6 +169,7 @@
                (log {:paper/modify-reject (str "modify-rejected, unknown order-id " order-id)})
                (m/? (push-update settings push (assoc action
                                                       :type :broker/modify-rejected
+                                                      :date (or (:date action) (t/inst))
                                                       :message "unknown order")))))
 
            ; else

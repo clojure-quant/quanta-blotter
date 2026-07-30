@@ -35,15 +35,16 @@
   {:order/id 4 :order/account-id 2 :order/asset "ETHUSDT" :order/side :sell
    :order/type :limit :order/status :working :order/qty 0.001
    :order/qty-filled 0.0 :order/qty-working 0.001 :order/avg-price nil
-   :order/date (t/instant) :order/history []})
+   :order/date (t/inst) :order/history []})
 
 (def demo-fill
   {:fill/id "m-9By0" :fill/order-id 4 :fill/account-id 2 :fill/asset "ETHUSDT"
-   :fill/side :sell :fill/qty 0.001 :fill/price 100.0 :fill/date (t/instant)})
+   :fill/side :sell :fill/qty 0.001 :fill/price 100.0 :fill/date (t/inst)})
 
 (def demo-position
   {:position/account 2 :position/asset "ETHUSDT" :position/side :short
-   :position/open true :position/qty-open 0.001 :position/qty 0.001
+   :position/qty-entry 0.001 :position/qty-exit 0.0
+   :position/qty-open 0.001 :position/position-id "position-1" :position/hedge false
    :position/average-entry-price 100.0 :position/realized-pl 0.0})
 
 (deftest creates-db-on-disk-and-persists
@@ -51,7 +52,7 @@
         state (db/new-state)]
     (testing "the db directory is created on disk"
       (is (.exists (io/file db-path))))
-    (db/process conn state [:msg demo-msg
+    (db/persist-block conn state [:msg demo-msg
                             :order demo-order
                             :fill demo-fill
                             :position demo-position])
@@ -65,7 +66,7 @@
 (deftest data-survives-reconnect
   (let [conn (datahike/db-start {:schema db/schema :db-path db-path})
         state (db/new-state)]
-    (db/process conn state [:order demo-order])
+    (db/persist-block conn state [:order demo-order])
     (datahike/db-stop conn)
     (testing "reconnecting to the existing on-disk db sees the data"
       (let [conn (datahike/db-start {:schema db/schema :db-path db-path})]

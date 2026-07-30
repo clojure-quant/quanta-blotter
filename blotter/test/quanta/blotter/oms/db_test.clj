@@ -16,29 +16,30 @@
 (def demo-order
   {:order/id 4 :order/account-id 2 :order/asset "ETHUSDT" :order/side :sell
    :order/type :limit :order/status :working :order/qty 0.001M :order/qty-filled 0.0M
-   :order/qty-working 0.001M :order/avg-price nil :order/date (t/instant)
+   :order/qty-working 0.001M :order/avg-price nil :order/date (t/inst)
    :order/history []})
 
 (def demo-order-update
   {:order/id 4 :order/account-id 2 :order/asset "ETHUSDT" :order/side :sell
    :order/type :limit :order/status :filled :order/qty 0.001M :order/qty-filled 0.001M
-   :order/qty-working 0.0M :order/avg-price 100.0M :order/date (t/instant)
+   :order/qty-working 0.0M :order/avg-price 100.0M :order/date (t/inst)
    :order/history []})
 
 (def demo-fill
   {:fill/id "m-9By0" :fill/order-id 4 :fill/account-id 2 :fill/asset "ETHUSDT"
-   :fill/side :sell :fill/qty 0.001M :fill/price 100.0M :fill/date (t/instant)})
+   :fill/side :sell :fill/qty 0.001M :fill/price 100.0M :fill/date (t/inst)})
 
 (def demo-position
   {:position/account 2 :position/asset "ETHUSDT" :position/side :short
-   :position/open true :position/qty-open 0.001M :position/qty 0.001M
+   :position/qty-entry 0.001M :position/qty-exit 0M
+   :position/qty-open 0.001M :position/position-id "position-1" :position/hedge false
    :position/average-entry-price 100.0M :position/realized-pl 0.0M
    :position/avg-exit-price nil})
 
 (deftest process-stores-all-kinds
   (let [conn (fresh-db)
         state (db/new-state)]
-    (db/process conn state [:msg demo-msg
+    (db/persist-block conn state [:msg demo-msg
                             :order demo-order
                             :fill demo-fill
                             :position demo-position])
@@ -63,27 +64,37 @@
       (let [positions (db/query-positions conn)]
         (is (= 1 (count positions)))
         (is (= :short (:position/side (first positions))))
-        (is (true? (:position/open (first positions))))))
+        (is (pos? (:position/qty-open (first positions))))))
     (datahike/db-stop conn)))
 
 (deftest order-update-reuses-db-id
   (let [conn (fresh-db)
         state (db/new-state)]
-    (db/process conn state [:order demo-order])
+    (db/persist-block conn state [:order demo-order])
     (let [eid-after-create (get-in @state [:order-id->eid "4"])]
-      (db/process conn state [:order demo-order-update])
+      (db/persist-block conn state [:order demo-order-update])
       (testing "same :db/id reused for the update"
         (is (= eid-after-create (get-in @state [:order-id->eid "4"])))
         (is (= 1 (count (db/query-orders conn))) "no duplicate order entity")
         (is (= :filled (:order/status (first (db/query-orders conn)))))))
     (datahike/db-stop conn)))
 
-(deftest instant-date-coerced-to-date
-  (testing "a java.time.Instant :date is coerced to java.util.Date and persisted"
+(deftest message-date-persisted-as-date
+  (testing "a java.util.Date :date is persisted as java.util.Date"
     (let [conn (fresh-db)
           state (db/new-state)
-          msg (assoc demo-msg :date (t/instant))]
-      (db/process conn state [:msg msg])
+          msg (assoc demo-msg :date (t/inst))]
+      (db/persist-block conn state [:msg msg])
+      (let [stored (:message/date (first (db/query-messages conn)))]
+        (is (instance? java.util.Date stored)))
+      (datahike/db-stop conn))))
+
+(deftest message-date-fallback-when-missing
+  (testing "missing channel :date falls back to persist-time java.util.Date"
+    (let [conn (fresh-db)
+          state (db/new-state)
+          msg (dissoc demo-msg :date)]
+      (db/persist-block conn state [:msg msg])
       (let [stored (:message/date (first (db/query-messages conn)))]
         (is (instance? java.util.Date stored)))
       (datahike/db-stop conn))))
@@ -91,16 +102,18 @@
 (deftest fill-stored-only-once
   (let [conn (fresh-db)
         state (db/new-state)]
-    (db/process conn state [:fill demo-fill])
-    (db/process conn state [:fill demo-fill])
+    (db/persist-block conn state [:fill demo-fill])
+    (db/persist-block conn state [:fill demo-fill])
     (is (= 1 (count (db/query-fills conn))) "duplicate fill ignored")
     (datahike/db-stop conn)))
 
 (deftest order-history-stored-as-string
   (let [conn (fresh-db)
         state (db/new-state)
-        order (assoc demo-order :order/history [{:type :trader/new-order :order-id 4}])]
-    (db/process conn state [:order order])
+        order (assoc demo-order :order/history [{:type :trader/new-order
+                                                 :date #inst "2026-06-01T20:10:07.740Z"
+                                                 :order-id 4}])]
+    (db/persist-block conn state [:order order])
     (let [stored (:order/history (first (db/query-orders conn)))]
       (is (string? stored))
       (is (vector? (read-string stored))))
@@ -110,8 +123,45 @@
   (let [conn (fresh-db)
         state (db/new-state)
         order (assoc demo-order :order/campaign "fx-q2" :order/label :hedge)]
-    (db/process conn state [:order order])
+    (db/persist-block conn state [:order order])
     (let [stored (first (db/query-orders conn))]
       (is (= "fx-q2" (:order/campaign stored)))
       (is (= :hedge (:order/label stored))))
+    (datahike/db-stop conn)))
+
+(def closed-order
+  {:order/id 5 :order/account-id 2 :order/asset "BTCUSDT" :order/side :buy
+   :order/type :market :order/status :filled :order/qty 1.0M :order/qty-filled 1.0M
+   :order/qty-working 0.0M :order/avg-price 100.0M :order/date (t/inst)
+   :order/history []})
+
+(def closed-position
+  {:position/account 1 :position/asset "BTCUSDT" :position/side :long
+   :position/qty-entry 1.0M :position/qty-exit 1.0M
+   :position/qty-open 0.0M :position/position-id "position-2" :position/hedge false
+   :position/average-entry-price 100.0M :position/realized-pl 10.0M
+   :position/avg-exit-price 110.0M})
+
+(deftest query-open-orders-and-open-positions
+  (let [conn (fresh-db)
+        state (db/new-state)]
+    (db/persist-block conn state [:order demo-order
+                            :order closed-order
+                            :position demo-position
+                            :position closed-position])
+    (testing "query-open-orders returns only :working orders"
+      (let [open (db/query-open-orders conn)]
+        (is (= 1 (count open)))
+        (is (= #{"4"} (set (map :order/id open))))
+        (is (every? #(= :working (:order/status %)) open))))
+    (testing "query-orders still returns all orders"
+      (is (= 2 (count (db/query-orders conn)))))
+    (testing "query-open-positions returns only open positions"
+      (let [open (db/query-open-positions conn)]
+        (is (= 1 (count open)))
+        (is (= #{[2 "ETHUSDT"]}
+               (set (map (juxt :position/account :position/asset) open))))
+        (is (every? #(pos? (:position/qty-open %)) open))))
+    (testing "query-positions still returns all positions"
+      (is (= 2 (count (db/query-positions conn)))))
     (datahike/db-stop conn)))

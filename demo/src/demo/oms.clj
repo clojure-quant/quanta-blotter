@@ -6,6 +6,7 @@
    ; demo order flow
    [quanta.blotter.util :refer [push-flow-to-rdv]]
    [demo.util.orderflow-simulated :refer [demo-order-action-flow]]
+   [quanta.blotter.oms.portfolio :as portfolio]
    [quanta.blotter.oms.report.text-logger :refer [start-trading-state-logger!]]
    ; persistence
    [quanta.blotter.oms.db :as db]
@@ -24,12 +25,18 @@ oms
 
 (add-edn-accounts (:account-manager oms) "demo-accounts.edn")
 
-(def dispose-wo-op-logger (start-trading-state-logger! (:trading-state oms) "log/oms-wo-op.txt" 15000 false))
-
 ;; persistence: open the datahike trade-db and stream all OMS flows into it.
 (def trade-db (datahike/db-start {:schema db/schema :db-path "trade-db"}))
 
+(def portfolio (portfolio/portfolio-create (:combined-flow oms) trade-db))
+
+(def dispose-wo-op-logger (start-trading-state-logger! portfolio "log/oms-wo-op.txt" 15000 false))
+
+(def oms (assoc oms :portfolio portfolio))
+
 (def db-transactor (db-transactor/start-db-transactor oms trade-db))
+
+(portfolio/portfolio-start! portfolio)
 
 (def dispose-orderflow-simulated
   (push-flow-to-rdv (get-in oms [:internal :order-rdv]) demo-order-action-flow))
@@ -75,6 +82,7 @@ oms
 
   ;; stop persistence + close the db
   (db-transactor/stop-db-transactor db-transactor)
+  (portfolio/portfolio-stop! portfolio)
   (datahike/db-stop trade-db)
   ;
   )

@@ -19,7 +19,8 @@
    :side :buy
    :order-type :limit
    :limit 100.0M
-   :qty 0.001M})
+   :qty 0.001M
+   :date (t/inst)})
 
 (defn- bad-order [base]
   (dissoc base :qty))
@@ -42,7 +43,7 @@
                                            {:asset "BTCUSDT"
                                             :bid 100.0M
                                             :ask 100.01M
-                                            :ts (t/instant)}))))]
+                                            :ts (t/inst)}))))]
     (let [tx-file (temp-file "oms-validation-tx-")
           oms (create-order-manager {:transaction-log-file tx-file
                                      :validate? true
@@ -50,7 +51,7 @@
                                      :ctx {:quote-manager ::test-quote-manager}})
           combined-events (atom [])]
       (try
-        (start-order-manager! oms) ; returns oms with :trading-state
+        (start-order-manager! oms)
         (start-combined-collector! oms combined-events)
         (add-account (:account-manager oms)
                      {:account/id account-id

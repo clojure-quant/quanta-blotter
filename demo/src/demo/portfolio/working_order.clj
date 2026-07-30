@@ -1,10 +1,9 @@
-(ns demo.backoffice.working-order
+(ns demo.portfolio.working-order
   (:require
    [clojure.pprint :refer [print-table]]
    [ednx.edn :refer [slurp-edn]]
    [ednx.tick.edn :refer [add-tick-edn-handlers!]]
-   [missionary.core :as m]
-   [quanta.blotter.oms.flow.working-orders :as wo]))
+   [quanta.blotter.oms.portfolio :as portfolio]))
 
 (add-tick-edn-handlers!)
 
@@ -39,26 +38,23 @@
 
 (defn run-demo!
   "Reads channel-paper.edn; after each channel message prints a table of all orders."
-  []
-  (let [channel-flow (m/seed (load-channel-paper))
-        order-change-flow (wo/order-change-flow channel-flow)
+  [_]
+  (let [msgs (load-channel-paper)
         closed-orders (atom [])]
-    (m/? (m/reduce
-          (fn [orders-by-id order]
-            (let [order-id (:order/id order)
-                  orders-by-id (if (contains? wo/closed-statuses (:order/status order))
-                                 (do (swap! closed-orders conj order)
-                                     (println "Closed Orders:")
-                                     (print-table table-cols (->> @closed-orders (map order->row) (sort-by :order-id)))
-                                     (println "\r\n")
-                                     (dissoc orders-by-id order-id))
-                                 (assoc orders-by-id order-id order))]
-              ;(println "\r\n \r\n" " " order)
-
-              (print-orders-table! orders-by-id)
-              orders-by-id))
-          {}
-          order-change-flow))))
+    (reduce
+     (fn [state msg]
+       (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
+         (when-let [order (:order-closed out-msg)]
+           (swap! closed-orders conj order)
+           (println "Closed Orders:")
+           (print-table table-cols (->> @closed-orders (map order->row) (sort-by :order-id)))
+           (println "\r\n"))
+         (when (contains? out-msg :working-order)
+           (print-orders-table! (:working-order out-msg)))
+         state))
+     (portfolio/empty-state)
+     msgs)
+    nil))
 
 (comment
   (run-demo!))

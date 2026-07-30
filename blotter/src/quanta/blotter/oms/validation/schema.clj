@@ -1,14 +1,7 @@
 (ns quanta.blotter.oms.validation.schema
   (:require
    [malli.core :as m]
-   [malli.registry :as mr]
-   [malli.error :as me]
-   [malli.experimental.time :as time]))
-
-(def r
-  (mr/composite-registry
-   m/default-registry
-   (mr/registry (time/schemas))))
+   [malli.error :as me]))
 
 (def above-zero 0.0000000000000001)
 
@@ -38,7 +31,8 @@
   [:and Decimal [:fn {:error/message "must be greater than zero"}
                  #(pos? (double %))]])
 
-(def Instant :time/instant)
+(def Date [:fn {:error/message "must be a java.util.Date"}
+           #(instance? java.util.Date %)])
 
 (def TraderNewOrder
   [:and
@@ -50,6 +44,7 @@
     [:side Side]
     [:qty PositiveDecimal]
     [:order-type OrderType]
+    [:date Date]
     [:limit {:optional true} PositiveDecimal]
     [:campaign {:optional true} :string]
     [:label {:optional true} :keyword]
@@ -62,7 +57,8 @@
    [:type [:= :trader/cancel-order]]
    [:account/id AccountId]
    [:order-id OrderId]
-   [:asset :string]])
+   [:asset :string]
+   [:date Date]])
 
 (def TraderModifyOrder
   [:and
@@ -71,6 +67,7 @@
     [:account/id AccountId]
     [:order-id OrderId]
     [:asset :string]
+    [:date Date]
     ; [:side {:optional true} Side] ; side may not be modified
     [:qty {:optional true} PositiveDecimal]
     ; [:order-type {:optional true} OrderType] ; order-type may not be modified
@@ -87,7 +84,7 @@
    [:account/id AccountId]
    [:order-id OrderId]
    [:fill-id FillId]
-   [:date Instant]
+   [:date Date]
    [:asset :string]
    [:qty PositiveDecimal]
    [:side Side]
@@ -107,7 +104,7 @@
     [:limit {:optional true} PositiveDecimal]
     [:campaign {:optional true} :string]
     [:label {:optional true} :keyword]
-    [:date Instant]
+    [:date Date]
     [:message {:optional true} :string]]
    [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}
     limit-market-exclusive?]])
@@ -117,7 +114,7 @@
    [:type [:= :broker/order-rejected]]
    [:account/id AccountId]
    [:order-id OrderId]
-   [:date {:optional true} Instant]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerOrderupdateSchemaError
@@ -125,7 +122,7 @@
    [:type [:= :broker/orderupdate-schema-error]]
    [:account/id AccountId]
    [:order-id OrderId]
-   [:date {:optional true} Instant]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerCancelConfirmed
@@ -133,6 +130,7 @@
    [:type [:= :broker/cancel-confirmed]]
    [:account/id AccountId]
    [:order-id OrderId]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerCancelRejected
@@ -140,6 +138,7 @@
    [:type [:= :broker/cancel-rejected]]
    [:account/id AccountId]
    [:order-id OrderId]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerOrderModified
@@ -148,6 +147,7 @@
    [:account/id AccountId]
    [:order-id OrderId]
    [:asset :string]
+   [:date Date]
    [:qty {:optional true} PositiveDecimal]
    [:limit {:optional true} PositiveDecimal]
    [:message {:optional true} :string]])
@@ -157,13 +157,14 @@
    [:type [:= :broker/modify-rejected]]
    [:account/id AccountId]
    [:order-id OrderId]
+   [:date Date]
    [:message {:optional true} :string]])
 
 (def BrokerOrderCanceled
   [:map
    [:type [:= :broker/order-canceled]]
    [:order-id OrderId]
-   [:date Instant]
+   [:date Date]
    [:account/id {:optional true} AccountId]])
 
 (def Message
@@ -184,10 +185,10 @@
    [:broker/order-canceled BrokerOrderCanceled]])
 
 (defn validate-message [message]
-  (m/validate Message message {:registry r}))
+  (m/validate Message message))
 
 (defn explain-message [message]
-  (m/explain Message message {:registry r}))
+  (m/explain Message message))
 
 (defn human-error-message [message]
   (->> (explain-message message)
@@ -201,10 +202,10 @@
    ])
 
 (defn validate-trader-message [message]
-  (m/validate TraderMessage message {:registry r}))
+  (m/validate TraderMessage message))
 
 (defn explain-trader-message [message]
-  (m/explain TraderMessage message {:registry r}))
+  (m/explain TraderMessage message))
 
 (defn human-error-trader-message [message]
   (->> (explain-trader-message message)

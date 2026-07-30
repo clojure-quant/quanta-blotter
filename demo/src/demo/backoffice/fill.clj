@@ -1,11 +1,10 @@
-(ns demo.backoffice
+(ns demo.backoffice.fill
   "Read and print trades from the datahike trade-db, then derive positions
-   via the open-position flow."
+   via the portfolio reducer."
   (:require
    [datahike.api :as d]
-   [missionary.core :as m]
    [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.flow.open-positions :as op]
+   [quanta.blotter.oms.portfolio.open-position :as open-position]
    [quanta.blotter.oms.print :as print]
    [quanta.util.datahike :as datahike]
    [tick.core :as t]))
@@ -32,18 +31,20 @@
        @conn (t/inst since) account-id asset))
 
 (defn- final-open-positions
-  [fills opts]
-  (let [position-change-flow (op/position-change-flow (m/seed fills) opts)
-        open-position-list-flow (op/open-position-list-flow position-change-flow)]
-    (m/? (m/reduce (fn [_ open-positions] open-positions)
-                   nil
-                   open-position-list-flow))))
+  [fills _opts]
+  (let [positions (reduce
+                   (fn [positions fill]
+                     (:open-position
+                      (open-position/process-trade positions fill)))
+                   {}
+                   fills)]
+    (vec (vals positions))))
 
 (defn- print-open-positions!
   [fills opts]
   (println
    (print/timestamped-table
-    "open positions (open-position-list flow)"
+    "open positions (portfolio)"
     (print/open-positions-table (or (final-open-positions fills opts) [])))))
 
 (defn print-trades!

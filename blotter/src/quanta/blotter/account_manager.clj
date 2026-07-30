@@ -4,6 +4,7 @@
    [clojure.edn :as edn]
    [datahike.api :as d]
    [missionary.core :as m]
+   [tick.core :as t]
    [quanta.missionary.logger :refer [create-logger log stop-logger]]
    [quanta.blotter.protocol :as p]
    [quanta.blotter.util-rdv :refer [create-rdv]] 
@@ -66,7 +67,11 @@
 (defn read-account-orderupdate [account]
   (m/sp
    (let [data-in (m/? (:account-orderupdate-rdf account))]
-     (assoc data-in :account/id (:account/id account)))))
+     (assoc data-in
+            :account/id (:account/id account)
+            :date (if-let [date (:date data-in)]
+                    (t/inst date)
+                    (t/inst))))))
 
 (defn consolidate-accounts-orderupdate [state]
   (m/sp

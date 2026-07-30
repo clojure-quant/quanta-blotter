@@ -35,7 +35,7 @@
 (def ctx {:quote-manager ::test-qm})
 
 (defn- q
-  ([bid] (q bid (t/instant)))
+  ([bid] (q bid (t/inst)))
   ([bid ts]
    {:asset "BTCUSDT" :bid bid :ask (+ bid 0.01M) :ts ts}))
 
@@ -116,7 +116,7 @@
     (is (= 100.5M (:price (first fills))))))
 
 (deftest guaranteed-partial-fills
-  (let [t0 (t/instant)
+  (let [t0 (t/inst)
         t1 (t/>> t0 (t/new-duration 1 :seconds))
         t2 (t/>> t0 (t/new-duration 2 :seconds))
         emissions (collect {:fill-probability 100 :ms-between-fills 0 :fill-qty-prct [50 25 25]}
@@ -130,7 +130,7 @@
     (is (apply distinct? (map :fill-id fills)) "each fill has a unique id")))
 
 (deftest ms-between-fills-blocks-until-ts-elapsed
-  (let [t0 (t/instant)
+  (let [t0 (t/inst)
         t1 (t/>> t0 (t/new-duration 1 :seconds))
         t5 (t/>> t0 (t/new-duration 5 :seconds))
         emissions (collect {:fill-probability 100 :ms-between-fills 5000 :fill-qty-prct [50 50]}

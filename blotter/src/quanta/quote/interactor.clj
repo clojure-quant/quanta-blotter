@@ -20,7 +20,7 @@
   (m/ap
    (let [assets-old (atom #{})
          assets-new (m/?> 1 subscription-f)
-         _  (session-log {:date (t/instant) :account (:account/id account)
+         _  (session-log {:date (t/inst) :account (:account/id account)
                           :type :subscriptions :assets assets-new })
          {:keys [sub unsub]} (sub-unsub-sets @assets-old assets-new)]
      (reset! assets-old assets-new)

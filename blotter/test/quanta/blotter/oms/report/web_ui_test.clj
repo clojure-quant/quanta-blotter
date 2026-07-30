@@ -3,37 +3,43 @@
    [clojure.test :refer :all]
    [missionary.core :as m]
    [quanta.missionary.time-flow :refer [create-time-flow]]
-   [quanta.blotter.oms.flow.trading-state :as trading-state]
+   [quanta.blotter.oms.portfolio :as portfolio]
    [quanta.blotter.oms.report.web-ui :as tsc]
    [quanta.blotter.oms.print :as print]))
 
 (def channel-paper-time-flow
   (create-time-flow
-   [1 {:type :trader/new-order, :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
-    1 {:date #inst "2026-06-01T20:10:07.740265349Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
-    1 {:type :trader/new-order, :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
-    1 {:date #inst "2026-06-01T20:10:09.740517009Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+   [1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:07.740Z", :account/id 1, :order-id 1, :asset "BTCUSDT", :side :buy, :order-type :limit, :limit 100.0, :qty 0.001}
+    1 {:date #inst "2026-06-01T20:10:07.740Z", :order-type :limit, :limit 100.0, :account/id 1, :type :broker/order-confirmed, :order-id 1, :side :buy, :qty 0.001, :asset "BTCUSDT"}
+    1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:09.740Z", :account/id 2, :order-id 2, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    1 {:date #inst "2026-06-01T20:10:09.740Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 2, :side :sell, :qty 0.001, :asset "ETHUSDT"}
     1 {:type :trader/cancel-order, :account/id 2, :order-id 2, :asset "ETHUSDT"}
     1 {:type :broker/cancel-confirmed, :account/id 2, :order-id 2}
-    1 {:order-id 2, :date #inst "2026-06-01T20:10:12.740853585Z", :type :broker/order-canceled}
-    1 {:type :trader/new-order, :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
-    1 {:date #inst "2026-06-01T20:10:17.741032902Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
-    1 {:type :trader/new-order, :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
-    1 {:date #inst "2026-06-01T20:10:24.741005992Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
-    1 {:type :broker/order-filled, :account/id 2, :order-id 4, :fill-id "m-9By0", :date #inst "2026-06-01T20:10:29.741914267Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 100.0}
-    1 {:type :broker/order-filled, :account/id 2, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742482333Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
-    1 {:type :broker/order-filled, :account/id 1, :order-id 1, :fill-id "KKEY9v", :date #inst "2026-06-01T20:10:52.742779027Z", :asset "BTCUSDT", :qty 0.001, :side :buy, :price 10000.0}]))
+    1 {:order-id 2, :date #inst "2026-06-01T20:10:12.740Z", :type :broker/order-canceled}
+    1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:17.741Z", :account/id 2, :order-id 3, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    1 {:date #inst "2026-06-01T20:10:17.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 3, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+    1 {:type :trader/new-order, :date #inst "2026-06-01T20:10:24.741Z", :account/id 2, :order-id 4, :asset "ETHUSDT", :side :sell, :order-type :limit, :limit 100.0, :qty 0.001}
+    1 {:date #inst "2026-06-01T20:10:24.741Z", :order-type :limit, :limit 100.0, :account/id 2, :type :broker/order-confirmed, :order-id 4, :side :sell, :qty 0.001, :asset "ETHUSDT"}
+    1 {:type :broker/order-filled, :account/id 2, :order-id 4, :fill-id "m-9By0", :date #inst "2026-06-01T20:10:29.741Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 100.0}
+    1 {:type :broker/order-filled, :account/id 2, :order-id 3, :fill-id "7N-G_C", :date #inst "2026-06-01T20:10:37.742Z", :asset "ETHUSDT", :qty 0.001, :side :sell, :price 101.0}
+    1 {:type :broker/order-filled, :account/id 1, :order-id 1, :fill-id "KKEY9v", :date #inst "2026-06-01T20:10:52.742Z", :asset "BTCUSDT", :qty 0.001, :side :buy, :price 10000.0}]))
 
 (def recent-reject-order-time-flow
   (create-time-flow
-   [1 {:type :trader/new-order :account/id 1 :order-id 1 :asset "BTCUSDT"
+   [1 {:type :trader/new-order :date #inst "2026-06-01T20:10:07.740Z" :account/id 1 :order-id 1 :asset "BTCUSDT"
        :side :buy :order-type :limit :limit 100.0 :qty 0.001}
     1 {:type :broker/order-rejected :account/id 1 :order-id 1 :message "immediate"}]))
 
 (def recent-close-position-time-flow
   (create-time-flow
-   [1 {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f1"
+   [1 {:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
+       :account/id 1 :order-id 1 :asset "BTCUSDT"
+       :side :buy :order-type :market :qty 100.0}
+    1 {:type :broker/order-filled :account/id 1 :order-id 1 :fill-id "f1"
        :asset "BTCUSDT" :side :buy :qty 100.0 :price 10.0}
+    1 {:type :trader/new-order :date #inst "2026-06-01T12:00:01.000Z"
+       :account/id 1 :order-id 2 :asset "BTCUSDT"
+       :side :sell :order-type :market :qty 100.0}
     1 {:type :broker/order-filled :account/id 1 :order-id 2 :fill-id "f2"
        :asset "BTCUSDT" :side :sell :qty 100.0 :price 11.0}]))
 
@@ -65,23 +71,26 @@
 
 (defn- with-recent-consumer! [time-flow recent-ms f]
   (let [channel-flow (m/stream time-flow)
-        ts (trading-state/create-trading-state! channel-flow)
-        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! ts recent-ms)
+        p (portfolio/portfolio-create channel-flow)
+        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! p recent-ms)
         acc (atom [])
-        dispose (start-collecting! snapshot-flow acc)]
+        dispose (start-collecting! snapshot-flow acc)
+        _ (portfolio/portfolio-start! p)]
     (try
       (f trading-state-a)
       (finally
-        (stop-collecting! dispose)))))
+        (stop-collecting! dispose)
+        (portfolio/portfolio-stop! p)))))
 
 (deftest two-snapshot-consumers-see-same-trading-state
   (let [channel-flow (m/stream channel-paper-time-flow)
-        ts (trading-state/create-trading-state! channel-flow)
-        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! ts 0)
+        p (portfolio/portfolio-create channel-flow)
+        {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! p 0)
         acc1 (atom [])
         acc2 (atom [])
         dispose1 (start-collecting! snapshot-flow acc1)
-        dispose2 (start-collecting! snapshot-flow acc2)]
+        dispose2 (start-collecting! snapshot-flow acc2)
+        _ (portfolio/portfolio-start! p)]
     (try
       ;; 14 messages × 1ms + margin for positions and 250ms snapshot ticks
       (m/? (m/sleep 500))
@@ -104,7 +113,8 @@
         (println (print/open-positions-table (:open-positions final-a))))
       (finally
         (stop-collecting! dispose1)
-        (stop-collecting! dispose2)))))
+        (stop-collecting! dispose2)
+        (portfolio/portfolio-stop! p)))))
 
 (deftest recent-ms-keeps-rejected-order-visible
   (with-recent-consumer! recent-reject-order-time-flow 2000
@@ -123,7 +133,7 @@
       (m/? (m/sleep (+ event-settle-ms visible-after-ms)))
       (let [position (find-position (:open-positions @trading-state-a) 1 "BTCUSDT")]
         (is (some? position) "closed position should still appear in open-positions")
-        (is (false? (:position/open position))))
+        (is (zero? (:position/qty-open position))))
       (m/? (m/sleep (- gone-after-ms visible-after-ms)))
       (is (nil? (find-position (:open-positions @trading-state-a) 1 "BTCUSDT"))
           "closed position should be gone after recent-ms window"))))
