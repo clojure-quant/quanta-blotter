@@ -306,6 +306,25 @@
     (is (not (s/validate-message (dissoc message :req-id))))
     (is (not (s/validate-message (assoc message :positions '()))))))
 
+(deftest broker-working-orders-test
+  (let [message {:type :broker/working-orders
+                 :account/id 1000
+                 :req-id "orders-1"
+                 :date (t/inst)
+                 :orders
+                 [{:order/id "fix-1"
+                   :order/account-id 1000
+                   :order/asset "EURUSD"
+                   :order/side :buy
+                   :order/type :limit
+                   :order/status :working
+                   :order/qty 1000M}]}]
+    (is (s/validate-message message))
+    (is (s/validate-message (assoc message :orders [])))
+    (is (s/validate-message (assoc message :orders [nil 1 "order"])))
+    (is (not (s/validate-message (dissoc message :req-id))))
+    (is (not (s/validate-message (assoc message :orders '()))))))
+
 (deftest validate-trader-message-test
   (testing "valid new-orders"
     (doseq [msg [{:type :trader/new-order

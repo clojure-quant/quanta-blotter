@@ -100,6 +100,14 @@
    [:date Date]
    [:positions [:vector :any]]])
 
+(def BrokerWorkingOrders
+  [:map
+   [:type [:= :broker/working-orders]]
+   [:account/id AccountId]
+   [:req-id OrderId]
+   [:date Date]
+   [:orders [:vector :any]]])
+
 (def BrokerOrderFilled
   [:map
    [:type [:= :broker/order-filled]]
@@ -207,7 +215,8 @@
    [:broker/order-modified BrokerOrderModified]
    [:broker/modify-rejected BrokerModifyRejected]
    [:broker/order-canceled BrokerOrderCanceled]
-   [:broker/open-positions BrokerOpenPositions]])
+   [:broker/open-positions BrokerOpenPositions]
+   [:broker/working-orders BrokerWorkingOrders]])
 
 (defn validate-message [message]
   (m/validate Message message))
