@@ -5,9 +5,15 @@
    [quanta.missionary.logger :as logger]
    [quanta.blotter.oms.print :as print]))
 
-(defn- print-state [{:keys [trader trade order-closed position-closed working-order open-position] :as _state}]
+(defn- print-state [{:keys [schema-error trader trade order-closed position-closed
+                            working-order open-position]
+                     :as _state}]
   (let [opts {:max-width 300}
         s (str "\r\n trading-state as of " (print/format-ts-ms (t/inst)) "\r\n")
+
+        s (if (empty? schema-error)
+            s
+            (str s "\r\nschema errors:\r\n" (print/schema-errors-table schema-error opts)))
 
         s (if (empty? trader)
             s
@@ -35,24 +41,28 @@
     s))
 
 (defn- acc-out-msg [state out-msg]
-  (cond-> state
-    (contains? out-msg :trader)
-    (update :trader conj (:trader out-msg))
+  (let [msg (:msg out-msg)]
+    (cond-> state
+      (= :broker/orderupdate-schema-error (:type msg))
+      (update :schema-error conj msg)
 
-    (contains? out-msg :trade)
-    (update :trade conj (:trade out-msg))
+      (contains? out-msg :trader)
+      (update :trader conj (:trader out-msg))
 
-    (contains? out-msg :order-closed)
-    (update :order-closed conj (:order-closed out-msg))
+      (contains? out-msg :trade)
+      (update :trade conj (:trade out-msg))
 
-    (contains? out-msg :position-closed)
-    (update :position-closed conj (:position-closed out-msg))
+      (contains? out-msg :order-closed)
+      (update :order-closed conj (:order-closed out-msg))
 
-    (contains? out-msg :working-order)
-    (assoc :working-order (:working-order out-msg))
+      (contains? out-msg :position-closed)
+      (update :position-closed conj (:position-closed out-msg))
 
-    (contains? out-msg :open-position)
-    (assoc :open-position (:open-position out-msg))))
+      (contains? out-msg :working-order)
+      (assoc :working-order (:working-order out-msg))
+
+      (contains? out-msg :open-position)
+      (assoc :open-position (:open-position out-msg)))))
 
 (defn portfolio-print-flow
   "Batch portfolio :out-flow events every `interval-ms` and pretty-print."
@@ -64,7 +74,7 @@
                      (m/? (->> (m/ap (m/amb= (m/?> batch)
                                              (m/? (m/sleep interval-ms))))
                                (m/eduction (take-while some?))
-                               (m/reduce acc-out-msg {:trader []
+                               (m/reduce acc-out-msg {:schema-error [] :trader []
                                                       :trade [] :order-closed [] :position-closed []
                                                       :working-order nil :open-position nil})))))]
     (m/ap

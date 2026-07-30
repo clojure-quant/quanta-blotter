@@ -84,6 +84,22 @@
 (defn timestamped-table [label table-str]
   (str (format-ts-ms (t/inst)) " " label "\r\n" table-str))
 
+(defn schema-errors-table
+  ([schema-errors]
+   (schema-errors-table schema-errors {}))
+  ([schema-errors opts]
+   (with-out-str
+     (crockery/print-table
+      (table-opts opts)
+      [{:name :date, :align :left :title "date" :key-fn #(format-ts-ms (:date %))}
+       {:name :account, :title "account" :align :left :key-fn :account/id}
+       {:name :campaign, :title "campaign" :align :left :key-fn :campaign}
+       {:name :label, :title "label" :align :left :key-fn :label}
+       {:name :order-id, :title "order-id" :align :left :key-fn :order-id}
+       {:name :type, :align :left :title "msg-type" :key-fn :type}
+       {:name :message, :align :left :title "message" :key-fn :message}]
+      schema-errors))))
+
 (defn trader-requests-table
   ([trader-requests]
    (trader-requests-table trader-requests {}))
