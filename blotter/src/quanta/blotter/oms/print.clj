@@ -78,7 +78,8 @@
        {:name :avg-entry, :align :right :title "avg-entry" :key-fn :position/average-entry-price}
        {:name :avg-exit, :align :right :title "avg-exit" :key-fn :position/avg-exit-price}
        {:name :realized-pl, :align :right :title "realized-pl" :key-fn :position/realized-pl}
-       {:name :date-close, :align :left :title "date-close" :key-fn :position/date-close}]
+       {:name :date-close, :align :left :title "date-close" :key-fn :position/date-close}
+       {:name :position-id, :align :left :title "position-id" :key-fn :position/position-id}]
       open-positions))))
 
 (defn timestamped-table [label table-str]

@@ -33,6 +33,7 @@
                        :order/account-id 2000
                        :order/asset "GBPUSD")
         position-1 {:position/account 1000
+                    :position/position-id "position-1"
                     :position/asset "EURUSD"
                     :position/side :long
                     :position/qty-entry 1000M
@@ -73,4 +74,6 @@
     (is (str/includes? output "order-1"))
     (is (str/includes? output "order-2"))
     (is (str/includes? output "EURUSD"))
-    (is (str/includes? output "GBPUSD"))))
+    (is (str/includes? output "GBPUSD"))
+    (is (str/includes? output "position-id"))
+    (is (str/includes? output "position-1"))))
