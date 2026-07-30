@@ -78,6 +78,20 @@
    [:fn {:error/message "limit orders require :limit; market orders must not include :limit"}
     limit-market-exclusive?]])
 
+(def TraderOpenPositions
+  [:map
+   [:type [:= :trader/open-positions]]
+   [:account/id AccountId]
+   [:req-id OrderId]
+   [:date Date]])
+
+(def TraderWorkingOrders
+  [:map
+   [:type [:= :trader/working-orders]]
+   [:account/id AccountId]
+   [:req-id OrderId]
+   [:date Date]])
+
 (def BrokerOrderFilled
   [:map
    [:type [:= :broker/order-filled]]
@@ -173,6 +187,8 @@
    [:trader/new-order TraderNewOrder]
    [:trader/cancel-order TraderCancelOrder]
    [:trader/modify-order TraderModifyOrder]
+   [:trader/open-positions TraderOpenPositions]
+   [:trader/working-orders TraderWorkingOrders]
    ; broker
    [:broker/order-filled BrokerOrderFilled]
    [:broker/order-confirmed BrokerOrderConfirmed]
@@ -199,6 +215,8 @@
    [:trader/new-order TraderNewOrder]
    [:trader/cancel-order TraderCancelOrder]
    [:trader/modify-order TraderModifyOrder]
+   [:trader/open-positions TraderOpenPositions]
+   [:trader/working-orders TraderWorkingOrders]
    ])
 
 (defn validate-trader-message [message]

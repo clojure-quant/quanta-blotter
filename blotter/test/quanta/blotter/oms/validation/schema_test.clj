@@ -274,6 +274,18 @@
              :account/id 2
              :message "missing order-id"}))))
 
+(deftest trader-account-status-test
+  (doseq [type [:trader/open-positions :trader/working-orders]]
+    (testing (name type)
+      (let [message {:type type
+                     :account/id 1000
+                     :req-id "status-1"
+                     :date (t/inst)}]
+        (is (s/validate-message message))
+        (is (s/validate-trader-message message))
+        (is (not (s/validate-trader-message (dissoc message :req-id))))
+        (is (not (s/validate-trader-message (assoc message :account/id "1000"))))))))
+
 (deftest validate-trader-message-test
   (testing "valid new-orders"
     (doseq [msg [{:type :trader/new-order
