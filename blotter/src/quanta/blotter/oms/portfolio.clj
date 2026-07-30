@@ -61,7 +61,11 @@
 
         ;; trader request
         out (cond-> out
-              (trader/trader? msg) (assoc :trader msg))
+              (trader/trader? msg) (assoc :trader msg)
+              (= :broker/working-orders (:type msg))
+              (assoc :broker/working-orders msg)
+              (= :broker/open-positions (:type msg))
+              (assoc :broker/open-positions msg))
 
         ;; working order (order/orderupdate)
         {:keys [working-order trade] :as out-wo}

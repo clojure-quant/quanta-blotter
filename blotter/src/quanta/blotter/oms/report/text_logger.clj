@@ -5,9 +5,29 @@
    [quanta.missionary.logger :as logger]
    [quanta.blotter.oms.print :as print]))
 
+(defn- print-working-order-snapshots [s snapshots opts]
+  (reduce
+   (fn [s {:keys [account/id orders]}]
+     (if (empty? orders)
+       s
+       (str s "\r\nworking orders account id " id ":\r\n"
+            (print/working-orders-table orders opts))))
+   s
+   snapshots))
+
+(defn- print-open-position-snapshots [s snapshots opts]
+  (reduce
+   (fn [s {:keys [account/id positions]}]
+     (if (empty? positions)
+       s
+       (str s "\r\nopen positions account id " id ":\r\n"
+            (print/open-positions-table positions opts))))
+   s
+   snapshots))
+
 (defn- print-state [{:keys [schema-error trader trade order-closed position-closed
                             working-order open-position]
-                     :as _state}]
+                     :as state}]
   (let [opts {:max-width 300}
         s (str "\r\n trading-state as of " (print/format-ts-ms (t/inst)) "\r\n")
 
@@ -18,6 +38,12 @@
         s (if (empty? trader)
             s
             (str s "\r\ntrader requests:\r\n" (print/trader-requests-table trader opts)))
+
+        s (print-working-order-snapshots
+           s (get state :broker/working-orders) opts)
+
+        s (print-open-position-snapshots
+           s (get state :broker/open-positions) opts)
 
         s (if (empty? trade)
             s
@@ -49,6 +75,12 @@
       (contains? out-msg :trader)
       (update :trader conj (:trader out-msg))
 
+      (contains? out-msg :broker/working-orders)
+      (update :broker/working-orders conj (:broker/working-orders out-msg))
+
+      (contains? out-msg :broker/open-positions)
+      (update :broker/open-positions conj (:broker/open-positions out-msg))
+
       (contains? out-msg :trade)
       (update :trade conj (:trade out-msg))
 
@@ -75,6 +107,8 @@
                                              (m/? (m/sleep interval-ms))))
                                (m/eduction (take-while some?))
                                (m/reduce acc-out-msg {:schema-error [] :trader []
+                                                      :broker/working-orders []
+                                                      :broker/open-positions []
                                                       :trade [] :order-closed [] :position-closed []
                                                       :working-order nil :open-position nil})))))]
     (m/ap
