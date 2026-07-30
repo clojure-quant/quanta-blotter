@@ -178,7 +178,7 @@
     (is (= #{"dtb56s" "67Mmol"} (set (map :fill/order-id fills))))
     (let [pos (get op-dict [1 "EURUSD"])]
       (is (some? pos))
-      (is (true? (:position/open pos)))
+      (is (pos? (:position/qty-open pos)))
       (is (= 1 (:position/account pos)))
       (is (= "EURUSD" (:position/asset pos)))
       (is (== 15000.0M (:position/qty-open pos))))))

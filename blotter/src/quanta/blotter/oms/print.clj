@@ -1,7 +1,7 @@
 (ns quanta.blotter.oms.print
   (:require
-   [tick.core :as t]
-   [crockery.core :as crockery]))
+   [crockery.core :as crockery]
+   [tick.core :as t]))
 
 (def default-table-max-width
   "Avoid crockery terminal-width rebalancing, which can shrink columns below
@@ -38,7 +38,8 @@
        {:name :qty-working, :align :right :title "qty-working" :key-fn :order/qty-working}
        {:name :qty-filled, :align :right :title "qty-filled" :key-fn :order/qty-filled}
        {:name :avg-price, :align :right :title "avg-price" :key-fn :order/avg-price}
-       {:name :text, :align :right :title "text" :key-fn :order/text}]
+       {:name :text, :align :right :title "text" :key-fn :order/text}
+       {:name :position-id, :align :left :title "position-id" :key-fn :order/position-id}]
       working-orders))))
 
 (defn trades-table
@@ -57,7 +58,8 @@
        {:name :side, :align :right :title "side" :key-fn :fill/side}
        {:name :qty, :align :right :title "qty" :key-fn :fill/qty}
        {:name :price, :align :right :title "price" :key-fn :fill/price}
-       {:name :fill-id, :align :right :title "fill-id" :key-fn :fill/id}]
+       {:name :fill-id, :align :right :title "fill-id" :key-fn :fill/id}
+       {:name :position-id, :align :left :title "position-id" :key-fn :fill/position-id}]
       trades))))
 (defn open-positions-table
   ([open-positions]
@@ -70,9 +72,9 @@
        {:name :account, :title "account" :align :left :key-fn :position/account}
        {:name :asset, :align :right :title "asset" :key-fn :position/asset}
        {:name :side, :align :right :title "side" :key-fn :position/side}
-       {:name :open, :align :right :title "open" :key-fn :position/open}
+       {:name :qty-entry, :align :right :title "qty-entry" :key-fn :position/qty-entry}
+       {:name :qty-exit, :align :right :title "qty-exit" :key-fn :position/qty-exit}
        {:name :qty-open, :align :right :title "qty-open" :key-fn :position/qty-open}
-       {:name :qty, :align :right :title "qty-max" :key-fn :position/qty}
        {:name :avg-entry, :align :right :title "avg-entry" :key-fn :position/average-entry-price}
        {:name :avg-exit, :align :right :title "avg-exit" :key-fn :position/avg-exit-price}
        {:name :realized-pl, :align :right :title "realized-pl" :key-fn :position/realized-pl}
@@ -99,5 +101,6 @@
        {:name :side, :align :right :title "side" :key-fn :side}
        {:name :qty, :align :right :title "qty" :key-fn :qty}
        {:name :order-type, :align :right :title "order-type" :key-fn :order-type}
-       {:name :limit, :align :right :title "limit" :key-fn :limit}]
+       {:name :limit, :align :right :title "limit" :key-fn :limit}
+       {:name :position-id, :align :left :title "position-id" :key-fn :position-id}]
       trader-requests))))

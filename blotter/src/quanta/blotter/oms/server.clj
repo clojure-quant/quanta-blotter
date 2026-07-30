@@ -26,13 +26,11 @@
                  calculate-trading-state-trader
                  ns-require
                  web-ui text-logger
-                 position-method
                  ctx]
           :or {validate? true
                tag? true
                db-enabled false
                calculate-trading-state-trader false
-               position-method :fifo
                web-ui {}
                text-logger {}}} config
          {:keys [calculate-enabled history-recent-ms]
@@ -53,8 +51,7 @@
                                       :tag? tag?
                                       :ctx ctx})
            _ (add-enabled-db-accounts (:account-manager oms) trade-db)
-           portfolio (portfolio/portfolio-create trade-db (:combined-flow oms)
-                                                 {:position-method position-method})
+           portfolio (portfolio/portfolio-create (:combined-flow oms) trade-db)
            ;; attach consumers before portfolio-start!
            tsc (when calculate-enabled
                  (tsc/create-trading-state-consumer! portfolio history-recent-ms))

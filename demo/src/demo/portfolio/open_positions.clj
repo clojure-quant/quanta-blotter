@@ -45,23 +45,21 @@
   (println))
 
 (defn run-demo!
-  "Reads channel-paper.edn; after each position change prints all positions.
-  Optional opts e.g. {:position-method :fifo}."
-  [opts]
+  "Reads channel-paper.edn; after each position change prints all positions."
+  [& _]
   (let [msgs (load-channel-paper)
-        closed-positions (atom [])
-        method (or (:position-method opts) (:method opts) :fifo)]
+        closed-positions (atom [])]
     (reduce
      (fn [state msg]
        (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
-         (when-let [p (:position-change out-msg)]
-           (when (false? (:position/open p))
-             (swap! closed-positions conj p))
+         (when-let [closed (:position-closed out-msg)]
+           (swap! closed-positions conj closed))
+         (when (seq (:positions-change out-msg))
            (print-all-tables! (:open-position state) closed-positions))
          state))
-     (portfolio/empty-state {:position-method method})
+     (portfolio/empty-state)
      msgs)
     nil))
 
 (comment
-  (run-demo! {:position-method :fifo}))
+  (run-demo!))

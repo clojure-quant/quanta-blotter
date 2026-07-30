@@ -1,200 +1,148 @@
 (ns quanta.blotter.oms.portfolio.open-position-test
   (:require
-   [clojure.test :refer :all]
-   [quanta.blotter.oms.portfolio :as portfolio]
+   [clojure.test :refer [deftest is]]
    [quanta.blotter.oms.portfolio.open-position :as op]))
 
-(defn- fill [account asset side qty price]
-  {:type :broker/order-filled
-   :account/id account
-   :asset asset
-   :side side
-   :qty qty
-   :price price})
+(defn- trade
+  ([account asset side qty price]
+   (trade account asset side qty price nil))
+  ([account asset side qty price position-id]
+   (cond-> {:fill/account-id account
+            :fill/asset asset
+            :fill/side side
+            :fill/qty qty
+            :fill/price price}
+     position-id (assoc :fill/position-id position-id))))
 
-(defn- new-order-for-fill [order-id msg]
-  {:type :trader/new-order
-   :date (or (:date msg) #inst "2026-06-01T12:00:00.000Z")
-   :account/id (:account/id msg)
-   :order-id order-id
-   :asset (:asset msg)
-   :side (:side msg)
-   :order-type :market
-   :qty (:qty msg)})
+(defn- apply-trades [trades]
+  (reduce
+   (fn [{:keys [open-position]} trade]
+     (op/process-trade open-position trade))
+   {:open-position {}}
+   trades))
 
-(defn- ensure-known-orders [events]
-  (:events
-   (reduce-kv
-    (fn [{:keys [known] :as acc} idx msg]
-      (let [order-id (:order-id msg)]
-        (cond
-          (= :trader/new-order (:type msg))
-          (-> acc
-              (update :events conj msg)
-              (cond-> order-id (update :known conj order-id)))
+(deftest entries-use-average-cost-without-private-accumulators
+  (let [{:keys [open-position positions-change]}
+        (apply-trades [(trade 1 "X" :buy 50M 10.00M)
+                       (trade 1 "X" :buy 50M 12.0000M)])
+        position (get open-position [1 "X"])]
+    (is (= [position] positions-change))
+    (is (= 100M (:position/qty-entry position)))
+    (is (= 0M (:position/qty-exit position)))
+    (is (= 100M (:position/qty-open position)))
+    (is (.equals 11.0000M (:position/average-entry-price position)))
+    (is (= 4 (.scale ^BigDecimal (:position/average-entry-price position))))
+    (is (false? (:position/hedge position)))
+    (is (= 12 (count (:position/position-id position))))
+    (is (not (contains? position :lots)))
+    (is (not (contains? position :entry-notional)))
+    (is (not (contains? position :exit-notional)))))
 
-          (= :broker/order-filled (:type msg))
-          (if (contains? known order-id)
-            (-> acc
-                (update :events conj msg)
-                (update :known disj order-id))
-            (let [order-id (or order-id (str "position-test-order-" idx))
-                  msg (assoc msg :order-id order-id)]
-              (update acc :events into [(new-order-for-fill order-id msg) msg])))
-
-          :else
-          (update acc :events conj msg))))
-    {:events [] :known #{}}
-    (vec events))))
-
-(defn- emissions [events & [opts]]
-  (let [method (or (:position-method opts) (:method opts) :average)]
-    (second
-     (reduce
-      (fn [[state outs] msg]
-        (let [{:keys [state out-msg]} (portfolio/process-message state msg)]
-          [state (cond-> outs
-                   (:position-change out-msg)
-                   (conj (:position-change out-msg)))]))
-      [(portfolio/empty-state {:position-method method}) []]
-      (ensure-known-orders events)))))
-
-(defn- last-emission [fills & [opts]]
-  (last (emissions fills opts)))
-
-(deftest buy-sell-flip-average
-  (let [fills [(fill 1 "X" :buy 100.0 10.0)
-               (fill 1 "X" :sell 110.0 11.0)]
-        ems (emissions fills {:method :average})]
-    (is (= 2 (count ems)))
-    (is (= :long (:position/side (nth ems 0))))
-    (is (true? (:position/open (nth ems 0))))
-    (is (== 100.0 (:position/qty-open (nth ems 0))))
-    (is (== 100.0 (:position/qty (nth ems 0))))
-    (is (== 10.0 (:position/average-entry-price (nth ems 0))))
-    (is (== 0.0 (:position/realized-pl (nth ems 0))))
-    (is (= :short (:position/side (nth ems 1))))
-    (is (true? (:position/open (nth ems 1))))
-    (is (== 10.0 (:position/qty-open (nth ems 1))))
-    (is (== 100.0 (:position/qty (nth ems 1))))
-    (is (== 11.0 (:position/average-entry-price (nth ems 1))))
-    (is (== 100.0 (:position/realized-pl (nth ems 1))))))
-
-(deftest buy-sell-flip-fifo-same-lots
-  (let [fills [(fill 1 "X" :buy 100.0 10.0)
-               (fill 1 "X" :sell 110.0 11.0)]
-        ems (emissions fills {:method :fifo})
-        last-pos (last ems)]
-    (is (== 10.0 (:position/average-entry-price (first ems))))
-    (is (= :short (:position/side last-pos)))
-    (is (== 11.0 (:position/average-entry-price last-pos)))
-    (is (== 100.0 (:position/realized-pl last-pos)))))
-
-(deftest fifo-consumes-oldest-lot-first
-  (let [fills [(fill 1 "X" :buy 50.0 10.0)
-               (fill 1 "X" :buy 50.0 12.0)
-               (fill 1 "X" :sell 60.0 15.0)]
-        pos (last-emission fills {:method :fifo})]
-    (is (= :long (:position/side pos)))
-    (is (== 40.0 (:position/qty-open pos)))
-    (is (== 100.0 (:position/qty pos)))
-    (is (== 12.0 (:position/average-entry-price pos)))
-    (is (== 280.0 (:position/realized-pl pos)))))
-
-(deftest average-partial-close-keeps-avg
-  (let [fills [(fill 1 "X" :buy 100.0 10.0)
-               (fill 1 "X" :sell 40.0 12.0)]
-        pos (last-emission fills {:method :average})]
-    (is (= :long (:position/side pos)))
-    (is (== 60.0 (:position/qty-open pos)))
-    (is (== 100.0 (:position/qty pos)))
-    (is (== 10.0 (:position/average-entry-price pos)))
-    (is (== 80.0 (:position/realized-pl pos)))))
+(deftest partial-exit-updates-exit-average-and-quantities
+  (let [{:keys [open-position]}
+        (apply-trades [(trade 1 "X" :buy 100M 10.00M)
+                       (trade 1 "X" :sell 25M 12.0000M)
+                       (trade 1 "X" :sell 15M 14.0M)])
+        position (get open-position [1 "X"])]
+    (is (= 100M (:position/qty-entry position)))
+    (is (= 40M (:position/qty-exit position)))
+    (is (= 60M (:position/qty-open position)))
+    (is (.equals 10.00M (:position/average-entry-price position)))
+    (is (.equals 12.7500M (:position/avg-exit-price position)))
+    (is (= 4 (.scale ^BigDecimal (:position/avg-exit-price position))))
+    (is (= 110.0000M (:position/realized-pl position)))))
 
 (deftest short-close-realized-pl
-  (let [fills [(fill 1 "X" :sell 100.0 11.0)
-               (fill 1 "X" :buy 100.0 10.0)]
-        closed (last-emission fills {:method :average})]
-    (is (false? (:position/open closed)))
+  (let [{:keys [open-position positions-change position-closed]}
+        (apply-trades [(trade 1 "X" :sell 100M 11.0M)
+                       (trade 1 "X" :buy 100M 10.00M)])
+        closed (first positions-change)]
+    (is (empty? open-position))
+    (is (= closed position-closed))
+    (is (not (op/position-open? closed)))
     (is (= :short (:position/side closed)))
-    (is (== 11.0 (:position/average-entry-price closed)))
-    (is (== 100.0 (:position/realized-pl closed)))
-    (is (instance? java.util.Date (:position/date-open closed)))
+    (is (= 100M (:position/qty-entry closed)))
+    (is (= 100M (:position/qty-exit closed)))
+    (is (= 0M (:position/qty-open closed)))
+    (is (.equals 10.00M (:position/avg-exit-price closed)))
+    (is (= 100.00M (:position/realized-pl closed)))
     (is (instance? java.util.Date (:position/date-close closed)))))
 
-(deftest date-open-when-fill-has-no-date
-  (let [pos (last-emission [(fill 1 "X" :buy 10.0 1.0)])]
-    (is (instance? java.util.Date (:position/date-open pos)))
-    (is (nil? (:position/date-close pos)))))
+(deftest normal-account-flip-closes-and-opens-separate-positions
+  (let [{:keys [open-position]} (op/process-trade {}
+                                                  (trade 1 "X" :buy 100M 10.0M))
+        old-position (get open-position [1 "X"])
+        {:keys [open-position positions-change position-closed] :as result}
+        (op/process-trade open-position (trade 1 "X" :sell 110M 11.00M))
+        [closed opened] positions-change]
+    (is (not (contains? result :position)))
+    (is (= 2 (count positions-change)))
+    (is (= closed position-closed))
+    (is (not (op/position-open? closed)))
+    (is (= 100M (:position/qty-entry closed)))
+    (is (= 100M (:position/qty-exit closed)))
+    (is (= 100M (:position/realized-pl closed)))
+    (is (= (:position/position-id old-position)
+           (:position/position-id closed)))
+    (is (op/position-open? opened))
+    (is (= :short (:position/side opened)))
+    (is (= 10M (:position/qty-entry opened)))
+    (is (= 0M (:position/qty-exit opened)))
+    (is (= 10M (:position/qty-open opened)))
+    (is (= 0M (:position/realized-pl opened)))
+    (is (not= (:position/position-id closed)
+              (:position/position-id opened)))
+    (is (= {[1 "X"] opened} open-position))))
 
-(deftest date-open-from-fill-date
-  (let [msg (assoc (fill 1 "X" :buy 10.0 1.0) :date #inst "2026-06-01T12:00:00.000Z")
-        pos (last-emission [msg])]
-    (is (= #inst "2026-06-01T12:00:00.000Z" (:position/date-open pos)))))
+(deftest hedge-positions-use-position-id-dictionary-keys
+  (let [{:keys [open-position]}
+        (apply-trades [(trade 1 "X" :buy 10M 10M "long-1")
+                       (trade 1 "X" :sell 20M 11M "short-1")])]
+    (is (= #{"long-1" "short-1"} (set (keys open-position))))
+    (is (= "long-1"
+           (get-in open-position ["long-1" :position/position-id])))
+    (is (true? (get-in open-position ["long-1" :position/hedge])))
+    (is (= :short (get-in open-position ["short-1" :position/side])))))
 
-(deftest closed-emitted-once
-  (let [fills [(fill 1 "X" :buy 10.0 1.0)
-               (fill 1 "X" :sell 10.0 2.0)]
-        ems (emissions fills)]
-    (is (= 2 (count ems)))
-    (is (false? (:position/open (last ems))))))
+(deftest hedge-close-overshoot-does-not-flip
+  (let [{:keys [open-position]}
+        (op/process-trade {} (trade 1 "X" :buy 10M 10M "hedge-1"))
+        {:keys [open-position positions-change position-closed]}
+        (op/process-trade open-position
+                          (trade 1 "X" :sell 15M 12M "hedge-1"))
+        closed (first positions-change)]
+    (is (= 1 (count positions-change)))
+    (is (= closed position-closed))
+    (is (not (op/position-open? closed)))
+    (is (= 10M (:position/qty-exit closed)))
+    (is (= 20M (:position/realized-pl closed)))
+    (is (empty? open-position))))
 
-(deftest ignores-non-fill-messages
-  (let [ems (emissions [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
-                         :account/id 1 :asset "X" :side :buy :order-type :market :qty 1.0}
-                        (fill 1 "X" :buy 1.0 5.0)])]
-    (is (= 1 (count ems)))
-    (is (= :long (:position/side (first ems))))))
+(deftest hydrate-position-preserves-public-state
+  (let [persisted {:position/account 1
+                   :position/asset "X"
+                   :position/side :long
+                   :position/qty-entry 10M
+                   :position/qty-exit 4M
+                   :position/qty-open 6M
+                   :position/average-entry-price 1.0900M
+                   :position/avg-exit-price 2.345678M
+                   :position/realized-pl 5M
+                   :position/date-open nil
+                   :position/date-close nil
+                   :position/position-id "hedge-1"
+                   :position/hedge true}
+        position (op/hydrate-position persisted)]
+    (is (= persisted position))
+    (is (= "hedge-1" (op/position-key position)))
+    (is (.equals 1.0900M (:position/average-entry-price position)))
+    (is (.equals 2.345678M (:position/avg-exit-price position)))))
 
-(deftest channel-paper-fills
-  (let [ems (emissions
-             [{:type :trader/new-order :date #inst "2026-06-01T12:00:00.000Z"
-               :account/id 2 :order-id 4 :asset "ETHUSDT" :side :sell :order-type :market :qty 0.001}
-              {:type :broker/order-filled :account/id 2 :order-id 4 :asset "ETHUSDT"
-               :qty 0.001 :side :sell :price 100.0}
-              {:type :broker/order-filled :account/id 2 :order-id 3 :asset "ETHUSDT"
-               :qty 0.001 :side :sell :price 101.0}])
-        last-pos (last ems)]
-    (is (= 2 (count ems)))
-    (is (= :short (:position/side (first ems))))
-    (is (== 0.001 (:position/qty-open (first ems))))
-    (is (= :short (:position/side last-pos)))
-    (is (== 0.002 (:position/qty-open last-pos)))
-    (is (== 100.5 (:position/average-entry-price last-pos)))))
+(deftest process-trade-without-trade-is-sparse
+  (is (= {} (op/process-trade {} nil))))
 
-(deftest derived-avg-exit-matches-formula
-  (let [fills [(fill 1 "X" :buy 100.0 10.0)
-               (fill 1 "X" :sell 40.0 12.0)]
-        pos (last-emission fills {:method :average})
-        max-qty (:position/qty pos)
-        entry (:position/average-entry-price pos)
-        exit (:position/avg-exit-price pos)
-        pl (:position/realized-pl pos)]
-    (is (== pl (* max-qty (- exit entry))))
-    (is (some? (op/derive-avg-exit-price pos)))))
-
-(deftest position-closed-and-dict-cleared
-  (let [fills [(fill 1 "X" :buy 10.0 1.0)
-               (fill 1 "X" :sell 10.0 2.0)]
-        [state outs] (reduce
-                      (fn [[st outs] msg]
-                        (let [{:keys [state out-msg]} (portfolio/process-message st msg)]
-                          [state (conj outs out-msg)]))
-                      [(portfolio/empty-state {:position-method :average}) []]
-                      (ensure-known-orders fills))
-        closed-out (last outs)]
-    (is (some? (:position-closed closed-out)))
-    (is (false? (:position/open (:position-closed closed-out))))
-    (is (empty? (:open-position state)))))
-
-(deftest reopen-after-close-starts-fresh
-  (let [fills [(fill 1 "X" :buy 10.0 1.0)
-               (fill 1 "X" :sell 10.0 2.0)
-               (fill 1 "X" :buy 5.0 3.0)]
-        ems (emissions fills {:method :average})
-        reopened (last ems)]
-    (is (= 3 (count ems)))
-    (is (true? (:position/open reopened)))
-    (is (== 5.0 (:position/qty-open reopened)))
-    (is (== 0.0 (:position/realized-pl reopened)))
-    (is (== 5.0 (:position/qty reopened)))))
+(deftest position-open-is-derived-from-open-quantity
+  (is (op/position-open? {:position/qty-open 1M}))
+  (is (not (op/position-open? {:position/qty-open 0M})))
+  (is (not (op/position-open? {:position/qty-open nil})))
+  (is (not (op/position-open? {}))))

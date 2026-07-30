@@ -35,7 +35,7 @@
                            (keep :position-closed)
                            out-flow)
         recent-order-dict-flow (recent/recent-flow closed-order-f recent-ms :order/id)
-        pos-key-fn (fn [position] [(:position/account position) (:position/asset position)])
+        pos-key-fn :position/position-id
         recent-position-dict-flow (recent/recent-flow closed-position-f recent-ms pos-key-fn)
         state-f (m/watch (:state portfolio))
         combined (m/ap

@@ -92,7 +92,7 @@
                :order-count (count (or orders-seen #{}))
                :active-order-count (count (filter #(= :working (:order/status %)) (vals working-orders)))
                :position-count (count open-positions)
-               :open-position-qty (reduce + 0M (map :position/qty (vals open-positions)))}]
+               :open-position-qty (reduce + 0M (map :position/qty-open (vals open-positions)))}]
     (info "calculating result stats.. done!")
     stats))
 

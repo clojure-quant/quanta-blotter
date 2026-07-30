@@ -78,3 +78,46 @@
         (doseq [eid [account-1-eid account-2-eid]]
           (is (some? (d/entity @conn eid)))))
     (datahike/db-stop conn))))
+
+(deftest transactor-persists-both-positions-from-flip
+  (let [conn (datahike/db-start-mem db/schema)
+        state (db/new-state)
+        old-open {:position/account 1
+                  :position/asset "X"
+                  :position/side :long
+                  :position/hedge false
+                  :position/qty-entry 100M
+                  :position/qty-exit 0M
+                  :position/qty-open 100M
+                  :position/average-entry-price 10M
+                  :position/avg-exit-price nil
+                  :position/realized-pl 0M
+                  :position/position-id "old"}
+        closed (assoc old-open
+                      :position/qty-exit 100M
+                      :position/qty-open 0M
+                      :position/avg-exit-price 11M
+                      :position/realized-pl 100M)
+        opened {:position/account 1
+                :position/asset "X"
+                :position/side :short
+                :position/hedge false
+                :position/qty-entry 10M
+                :position/qty-exit 0M
+                :position/qty-open 10M
+                :position/average-entry-price 11M
+                :position/avg-exit-price nil
+                :position/realized-pl 0M
+                :position/position-id "new"}
+        tx (into (db-transactor/out-msg->tx-vector
+                  {:positions-change [old-open]})
+                 (db-transactor/out-msg->tx-vector
+                  {:positions-change [closed opened]}))]
+    (db/persist-block conn state tx)
+    (let [positions (db/query-positions conn)]
+      (is (= #{"old" "new"} (set (map :position/position-id positions))))
+      (is (= 2 (count positions)))
+      (is (= #{"new"}
+             (set (map :position/position-id
+                       (db/query-open-positions conn))))))
+    (datahike/db-stop conn)))

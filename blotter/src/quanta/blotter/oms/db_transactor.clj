@@ -11,11 +11,14 @@
   "Project one portfolio out-msg to the flat [:msg m :order o ...] vector
    expected by db/persist-block."
   [out-msg]
-  (cond-> []
-    (contains? out-msg :msg) (conj :msg (:msg out-msg))
-    (contains? out-msg :order-change) (conj :order (:order-change out-msg))
-    (contains? out-msg :trade) (conj :fill (:trade out-msg))
-    (contains? out-msg :position-change) (conj :position (:position-change out-msg))))
+  (let [positions-change (:positions-change out-msg)]
+    (cond-> []
+      (contains? out-msg :msg) (conj :msg (:msg out-msg))
+      (contains? out-msg :order-change) (conj :order (:order-change out-msg))
+      (contains? out-msg :trade) (conj :fill (:trade out-msg))
+      (seq positions-change)
+      (into (mapcat (fn [position] [:position position])
+                    positions-change)))))
 
 (defn- block->tx-vector
   "Turns a buffered block of portfolio out-msg maps into one flat tx vector."

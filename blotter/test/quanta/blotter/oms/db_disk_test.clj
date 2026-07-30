@@ -43,7 +43,8 @@
 
 (def demo-position
   {:position/account 2 :position/asset "ETHUSDT" :position/side :short
-   :position/open true :position/qty-open 0.001 :position/qty 0.001
+   :position/qty-entry 0.001 :position/qty-exit 0.0
+   :position/qty-open 0.001 :position/position-id "position-1" :position/hedge false
    :position/average-entry-price 100.0 :position/realized-pl 0.0})
 
 (deftest creates-db-on-disk-and-persists

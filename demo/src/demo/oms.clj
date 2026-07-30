@@ -28,7 +28,7 @@ oms
 ;; persistence: open the datahike trade-db and stream all OMS flows into it.
 (def trade-db (datahike/db-start {:schema db/schema :db-path "trade-db"}))
 
-(def portfolio (portfolio/portfolio-create trade-db (:combined-flow oms)))
+(def portfolio (portfolio/portfolio-create (:combined-flow oms) trade-db))
 
 (def dispose-wo-op-logger (start-trading-state-logger! portfolio "log/oms-wo-op.txt" 15000 false))
 

@@ -32,14 +32,12 @@
 (defn campaign-portfolio
   "Filtered portfolio for a single campaign-id (not started).
    Returns the map from `portfolio-create`; caller should `portfolio-start!`."
-  ([combined-tagged-flow campaign]
-   (campaign-portfolio combined-tagged-flow campaign {:position-method :fifo}))
-  ([combined-tagged-flow campaign opts]
-   (let [filtered (m/stream
-                   (m/eduction
-                    (filter #(= (:campaign %) campaign))
-                    combined-tagged-flow))]
-     (portfolio/portfolio-create nil filtered opts))))
+  [combined-tagged-flow campaign]
+  (let [filtered (m/stream
+                  (m/eduction
+                   (filter #(= (:campaign %) campaign))
+                   combined-tagged-flow))]
+    (portfolio/portfolio-create filtered)))
 
 ;; backwards-compatible alias used by stresstest / tests during migration naming
 (defn campaign-flows

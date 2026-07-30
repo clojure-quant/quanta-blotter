@@ -71,7 +71,7 @@
 
 (defn- with-recent-consumer! [time-flow recent-ms f]
   (let [channel-flow (m/stream time-flow)
-        p (portfolio/portfolio-create nil channel-flow)
+        p (portfolio/portfolio-create channel-flow)
         {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! p recent-ms)
         acc (atom [])
         dispose (start-collecting! snapshot-flow acc)
@@ -84,7 +84,7 @@
 
 (deftest two-snapshot-consumers-see-same-trading-state
   (let [channel-flow (m/stream channel-paper-time-flow)
-        p (portfolio/portfolio-create nil channel-flow)
+        p (portfolio/portfolio-create channel-flow)
         {:keys [trading-state-a snapshot-flow]} (tsc/create-trading-state-consumer! p 0)
         acc1 (atom [])
         acc2 (atom [])
@@ -133,7 +133,7 @@
       (m/? (m/sleep (+ event-settle-ms visible-after-ms)))
       (let [position (find-position (:open-positions @trading-state-a) 1 "BTCUSDT")]
         (is (some? position) "closed position should still appear in open-positions")
-        (is (false? (:position/open position))))
+        (is (zero? (:position/qty-open position))))
       (m/? (m/sleep (- gone-after-ms visible-after-ms)))
       (is (nil? (find-position (:open-positions @trading-state-a) 1 "BTCUSDT"))
           "closed position should be gone after recent-ms window"))))

@@ -4,7 +4,7 @@
   (:require
    [datahike.api :as d]
    [quanta.blotter.oms.db :as db]
-   [quanta.blotter.oms.portfolio :as portfolio]
+   [quanta.blotter.oms.portfolio.open-position :as open-position]
    [quanta.blotter.oms.print :as print]
    [quanta.util.datahike :as datahike]
    [tick.core :as t]))
@@ -31,26 +31,14 @@
        @conn (t/inst since) account-id asset))
 
 (defn- final-open-positions
-  [fills opts]
-  (let [method (or (:position-method opts) (:method opts) :fifo)
-        state (reduce
-               (fn [st fill]
-                 ;; fills from db are already fill-shaped; wrap as broker msg? process-message expects channel msgs.
-                 ;; Convert fill record back is awkward — apply open-position step via portfolio by synthesizing msgs.
-                 (let [msg {:type :broker/order-filled
-                            :fill-id (:fill/id fill)
-                            :order-id (:fill/order-id fill)
-                            :account/id (:fill/account-id fill)
-                            :asset (:fill/asset fill)
-                            :side (:fill/side fill)
-                            :qty (:fill/qty fill)
-                            :price (:fill/price fill)
-                            :date (:fill/date fill)}
-                       {:keys [state]} (portfolio/process-message st msg)]
-                   state))
-               (portfolio/empty-state {:position-method method})
-               fills)]
-    (vec (vals (:open-position state)))))
+  [fills _opts]
+  (let [positions (reduce
+                   (fn [positions fill]
+                     (:open-position
+                      (open-position/process-trade positions fill)))
+                   {}
+                   fills)]
+    (vec (vals positions))))
 
 (defn- print-open-positions!
   [fills opts]

@@ -64,3 +64,12 @@ IB code	Meaning
 1100	Connectivity between TWS/Gateway and IB servers was lost
 1101	Connectivity restored, but market-data subscriptions were lost
 1102	Connectivity restored and subscriptions were maintained
+
+
+
+I see 2026-07-30T01:24:17.900Z nixnuc1 ERROR [quanta.blotter.oms.validation.channel:70] - {:original-msg {:order-type :limit, :date #time/instant "2026-07-30T01:24:17.850Z", :limit 1.13394M, :account/id 1000, :type :broker/order-confirmed, :order-id "CH8y64", :position-id "234196014", :side :buy, :qty 10000M, :asset "EURUSD"}, :schema/error "{:date [\"must be a java.util.Date\"]}", :direction :orderupdate}
+2026-07-30T01:24:17.905Z nixnuc1 INFO [quanta.blotter.consolidator:50] - consolidater sending: {:type :broker/orderupdate-schema-error, :date #time/instant "2026-07-30T01:24:17.850Z", :message "spec-error {:date [\"must be a java.util.Date\"]}", :account/id 1000, :order-id "CH8y64"}
+
+so from somewhere we get tick/instant and not tick/inst.
+I believe it comes from the fix-engine dependency.
+this is on my local dist /home/florian/repo/clojure/quanta/fix-engine.

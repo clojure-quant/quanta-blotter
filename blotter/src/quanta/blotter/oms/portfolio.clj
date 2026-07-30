@@ -8,51 +8,13 @@
    [quanta.blotter.oms.portfolio.working-order :as wo]
    [quanta.blotter.oms.portfolio.open-position :as op]))
 
+;; startup state (empty or from db)
+
 (defn empty-state
   "Empty portfolio reducer state."
-  ([]
-   (empty-state {:position-method :fifo}))
-  ([{:keys [position-method] :or {position-method :fifo}}]
-   {:working-order {}
-    :open-position {}
-    :position-method position-method}))
-
-(defn- public-state
-  "Public view of portfolio state (dicts only)."
-  [{:keys [working-order open-position]}]
-  {:working-order working-order
-   :open-position open-position})
-
-(defn process-message
-  "Pure synchronous portfolio step.
-   Returns {:state new-state :out-msg sparse-out-msg}.
-   Every out-msg includes :msg (the received channel message)."
-  [state msg]
-  (let [method (:position-method state)
-
-        out {:msg msg}
-
-        ;; trader request
-        out (cond-> out
-              (trader/trader? msg) (assoc :trader msg))
-
-        ;; working order (order/orderupdate)
-        {:keys [working-order trade] :as out-wo}
-        (wo/process-order-orderupdate-message (:working-order state) msg)
-        out (merge out out-wo)
-        state (if working-order 
-                (assoc state :working-order working-order)
-                state)
-
-        ;; open position (from trade)
-        {:keys [open-position] :as out-op}
-        (op/process-trade (:open-position state) trade {:method method})
-        out (merge out out-op)
-        state (if open-position
-                (assoc state :open-position open-position)
-                state)]
-    {:state state
-     :out-msg out}))
+  []
+  {:working-order {}
+   :open-position {}})
 
 (defn- strip-order-db-fields [order]
   (-> order
@@ -67,8 +29,8 @@
 (defn- hydrate-from-db
   "Rebuild portfolio state from persisted open orders and open positions.
    Only open positions are loaded into `:open-position`."
-  [db opts]
-  (let [state (empty-state opts)
+  [db]
+  (let [state (empty-state)
         open-orders (when db (or (db/query-open-orders db) []))
         open-positions (when db (or (db/query-open-positions db) []))
         state (reduce
@@ -82,35 +44,63 @@
     (reduce
      (fn [st position]
        (let [view (strip-position-db-fields position)
-             k (op/position-key view)
-             hydrated (op/hydrate-position view)]
+             hydrated (op/hydrate-position view)
+             k (op/position-key hydrated)]
          (assoc-in st [:open-position k] hydrated)))
      state
      open-positions)))
+
+;; reducer function
+
+(defn process-message
+  "Pure synchronous portfolio step.
+   Returns {:state new-state :out-msg sparse-out-msg}.
+   Every out-msg includes :msg (the received channel message)."
+  [state msg]
+  (let [out {:msg msg}
+
+        ;; trader request
+        out (cond-> out
+              (trader/trader? msg) (assoc :trader msg))
+
+        ;; working order (order/orderupdate)
+        {:keys [working-order trade] :as out-wo}
+        (wo/process-order-orderupdate-message (:working-order state) msg)
+        out (merge out out-wo)
+        state (if working-order
+                (assoc state :working-order working-order)
+                state)
+
+        ;; open position (from trade)
+        {:keys [open-position] :as out-op}
+        (op/process-trade (:open-position state) trade)
+        out (merge out out-op)
+        state (if open-position
+                (assoc state :open-position open-position)
+                state)]
+    {:state state
+     :out-msg out}))
+
 
 (defn portfolio-create
   "Build portfolio folding over `channel-flow` (does not start consuming).
    Returns {:state atom-of-public-dicts
             :out-flow shared missionary stream of sparse out-msg maps
-            :dispose! fn
-            :position-method keyword}.
+            :dispose! fn}.
    Call `portfolio-start!` after attaching `:out-flow` consumers."
-  ([db channel-flow]
-   (portfolio-create db channel-flow {:position-method :fifo}))
-  ([db channel-flow {:keys [position-method] :or {position-method :fifo}}]
+  ([channel-flow]
+   (portfolio-create channel-flow nil))
+  ([channel-flow db]
    (assert channel-flow "portfolio-create needs channel-flow")
-   (let [opts {:position-method position-method}
-         initial (if db
-                   (hydrate-from-db db opts)
-                   (empty-state opts))
-         state-a (atom (public-state initial))
-         reducer-a (atom initial)
+   (let [initial (if db
+                   (hydrate-from-db db)
+                   (empty-state))
+         state-a (atom initial)
          out-flow (m/stream
                    (m/eduction
                     (map (fn [msg]
-                           (let [{:keys [state out-msg]} (process-message @reducer-a msg)]
-                             (reset! reducer-a state)
-                             (reset! state-a (public-state state))
+                           (let [{:keys [state out-msg]} (process-message @state-a msg)]
+                             (reset! state-a state)
                              out-msg)))
                     channel-flow))
          dispose-a (atom nil)
@@ -121,8 +111,7 @@
      {:state state-a
       :out-flow out-flow
       :dispose-a dispose-a
-      :dispose! dispose!
-      :position-method position-method})))
+      :dispose! dispose!})))
 
 (defn portfolio-start!
   "Start retaining drain on portfolio `:out-flow` (idempotent).

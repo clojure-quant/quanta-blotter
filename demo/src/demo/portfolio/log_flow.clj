@@ -34,7 +34,7 @@
   "Read combined.edn, start portfolio + wo/op logger, replay messages."
   [_]
   (let [channel-flow (create-combined-flow)
-        portfolio (portfolio/portfolio-create nil channel-flow)
+        portfolio (portfolio/portfolio-create channel-flow)
         dispose-logger! (start-trading-state-logger! portfolio "log/print-demo.log" 1000 true)
         _ (portfolio/portfolio-start! portfolio)]
     (try

@@ -24,8 +24,7 @@
   :portfolio-log-flow {:exec-fn demo.portfolio.log-flow/run-demo!}
   :portfolio-position-pl {:exec-fn demo.portfolio.position-pl/run-demo!}
   :portfolio-working-order {:exec-fn demo.portfolio.working-order/run-demo!}
-  :portfolio-open-positions {:exec-fn demo.portfolio.open-positions/run-demo!
-                             :exec-args {:position-method :fifo}}
+  :portfolio-open-positions {:exec-fn demo.portfolio.open-positions/run-demo!}
   
   ;; backoffice 
   :backoffice {:exec-fn demo.backoffice.fill/print-trades!}

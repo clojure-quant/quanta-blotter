@@ -31,7 +31,8 @@
 
 (def demo-position
   {:position/account 2 :position/asset "ETHUSDT" :position/side :short
-   :position/open true :position/qty-open 0.001M :position/qty 0.001M
+   :position/qty-entry 0.001M :position/qty-exit 0M
+   :position/qty-open 0.001M :position/position-id "position-1" :position/hedge false
    :position/average-entry-price 100.0M :position/realized-pl 0.0M
    :position/avg-exit-price nil})
 
@@ -63,7 +64,7 @@
       (let [positions (db/query-positions conn)]
         (is (= 1 (count positions)))
         (is (= :short (:position/side (first positions))))
-        (is (true? (:position/open (first positions))))))
+        (is (pos? (:position/qty-open (first positions))))))
     (datahike/db-stop conn)))
 
 (deftest order-update-reuses-db-id
@@ -136,7 +137,8 @@
 
 (def closed-position
   {:position/account 1 :position/asset "BTCUSDT" :position/side :long
-   :position/open false :position/qty-open 0.0M :position/qty 1.0M
+   :position/qty-entry 1.0M :position/qty-exit 1.0M
+   :position/qty-open 0.0M :position/position-id "position-2" :position/hedge false
    :position/average-entry-price 100.0M :position/realized-pl 10.0M
    :position/avg-exit-price 110.0M})
 
@@ -159,7 +161,7 @@
         (is (= 1 (count open)))
         (is (= #{[2 "ETHUSDT"]}
                (set (map (juxt :position/account :position/asset) open))))
-        (is (every? #(true? (:position/open %)) open))))
+        (is (every? #(pos? (:position/qty-open %)) open))))
     (testing "query-positions still returns all positions"
       (is (= 2 (count (db/query-positions conn)))))
     (datahike/db-stop conn)))
