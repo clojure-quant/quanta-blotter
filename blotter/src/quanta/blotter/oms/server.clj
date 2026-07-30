@@ -1,6 +1,6 @@
 (ns quanta.blotter.oms.server
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info]]
    [clojure.java.io :as io]
    [modular.require :refer [require-namespaces]]
    [quanta.blotter.oms.core :refer [create-order-manager start-order-manager! stop-order-manager!]]

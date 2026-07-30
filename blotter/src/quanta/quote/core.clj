@@ -1,7 +1,7 @@
 (ns quanta.quote.core
   (:require
    [clojure.java.io :as io]
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info error]]
    [datahike.api :as d]
    [missionary.core :as m]
    [modular.require :refer [require-namespaces]]

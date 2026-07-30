@@ -1,6 +1,6 @@
 (ns quanta.blotter.util
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [debug]]
    [missionary.core :as m])
   (:import
    [missionary Cancelled]

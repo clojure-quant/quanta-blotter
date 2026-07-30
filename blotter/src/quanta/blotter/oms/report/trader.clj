@@ -1,6 +1,6 @@
 (ns quanta.blotter.oms.report.trader
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info error]]
    [missionary.core :as m]
    [quanta.blotter.oms.db :as db]))
 

@@ -1,6 +1,6 @@
 (ns quanta.quote.subscription-cache
   (:require
-   [taoensso.timbre :as timbre :refer [info error]]
+   [taoensso.timbre :refer [info error]]
    [missionary.core :as m]
    [quanta.missionary :refer [mix]]
    [quanta.quote.core :as quote]))

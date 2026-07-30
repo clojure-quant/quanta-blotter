@@ -1,6 +1,6 @@
 (ns quanta.blotter.account-manager
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info error]]
    [clojure.edn :as edn]
    [datahike.api :as d]
    [missionary.core :as m]

@@ -1,6 +1,6 @@
 (ns quanta.blotter.oms.validation.channel
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info error]]
    [missionary.core :as m]
    [tick.core :as t]
    [quanta.blotter.util-rdv :refer [create-rdv]]

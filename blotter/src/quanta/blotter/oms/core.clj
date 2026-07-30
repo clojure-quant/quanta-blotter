@@ -1,6 +1,6 @@
 (ns quanta.blotter.oms.core
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info error]]
    [missionary.core :as m]
    [nano-id.core :refer [nano-id]]
    [tick.core :as t]

@@ -1,7 +1,7 @@
 (ns quanta.quote.account-manager
   (:require
    [clojure.edn :as edn]
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info error]]
    [tick.core :as t]
    [missionary.core :as m]
    [quanta.missionary :refer [mix]]

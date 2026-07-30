@@ -57,4 +57,4 @@
     nil))
 
 (comment
-  (run-demo!))
+  (run-demo! {}))

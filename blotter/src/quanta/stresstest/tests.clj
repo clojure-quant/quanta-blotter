@@ -1,6 +1,6 @@
 (ns quanta.stresstest.tests
   (:require
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [warn]]
    [missionary.core :as m]
    [clojure.pprint :refer [print-table]]
    [nano-id.core :refer [nano-id]]

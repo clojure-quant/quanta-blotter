@@ -1,10 +1,5 @@
 
 
-
-trading state needs to calculate fills/positions/orders in one go.
-
-
-
 market order stresstest is not working
    - what is the difference in lmt and mkt?
      - knowing the difference is crucial

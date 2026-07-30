@@ -1,7 +1,7 @@
 (ns quanta.blotter.consolidator
   (:require
    [missionary.core :as m]
-   [taoensso.timbre :as timbre :refer [debug info warn error]]
+   [taoensso.timbre :refer [info warn error]]
    [quanta.blotter.util-rdv :refer [create-rdv]]))
 
 (defn msg-flow [!-a]
