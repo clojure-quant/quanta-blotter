@@ -286,6 +286,26 @@
         (is (not (s/validate-trader-message (dissoc message :req-id))))
         (is (not (s/validate-trader-message (assoc message :account/id "1000"))))))))
 
+(deftest broker-open-positions-test
+  (let [message {:type :broker/open-positions
+                 :account/id 1000
+                 :req-id "positions-1"
+                 :date (t/inst)
+                 :positions
+                 [{:type :broker/positions-item
+                   :account/id 1000
+                   :req-id "positions-1"
+                   :asset "EURUSD"
+                   :position-id "position-1"
+                   :position [{:long-qty 1000M :short-qty 0M}]
+                   :settl-price 1.1M
+                   :total 1}]}]
+    (is (s/validate-message message))
+    (is (s/validate-message (assoc message :positions [])))
+    (is (s/validate-message (assoc message :positions [nil 1 "position"])))
+    (is (not (s/validate-message (dissoc message :req-id))))
+    (is (not (s/validate-message (assoc message :positions '()))))))
+
 (deftest validate-trader-message-test
   (testing "valid new-orders"
     (doseq [msg [{:type :trader/new-order
