@@ -125,6 +125,22 @@
                    :position/realized-pl realized-pl)
       closed? (assoc :position/date-close (event-date fill)))))
 
+(defn- flip-hedge-position
+  "Continue a fully-closed hedge under the same position-id on the opposite
+   side: prior exits become entries (and vice versa), then apply the overfill
+   remainder as entry on the new side."
+  [closed fill remainder]
+  (let [flipped (assoc closed
+                       :position/side (fill-side fill)
+                       :position/qty-entry (:position/qty-exit closed)
+                       :position/qty-exit (:position/qty-entry closed)
+                       :position/average-entry-price (:position/avg-exit-price closed)
+                       :position/avg-exit-price (:position/average-entry-price closed)
+                       :position/qty-open 0M
+                       :position/realized-pl 0M
+                       :position/date-close nil)]
+    (apply-entry flipped (assoc fill :fill/qty remainder))))
+
 (defn step
   "Apply one fill to a position.
    Returns a vector under :positions-change and, on close, :position-closed."
@@ -142,12 +158,12 @@
           (cond-> {:positions-change [closed]}
             (not (position-open? closed))
             (assoc :position-closed closed))
-          ;; Overfill reverses the position. A hedge position keeps the broker
-          ;; position-id so later fills for that id find the reverse position.
-          (let [opened (open-position (cond-> fill
-                                        (not (:position/hedge position))
-                                        (dissoc :fill/position-id))
-                                      remainder)]
+          ;; Overfill reverses the position. Hedge keeps the broker position-id
+          ;; and swaps entry/exit so prior exits become the new side's entries.
+          (let [opened (if (:position/hedge position)
+                         (flip-hedge-position closed fill remainder)
+                         (open-position (dissoc fill :fill/position-id)
+                                        remainder))]
             {:positions-change [closed opened]
              :position-closed closed}))))))
 
