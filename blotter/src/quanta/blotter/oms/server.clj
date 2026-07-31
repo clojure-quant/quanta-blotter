@@ -22,62 +22,61 @@
 ; (vf/bad-message-with-explaination combined-flow)
 
 (defn start-oms-server
-  ([config] (start-oms-server config nil))
-  ([config trade-db]
-   (let [{:keys [transaction-log-file account-log-dir validate? tag?
-                 db-enabled
-                 calculate-trading-state-trader
-                 ns-require
-                 web-ui text-logger
-                 ctx]
-          :or {validate? true
-               tag? true
-               db-enabled false
-               calculate-trading-state-trader false
-               web-ui {}
-               text-logger {}}} config
-         {:keys [calculate-enabled history-recent-ms]
-          :or {calculate-enabled false
-               history-recent-ms 60000}} web-ui
-         {:keys [print-enabled log-file interval-ms]
-          :or {print-enabled false
-               log-file "log/oms-server-trading-state.txt"
-               interval-ms 15000}} text-logger]
-     (assert trade-db "trade-db connection is required")
-     (require-config-namespaces! ns-require)
-     (let [_ (.mkdirs (io/file "log"))
-           _ (when account-log-dir
-               (.mkdirs (io/file account-log-dir)))
-           oms (create-order-manager {:transaction-log-file transaction-log-file
-                                      :account-log-dir account-log-dir
-                                      :validate? validate?
-                                      :tag? tag?
-                                      :ctx ctx})
-           _ (add-enabled-db-accounts (:account-manager oms) trade-db)
-           portfolio (portfolio/portfolio-create (:combined-flow oms) trade-db)
-           ;; attach consumers before portfolio-start!
-           tsc (when calculate-enabled
-                 (tsc/create-trading-state-consumer! portfolio history-recent-ms))
-           _ (when tsc (tsc/start! tsc))
-           trader-tagger (when (and calculate-trading-state-trader tsc)
-                           (trader/start-trader-tagger trade-db (:trading-state-a tsc)))
-           dispose-wo-op-logger (when print-enabled
-                                  (start-trading-state-logger! portfolio log-file interval-ms false))
-           ;; oms map carries :portfolio for db-transactor
-           oms (assoc oms :portfolio portfolio)
-           db-transactor (when db-enabled
-                           (db-transactor/start-db-transactor oms trade-db))
-           _ (portfolio/portfolio-start! portfolio)
-           oms (start-order-manager! oms)
-           oms-server {:oms oms
-                       :portfolio portfolio
-                       :internal {:tsc tsc
-                                  :trader-tagger trader-tagger
-                                  :dispose-wo-op-logger dispose-wo-op-logger
-                                  :trade-db trade-db
-                                  :db-transactor db-transactor}}]
-       (assert (get-in oms [:combined-flow]) "oms :combined-flow is required")
-       oms-server))))
+  [config trade-db]
+  (let [{:keys [transaction-log-file account-log-dir validate? tag?
+                db-enabled
+                calculate-trading-state-trader
+                ns-require
+                web-ui text-logger
+                ctx]
+         :or {validate? true
+              tag? true
+              db-enabled false
+              calculate-trading-state-trader false
+              web-ui {}
+              text-logger {}}} config
+        {:keys [calculate-enabled history-recent-ms]
+         :or {calculate-enabled false
+              history-recent-ms 60000}} web-ui
+        {:keys [print-enabled log-file interval-ms]
+         :or {print-enabled false
+              log-file "log/oms-server-trading-state.txt"
+              interval-ms 15000}} text-logger]
+    (assert trade-db "trade-db connection is required")
+    (require-config-namespaces! ns-require)
+    (let [_ (.mkdirs (io/file "log"))
+          _ (when account-log-dir
+              (.mkdirs (io/file account-log-dir)))
+          oms (create-order-manager {:transaction-log-file transaction-log-file
+                                     :account-log-dir account-log-dir
+                                     :validate? validate?
+                                     :tag? tag?
+                                     :ctx ctx})
+          _ (add-enabled-db-accounts (:account-manager oms) trade-db)
+          portfolio (portfolio/portfolio-create (:combined-flow oms) trade-db)
+          ;; attach consumers before portfolio-start!
+          tsc (when calculate-enabled
+                (tsc/create-trading-state-consumer! portfolio history-recent-ms))
+          _ (when tsc (tsc/start! tsc))
+          trader-tagger (when (and calculate-trading-state-trader tsc)
+                          (trader/start-trader-tagger trade-db (:trading-state-a tsc)))
+          dispose-wo-op-logger (when print-enabled
+                                 (start-trading-state-logger! portfolio log-file interval-ms false))
+          ;; oms map carries :portfolio for db-transactor
+          oms (assoc oms :portfolio portfolio)
+          db-transactor (when db-enabled
+                          (db-transactor/start-db-transactor oms trade-db))
+          _ (portfolio/portfolio-start! portfolio)
+          oms (start-order-manager! oms)
+          oms-server {:oms oms
+                      :portfolio portfolio
+                      :internal {:tsc tsc
+                                 :trader-tagger trader-tagger
+                                 :dispose-wo-op-logger dispose-wo-op-logger
+                                 :trade-db trade-db
+                                 :db-transactor db-transactor}}]
+      (assert (get-in oms [:combined-flow]) "oms :combined-flow is required")
+      oms-server)))
 
 (defn stop-oms-server [{:keys [oms portfolio internal]}]
   (let [{:keys [dispose-wo-op-logger db-transactor tsc trader-tagger]} internal]
