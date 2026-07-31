@@ -119,7 +119,8 @@
    [:qty PositiveDecimal]
    [:side Side]
    [:price PositiveDecimal]
-   [:position-id {:optional true} :string]])
+   [:position-id {:optional true} :string]
+   [:message {:optional true} :string]])
 
 (def BrokerOrderConfirmed
   [:and

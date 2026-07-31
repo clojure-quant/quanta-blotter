@@ -161,6 +161,18 @@
         :qty 0.001M
         :side :sell
         :price 100.0M}))
+  (is (s/validate-message
+       {:type :broker/order-filled
+        :account/id 2
+        :order-id 4
+        :fill-id "m-9By0"
+        :date (t/inst)
+        :asset "ETHUSDT.S.BBT"
+        :qty 0.0999M
+        :side :buy
+        :price 1925.99M
+        :message "fee 0.0001 ETH"})
+      "optional :message on fills is accepted")
   (testing "double price/qty are rejected with a clear decimal error"
     (let [msg {:date (t/inst "2026-07-14T14:29:09.019Z")
                :account/id 1
