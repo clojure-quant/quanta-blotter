@@ -104,19 +104,26 @@
     (is (true? (get-in open-position ["long-1" :position/hedge])))
     (is (= :short (get-in open-position ["short-1" :position/side])))))
 
-(deftest hedge-close-overshoot-does-not-flip
+(deftest hedge-close-overshoot-flips-keeping-position-id
   (let [{:keys [open-position]}
         (op/process-trade {} (trade 1 "X" :buy 10M 10M "hedge-1"))
         {:keys [open-position positions-change position-closed]}
         (op/process-trade open-position
                           (trade 1 "X" :sell 15M 12M "hedge-1"))
-        closed (first positions-change)]
-    (is (= 1 (count positions-change)))
+        [closed opened] positions-change]
+    (is (= 2 (count positions-change)))
     (is (= closed position-closed))
     (is (not (op/position-open? closed)))
     (is (= 10M (:position/qty-exit closed)))
     (is (= 20M (:position/realized-pl closed)))
-    (is (empty? open-position))))
+    (is (op/position-open? opened))
+    (is (= :short (:position/side opened)))
+    (is (= 5M (:position/qty-entry opened)))
+    (is (= 5M (:position/qty-open opened)))
+    (is (= 0M (:position/realized-pl opened)))
+    (is (true? (:position/hedge opened)))
+    (is (= "hedge-1" (:position/position-id opened)))
+    (is (= {"hedge-1" opened} open-position))))
 
 (deftest hydrate-position-preserves-public-state
   (let [persisted {:position/account 1

@@ -2,7 +2,6 @@
   (:require
    [nano-id.core :refer [nano-id]]
    [quanta.blotter.precision :as precision]
-   [taoensso.timbre :refer [warn]]
    [tick.core :as t])
   (:import [java.math BigDecimal]))
 
@@ -139,24 +138,15 @@
             close-qty (min qty-open fill-qty)
             closed (apply-exit position fill close-qty)
             remainder (- fill-qty close-qty)]
-        (cond
-          (zero? remainder)
+        (if (zero? remainder)
           (cond-> {:positions-change [closed]}
             (not (position-open? closed))
             (assoc :position-closed closed))
-
-          (:position/hedge position)
-          (do
-            (warn "hedge-position close quantity exceeds open quantity"
-                  {:position-id (:position/position-id position)
-                   :qty-open qty-open
-                   :fill-qty fill-qty
-                   :excess-qty remainder})
-            {:positions-change [closed]
-             :position-closed closed})
-
-          :else
-          (let [opened (open-position (dissoc fill :fill/position-id)
+          ;; Overfill reverses the position. A hedge position keeps the broker
+          ;; position-id so later fills for that id find the reverse position.
+          (let [opened (open-position (cond-> fill
+                                        (not (:position/hedge position))
+                                        (dissoc :fill/position-id))
                                       remainder)]
             {:positions-change [closed opened]
              :position-closed closed}))))))
