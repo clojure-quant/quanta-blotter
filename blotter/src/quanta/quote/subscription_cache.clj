@@ -1,8 +1,9 @@
 (ns quanta.quote.subscription-cache
   (:require
-   [taoensso.timbre :refer [info error]]
+   [taoensso.timbre :refer [info]]
    [missionary.core :as m]
    [quanta.missionary :refer [mix]]
+   [quanta.missionary.task-timbre :refer [start-task!]]
    [quanta.quote.core :as quote]))
 
 (defn start-cache
@@ -17,8 +18,7 @@
       (let [flows (map #(quote/asset-quote-flow quote-manager %) assets)
             mixed (apply mix flows)
             task (m/reduce (fn [_ _] nil) nil mixed)
-            dispose! (task #(info "quote subscription-cache done" %)
-                           #(error "quote subscription-cache error" %))]
+            dispose! (start-task! task "quote subscription-cache")]
         {:dispose! dispose!
          :assets assets}))))
 

@@ -1,8 +1,8 @@
 (ns quanta.blotter.oms.report.trader
   (:require
-   [taoensso.timbre :refer [info error]]
    [missionary.core :as m]
-   [quanta.blotter.oms.db :as db]))
+   [quanta.blotter.oms.db :as db]
+   [quanta.missionary.task-timbre :refer [start-task!]]))
 
 (defn db-lookup [conn account-id]
   (some-> (db/account-by-id conn account-id)
@@ -51,6 +51,5 @@
                        (reset! trading-state-trader data)
                        data))
         t (m/reduce (fn [_r _v] nil) nil tt-a-f)]
-    {:dispose! (t #(info "trader-tagger done" %)
-                  #(error "trader-tagger error" %))
+    {:dispose! (start-task! t "trader-tagger")
      :trading-state-trader trading-state-trader}))

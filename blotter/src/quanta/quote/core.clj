@@ -1,11 +1,12 @@
 (ns quanta.quote.core
   (:require
    [clojure.java.io :as io]
-   [taoensso.timbre :refer [info error]]
+   [taoensso.timbre :refer [info]]
    [datahike.api :as d]
    [missionary.core :as m]
    [modular.require :refer [require-namespaces]]
    [quanta.asset.datahike :refer [get-list]]
+   [quanta.missionary.task-timbre :refer [start-task!]]
    [quanta.quote.account-manager :as am])
    (:import missionary.Cancelled)
   )
@@ -72,8 +73,7 @@
                              (reset! quotelist-a v)
                              nil)
                            nil quote-dict-flow)
-        dispose! (quote-processor #(info "quote-printer done " %)
-                                  #(error "quote-printer CRASH " %))]
+        dispose! (start-task! quote-processor "quote-printer")]
     {:dispose! dispose!
      :quotelist quotelist-a}))
 

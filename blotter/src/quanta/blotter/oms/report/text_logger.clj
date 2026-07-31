@@ -9,8 +9,8 @@
   (reduce
    (fn [s {:keys [account/id orders]}]
      (if (empty? orders)
-       s
-       (str s "\r\nworking orders account id " id ":\r\n"
+       (str s "\r\nbroker report working orders account id " id " - None.")
+       (str s "\r\nbroker report working orders account id " id ":\r\n"
             (print/working-orders-table orders opts))))
    s
    snapshots))
@@ -19,8 +19,8 @@
   (reduce
    (fn [s {:keys [account/id positions]}]
      (if (empty? positions)
-       s
-       (str s "\r\nopen positions account id " id ":\r\n"
+       (str s "\r\nbroker report open positions account id " id " - None.")
+       (str s "\r\nbroker report open positions account id " id ":\r\n"
             (print/open-positions-table positions opts))))
    s
    snapshots))

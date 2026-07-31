@@ -2,8 +2,8 @@
  :deps {org.clojure/clojure    {:mvn/version "1.11.1"} 
         io.github.clojure-quant/blotter {:local/root "../blotter" :deps/manifest :deps}
         io.github.clojure-quant/blotter-cli {:local/root "../blotter-cli" :deps/manifest :deps}
-       io.github.clojure-quant/fix-engine {:mvn/version "0.1.78"}
-        io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.15"}
+       io.github.clojure-quant/fix-engine {:mvn/version "0.1.81"}
+        io.github.clojure-quant/quanta-bybit {:mvn/version "0.1.19"}
         }
  :aliases
  {
@@ -45,6 +45,14 @@
                            :profile "default"
                            :version "prod1"
                            :run demo.stresstest/run}}
+
+  :account-status {:extra-deps {org.pinkgorilla/modular {:mvn/version "0.5.81"}}
+                   :exec-fn modular.system/start!
+                   :exec-args {:config ["config-stresstest.edn"]
+                               :services "services-stresstest.edn"
+                               :profile "default"
+                               :version "prod1"
+                               :run demo.account-status/run}}
   
   :flow-pusher-demo {:exec-fn demo.flow-pusher/run-demo!}
 
@@ -54,7 +62,7 @@
                        cider/cider-nrepl {:mvn/version "0.28.3"}}
           :main-opts  ["-m" "nrepl.cmdline"]}
   
-  :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.05.25"}}
+  :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.07.24"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src" "deps.edn" "--fail-level" "error"]}
 
 ;

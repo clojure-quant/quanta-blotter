@@ -9,7 +9,7 @@
         org.pinkgorilla/timbre {:mvn/version "0.0.8"}
         org.pinkgorilla/edn-x {:mvn/version "0.1.4"}
         org.pinkgorilla/modular {:mvn/version "0.5.81"} ; ns-require
-        io.github.clojure-quant/quanta-missionary {:mvn/version "0.2.23"}
+        io.github.clojure-quant/quanta-missionary {:mvn/version "0.2.24"}
         io.github.clojure-quant/quanta-util {:mvn/version "0.1.1"}
         io.github.clojure-quant/quanta-asset {:mvn/version "0.1.4"}
         }
@@ -26,7 +26,7 @@
                  slipset/deps-deploy {:mvn/version "0.2.2"}}
           :ns-default build}
 
-  :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.05.25"}}
+  :lint {:extra-deps {clj-kondo/clj-kondo {:mvn/version "2026.07.24"}}
          :main-opts ["-m" "clj-kondo.main" "--lint" "src" "test" "deps.edn" "--fail-level" "error"]}
 
 ;

@@ -1,10 +1,11 @@
 (ns quanta.blotter.oms.validation.channel
   (:require
-   [taoensso.timbre :refer [info error]]
+   [taoensso.timbre :refer [error]]
    [missionary.core :as m]
    [tick.core :as t]
    [quanta.blotter.util-rdv :refer [create-rdv]]
-   [quanta.blotter.oms.validation.schema :as s]))
+   [quanta.blotter.oms.validation.schema :as s]
+   [quanta.missionary.task-timbre :refer [start-task!]]))
 
 (defn- spec-error-text [message]
   (str "spec-error " (pr-str (s/human-error-message message))))
@@ -73,8 +74,7 @@
                                          (m/? (orderupdate-out-rdv (orderupdate-schema-error data)))))
                                      (recur))))
         t (m/join concat validate-order-sp validate-orderupdate-sp)
-        dispose (t #(info "validation channel done" %)
-                   #(error "validation channel error" %))]
+        dispose (start-task! t "validation channel")]
     (reset! dispose! dispose)
     dispose))
 

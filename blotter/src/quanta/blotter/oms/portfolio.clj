@@ -2,11 +2,11 @@
   "Synchronous OMS portfolio: one message in → updated dict state + sparse out-msg."
   (:require
    [missionary.core :as m]
-   [taoensso.timbre :refer [info error]]
    [quanta.blotter.oms.db :as db]
    [quanta.blotter.oms.portfolio.trader :as trader]
    [quanta.blotter.oms.portfolio.working-order :as wo]
-   [quanta.blotter.oms.portfolio.open-position :as op]))
+   [quanta.blotter.oms.portfolio.open-position :as op]
+   [quanta.missionary.task-timbre :refer [start-task!]]))
 
 ;; startup state (empty or from db)
 
@@ -125,9 +125,8 @@
   (assert dispose-a "portfolio-start! needs :dispose-a")
   (when-not @dispose-a
     (reset! dispose-a
-            ((m/reduce (fn [_ _] nil) nil out-flow)
-             #(info "portfolio out-flow done" %)
-             #(error "portfolio out-flow error" %))))
+            (start-task! (m/reduce (fn [_ _] nil) nil out-flow)
+                         "portfolio out-flow")))
   portfolio)
 
 (defn portfolio-stop!

@@ -1,10 +1,10 @@
 (ns quanta.blotter.oms.report.web-ui
   (:require
-   [taoensso.timbre :refer [info error]]
    [missionary.core :as m]
    [quanta.blotter.util :as util]
    [quanta.blotter.flow.sample :as sample]
-   [quanta.blotter.oms.flow.recent :as recent]))
+   [quanta.blotter.oms.flow.recent :as recent]
+   [quanta.missionary.task-timbre :refer [start-task!]]))
 
 (defn- dict->vals [dict]
   (vec (vals (or dict {}))))
@@ -77,9 +77,7 @@
 (defn start!
   [{:keys [dispose-a snapshot-flow] :as _this}]
   (let [t (m/reduce (fn [_r _v] nil) nil snapshot-flow)
-        dispose! (t
-                  #(info "trading-state-consumer done" %)
-                  #(error "trading-state-consumer error" %))]
+        dispose! (start-task! t "trading-state-consumer")]
     (reset! dispose-a dispose!)))
 
 (defn stop!
